@@ -1,0 +1,110 @@
+import express from "express";
+import { Op } from "sequelize";
+import { Listing } from "../models/Listing";
+import { User } from "../models/User";
+
+const router = express.Router();
+
+// Get all vehicles (redirect to listings)
+router.get("/", async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search, minPrice, maxPrice, location, type, status } = req.query;
+    
+    const offset = (Number(page) - 1) * Number(limit);
+    const whereClause: any = {};
+    
+    // Only show approved listings to public
+    if (!status) {
+      whereClause.status = 'approved';
+    } else {
+      whereClause.status = status;
+    }
+    
+    if (search) {
+      whereClause[Op.or] = [
+        { title: { [Op.iLike]: `%${search}%` } },
+        { make: { [Op.iLike]: `%${search}%` } },
+        { model: { [Op.iLike]: `%${search}%` } },
+        { location: { [Op.iLike]: `%${search}%` } },
+      ];
+    }
+    
+    if (minPrice) {
+      whereClause.pricePerDay = { ...whereClause.pricePerDay, [Op.gte]: Number(minPrice) };
+    }
+    
+    if (maxPrice) {
+      whereClause.pricePerDay = { ...whereClause.pricePerDay, [Op.lte]: Number(maxPrice) };
+    }
+    
+    if (location) {
+      whereClause.location = { [Op.iLike]: `%${location}%` };
+    }
+    
+    if (type) {
+      whereClause.type = type;
+    }
+    
+    const vehicles = await Listing.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: User,
+          as: "host",
+          attributes: ["id", "firstName", "lastName", "email", "phoneNumber"],
+        },
+      ],
+      limit: Number(limit),
+      offset,
+      order: [['createdAt', 'DESC']],
+    });
+    
+    res.json({
+      vehicles: vehicles.rows,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: vehicles.count,
+        pages: Math.ceil(vehicles.count / Number(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Search vehicles endpoint
+router.get("/search", async (req, res) => {
+  // Redirect to main vehicles endpoint
+  req.url = '/';
+  router.handle(req, res);
+});
+
+// Get vehicle by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const vehicle = await Listing.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: "host",
+          attributes: ["id", "firstName", "lastName", "email", "phoneNumber"],
+        },
+      ],
+    });
+    
+    if (!vehicle) {
+      return res.status(404).json({ error: "Vehicle not found" });
+    }
+    
+    res.json(vehicle);
+  } catch (error) {
+    console.error("Error fetching vehicle:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+export default router;
