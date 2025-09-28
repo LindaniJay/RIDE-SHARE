@@ -3,7 +3,7 @@ import { sequelize } from '../config/database';
 
 export interface BookingAttributes {
   id: number;
-  listingId: number;
+  vehicleId: number;
   renterId: number;
   startDate: Date;
   endDate: Date;
@@ -17,7 +17,7 @@ export interface BookingCreationAttributes extends Optional<BookingAttributes, '
 
 export class Booking extends Model<BookingAttributes, BookingCreationAttributes> implements BookingAttributes {
   public id!: number;
-  public listingId!: number;
+  public vehicleId!: number;
   public renterId!: number;
   public startDate!: Date;
   public endDate!: Date;
@@ -34,11 +34,11 @@ Booking.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    listingId: {
+    vehicleId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'listings',
+        model: 'vehicles',
         key: 'id',
       },
     },

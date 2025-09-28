@@ -44,7 +44,6 @@ export interface Booking {
   endDate: string;
   totalPrice: number;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  paymentStatus: 'pending' | 'paid' | 'refunded';
   vehicle: Vehicle;
   renter: User;
   createdAt: string;
@@ -53,7 +52,6 @@ export interface Booking {
 
 export interface Review {
   id: string;
-  bookingId: string;
   vehicleId: string;
   renterId: string;
   rating: number;

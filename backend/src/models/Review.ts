@@ -3,7 +3,7 @@ import { sequelize } from '../config/database';
 
 export interface ReviewAttributes {
   id: number;
-  listingId: number;
+  vehicleId: number;
   renterId: number;
   rating: number;
   comment: string;
@@ -15,7 +15,7 @@ export interface ReviewCreationAttributes extends Optional<ReviewAttributes, 'id
 
 export class Review extends Model<ReviewAttributes, ReviewCreationAttributes> implements ReviewAttributes {
   public id!: number;
-  public listingId!: number;
+  public vehicleId!: number;
   public renterId!: number;
   public rating!: number;
   public comment!: string;
@@ -30,11 +30,11 @@ Review.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    listingId: {
+    vehicleId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'listings',
+        model: 'vehicles',
         key: 'id',
       },
     },
