@@ -1,15 +1,15 @@
-# 🚗 RideShare - Peer-to-Peer Vehicle Rental Platform
+# RideShare - Peer-to-Peer Vehicle Rental Platform
 
 > **Transform the way people access vehicles** - A modern, secure platform that connects vehicle owners with renters, making transportation more accessible and profitable for everyone.
 
-## 💡 The Idea Behind RideShare
+##  The Idea Behind RideShare
 
 RideShare revolutionizes vehicle rental by creating a **peer-to-peer marketplace** where:
 - **Vehicle owners** can monetize their idle vehicles by renting them out
 - **Renters** get access to a diverse fleet of vehicles at competitive prices
 - **Communities** benefit from reduced vehicle ownership costs and environmental impact
 
-### 🌟 Why RideShare?
+### Why RideShare?
 
 **For Vehicle Owners:**
 - Turn your idle car into a source of income
@@ -47,7 +47,7 @@ RideShare revolutionizes vehicle rental by creating a **peer-to-peer marketplace
 - **Testing**: Comprehensive test suite with Vitest, React Testing Library, and Playwright
 - **Deployment**: Docker containers with CI/CD pipeline
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - React 18 + TypeScript
@@ -105,7 +105,7 @@ ridesharex/
 └── README.md
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - **Node.js 18+** (Download from [nodejs.org](https://nodejs.org/))
@@ -147,7 +147,7 @@ npm install
 npm run dev   # Start frontend server
 ```
 
-### 🎯 First Steps After Setup
+###  First Steps After Setup
 
 1. **Visit the application**: http://localhost:3000
 2. **Create an account** as either a renter or host
@@ -157,7 +157,7 @@ npm run dev   # Start frontend server
    - Make a test booking
 4. **Check the admin panel** for platform statistics
 
-### 📱 What You'll See
+###  What You'll See
 
 - **Beautiful landing page** with South African vehicle categories
 - **Advanced search** with filters for location, price, vehicle type
@@ -165,7 +165,7 @@ npm run dev   # Start frontend server
 - **Real-time messaging** between users
 - **Secure payment processing** with Stripe integration
 
-### 🌍 South African Focus
+### South African Focus
 
 RideShare is specifically designed for the **South African market** with:
 - **Local payment methods** (EFT, Payfast integration)
@@ -174,7 +174,7 @@ RideShare is specifically designed for the **South African market** with:
 - **Regional locations** (Cape Town, Johannesburg, Durban, etc.)
 - **Local regulations compliance**
 
-### ⚙️ Environment Variables
+###  Environment Variables
 
 Create `.env` files in both frontend and backend directories:
 
@@ -211,9 +211,9 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
 VITE_GOOGLE_ANALYTICS_ID=your_ga_id
 ```
 
-## 💼 Business Model & Use Cases
+##  Business Model & Use Cases
 
-### 🎯 Target Users
+###  Target Users
 
 **Vehicle Owners (Hosts):**
 - Car owners with vehicles sitting idle
@@ -227,21 +227,21 @@ VITE_GOOGLE_ANALYTICS_ID=your_ga_id
 - Locals needing vehicles for specific occasions
 - Students and young professionals without cars
 
-### 💰 Revenue Streams
+###  Revenue Streams
 
 - **Transaction fees** (5-10% per booking)
 - **Premium listings** for featured placement
 - **Insurance partnerships** for additional coverage
 - **Concierge services** for premium users
 
-### 🏢 Enterprise Features
+###  Enterprise Features
 
 - **Fleet management** for companies
 - **Corporate accounts** with bulk discounts
 - **API access** for third-party integrations
 - **White-label solutions** for other businesses
 
-## 🧪 Testing
+##  Testing
 
 ### Backend Tests
 ```bash
@@ -312,7 +312,7 @@ The API documentation is available at `/api/docs` when running the backend serve
 
 We welcome contributions! Here's how to get involved:
 
-### 🚀 Development Workflow
+###  Development Workflow
 
 1. **Fork the repository**
 2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
@@ -321,7 +321,7 @@ We welcome contributions! Here's how to get involved:
 5. **Commit with conventional commits**: `git commit -m "feat: add amazing feature"`
 6. **Push and create PR**: `git push origin feature/amazing-feature`
 
-### 🎯 Areas for Contribution
+###  Areas for Contribution
 
 - **Frontend**: React components, UI/UX improvements
 - **Backend**: API endpoints, business logic
@@ -330,7 +330,7 @@ We welcome contributions! Here's how to get involved:
 - **Documentation**: Guides, API docs
 - **Testing**: Unit tests, E2E tests
 
-### 📋 Development Guidelines
+### Development Guidelines
 
 - Follow TypeScript best practices
 - Write tests for new features
@@ -338,33 +338,33 @@ We welcome contributions! Here's how to get involved:
 - Follow the existing code style
 - Test on both development and production builds
 
-## 🌟 Impact & Future
+## Impact & Future
 
-### 🎯 Current Impact
+###  Current Impact
 - **Reduces vehicle ownership costs** for individuals
 - **Increases vehicle utilization** from 5% to 40%+
 - **Supports local economy** by keeping money in communities
 - **Reduces environmental impact** through shared mobility
 
-### 🚀 Roadmap
+###  Roadmap
 - **Mobile app** (React Native)
 - **AI-powered matching** for better user experience
 - **Blockchain integration** for secure transactions
 - **International expansion** to other African markets
 - **Autonomous vehicle support** for future mobility
 
-### 📊 Success Metrics
+### Success Metrics
 - User acquisition and retention rates
 - Vehicle utilization improvements
 - Revenue growth and profitability
 - Environmental impact measurements
 - Community engagement metrics
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+##  Support
 
 - **Email**: support@ridesharex.com
 - **GitHub Issues**: [Create an issue](https://github.com/your-username/ridesharex/issues)
@@ -375,8 +375,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**Built with ❤️ for South Africa**
+**Built with Lobe for South Africa**
 
-[🌐 Live Demo](https://ridesharex.com) • [📖 Documentation](https://docs.ridesharex.com) • [🐛 Report Bug](https://github.com/your-username/ridesharex/issues) • [💡 Request Feature](https://github.com/your-username/ridesharex/issues)
+[ Live Demo](https://ridesharex.com) • [📖 Documentation](https://docs.ridesharex.com) • [Report Bug](https://github.com/your-username/ridesharex/issues) • [Request Feature](https://github.com/your-username/ridesharex/issues)
 
 </div>
