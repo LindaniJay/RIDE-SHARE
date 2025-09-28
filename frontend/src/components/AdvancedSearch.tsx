@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { VehicleFilters } from '../types/api';
 
 interface AdvancedSearchProps {
-  onSearch: (filters: any) => void;
+  onSearch: (filters: VehicleFilters) => void;
   onClose: () => void;
 }
 
@@ -50,7 +51,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClose }) =>
     { value: 'distance', label: 'Nearest First' }
   ];
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: string | number | string[]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 

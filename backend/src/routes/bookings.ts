@@ -26,7 +26,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
     const { page = 1, limit = 10, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
     
-    const whereClause: any = { renterId: req.user!.id };
+    const whereClause: Record<string, unknown> = { renterId: req.user!.id };
     if (status) {
       whereClause.status = status;
     }

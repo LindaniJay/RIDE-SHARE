@@ -16,7 +16,7 @@ export interface ListingAttributes {
   pricePerDay: number;
   location: string;
   images: string[];
-  availability: any; // JSON field for date ranges
+  availability: Record<string, unknown>; // JSON field for date ranges
   status: 'pending' | 'approved' | 'declined';
   declineReason?: string;
   createdAt?: Date;
@@ -40,7 +40,7 @@ export class Listing extends Model<ListingAttributes, ListingCreationAttributes>
   public pricePerDay!: number;
   public location!: string;
   public images!: string[];
-  public availability!: any;
+  public availability!: Record<string, unknown>;
   public status!: 'pending' | 'approved' | 'declined';
   public declineReason?: string;
   public readonly createdAt!: Date;

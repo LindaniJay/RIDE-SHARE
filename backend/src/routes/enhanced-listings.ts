@@ -64,7 +64,7 @@ router.get('/', async (req, res) => {
     }
     
     const offset = (Number(page) - 1) * Number(limit);
-    const whereClause: any = {};
+    const whereClause: Record<string, unknown> = {};
     
     // Only show approved listings to public
     if (!req.query.admin) {
@@ -146,7 +146,7 @@ router.get('/', async (req, res) => {
     }
     
     // Sorting options
-    const orderOptions: any = [];
+    const orderOptions: [string, string][] = [];
     if (sortBy === 'price') {
       orderOptions.push(['pricePerDay', sortOrder]);
     } else if (sortBy === 'rating') {
@@ -283,7 +283,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
       status: 'pending', // Requires approval
       features: listingData.features || [], // Ensure features is always an array
       images: listingData.images || [], // Ensure images is always an array
-    } as any); // Type assertion to handle the strict typing
+    } as Partial<Listing>); // Type assertion to handle the strict typing
     
     // Clear relevant caches
     await cacheService.del('listings:*');

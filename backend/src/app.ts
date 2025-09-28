@@ -7,7 +7,6 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { sequelize } from './config/database';
 import authRoutes from './routes/auth';
-import listingRoutes from './routes/listings';
 import enhancedListingRoutes from './routes/enhanced-listings';
 import vehicleRoutes from './routes/vehicles';
 import bookingRoutes from './routes/bookings';

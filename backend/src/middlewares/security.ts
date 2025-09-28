@@ -120,7 +120,7 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
 };
 
 // Request validation
-export const validateRequest = (schema: any) => {
+export const validateRequest = (schema: { parse: (data: unknown) => unknown }) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       schema.parse({
@@ -129,11 +129,12 @@ export const validateRequest = (schema: any) => {
         params: req.params
       });
       next();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(400).json({
         error: 'Validation error',
         message: 'Invalid request data',
-        details: error.errors
+        details: errorMessage
       });
     }
   };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { vehiclesAPI, bookingsAPI } from '../api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import PaymentModal from '../components/PaymentModal';
 
 interface Vehicle {
@@ -55,7 +55,13 @@ const VehicleDetail: React.FC = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [currentBooking, setCurrentBooking] = useState<any>(null);
+  const [currentBooking, setCurrentBooking] = useState<{
+    id: string;
+    totalAmount: number;
+    vehicleName: string;
+    pickupDate: string;
+    returnDate: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchVehicle();

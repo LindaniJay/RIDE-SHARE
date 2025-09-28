@@ -107,7 +107,7 @@ export const useUpdateVehicle = () => {
       const response = await apiClient.put(apiEndpoints.vehicles.update(id.toString()), data);
       return response.data;
     },
-    onSuccess: (_: any, variables: { id: number; data: Partial<CreateVehicleData> }) => {
+    onSuccess: (_: unknown, variables: { id: number; data: Partial<CreateVehicleData> }) => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() });
     },

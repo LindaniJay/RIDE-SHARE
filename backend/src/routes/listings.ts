@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
     const { page = 1, limit = 10, search, minPrice, maxPrice, location, type, status } = req.query;
     
     const offset = (Number(page) - 1) * Number(limit);
-    const whereClause: any = {};
+    const whereClause: Record<string, unknown> = {};
     
     // Only show approved listings to public
     if (!req.query.admin) {
@@ -234,7 +234,7 @@ router.get('/host/my-listings', authenticateToken, async (req: AuthRequest, res)
     const { page = 1, limit = 10, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
     
-    const whereClause: any = { hostId: req.user!.id };
+    const whereClause: Record<string, unknown> = { hostId: req.user!.id };
     if (status) {
       whereClause.status = status;
     }

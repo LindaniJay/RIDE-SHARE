@@ -106,8 +106,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         document.body.appendChild(form);
         form.submit();
       }
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Payment failed. Please try again.');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
+        : 'Payment failed. Please try again.';
+      setError(errorMessage || 'Payment failed. Please try again.');
     } finally {
       setLoading(false);
     }

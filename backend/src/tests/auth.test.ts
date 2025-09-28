@@ -2,7 +2,6 @@ import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../app';
 import { sequelize } from '../config/database';
-import { User } from '../models';
 
 // Set up environment variables for tests
 beforeAll(() => {

@@ -25,7 +25,7 @@ const PAYFAST_CONFIG = {
 };
 
 // Generate Payfast signature
-const generatePayfastSignature = (data: any) => {
+const generatePayfastSignature = (data: Record<string, string>) => {
   const string = Object.keys(data)
     .filter(key => data[key] !== '' && key !== 'signature')
     .sort()
@@ -152,7 +152,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res) => {
         renterId: req.user!.id,
         status: ['confirmed', 'completed'],
         paymentIntentId: { [Op.ne]: null },
-      } as any,
+      } as Record<string, unknown>,
       limit: Number(limit),
       offset,
       order: [['updatedAt', 'DESC']],

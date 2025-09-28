@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-export const errorHandler = (err: any, req: Request, res: Response) => {
+export const errorHandler = (err: Error & { status?: number; errors?: { message: string }[] }, req: Request, res: Response) => {
   console.error(err.stack);
 
   if (err.name === 'ValidationError') {
@@ -13,7 +13,7 @@ export const errorHandler = (err: any, req: Request, res: Response) => {
   if (err.name === 'SequelizeValidationError') {
     return res.status(400).json({
       error: 'Database Validation Error',
-      details: err.errors.map((e: any) => e.message),
+      details: err.errors?.map((e: { message: string }) => e.message),
     });
   }
 

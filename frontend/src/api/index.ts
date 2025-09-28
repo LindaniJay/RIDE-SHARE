@@ -1,6 +1,18 @@
 import axios from 'axios';
+import type { 
+  LoginRequest, 
+  RegisterRequest, 
+  VehicleFilters, 
+  SearchParams, 
+  PaymentData,
+  User,
+  Vehicle,
+  Booking,
+  ApiResponse,
+  PaginatedResponse
+} from '../types/api';
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = (import.meta as ImportMeta).env?.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -20,83 +32,83 @@ api.interceptors.request.use((config) => {
 
 // Auth API
 export const authAPI = {
-  login: (email: string, password: string) => 
-    api.post('/auth/login', { email, password }),
+  login: (loginData: LoginRequest) => 
+    api.post<ApiResponse<{ user: User; token: string }>>('/auth/login', loginData),
   
-  register: (userData: any) => 
-    api.post('/auth/register', userData),
+  register: (userData: RegisterRequest) => 
+    api.post<ApiResponse<{ user: User; token: string }>>('/auth/register', userData),
   
   logout: () => 
-    api.post('/auth/logout'),
+    api.post<ApiResponse>('/auth/logout'),
   
   refreshToken: () => 
-    api.post('/auth/refresh'),
+    api.post<ApiResponse<{ token: string }>>('/auth/refresh'),
   
   getCurrentUser: () => 
-    api.get('/auth/me'),
+    api.get<ApiResponse<User>>('/auth/me'),
 };
 
 // Vehicles API
 export const vehiclesAPI = {
-  getAll: (filters?: any) => 
-    api.get('/vehicles', { params: filters }),
+  getAll: (filters?: VehicleFilters) => 
+    api.get<ApiResponse<PaginatedResponse<Vehicle>>>('/vehicles', { params: filters }),
   
   getById: (id: string) => 
-    api.get(`/vehicles/${id}`),
+    api.get<ApiResponse<Vehicle>>(`/vehicles/${id}`),
   
-  create: (vehicleData: any) => 
-    api.post('/vehicles', vehicleData),
+  create: (vehicleData: Omit<Vehicle, 'id' | 'hostId' | 'host' | 'createdAt' | 'updatedAt'>) => 
+    api.post<ApiResponse<Vehicle>>('/vehicles', vehicleData),
   
-  update: (id: string, vehicleData: any) => 
-    api.put(`/vehicles/${id}`, vehicleData),
+  update: (id: string, vehicleData: Partial<Omit<Vehicle, 'id' | 'hostId' | 'host' | 'createdAt' | 'updatedAt'>>) => 
+    api.put<ApiResponse<Vehicle>>(`/vehicles/${id}`, vehicleData),
   
   delete: (id: string) => 
-    api.delete(`/vehicles/${id}`),
+    api.delete<ApiResponse>(`/vehicles/${id}`),
   
-  search: (searchParams: any) => 
-    api.get('/vehicles/search', { params: searchParams }),
+  search: (searchParams: SearchParams) => 
+    api.get<ApiResponse<PaginatedResponse<Vehicle>>>('/vehicles/search', { params: searchParams }),
 };
 
 // Bookings API
 export const bookingsAPI = {
   getAll: () => 
-    api.get('/bookings'),
+    api.get<ApiResponse<Booking[]>>('/bookings'),
   
   getById: (id: string) => 
-    api.get(`/bookings/${id}`),
+    api.get<ApiResponse<Booking>>(`/bookings/${id}`),
   
-  create: (bookingData: any) => 
-    api.post('/bookings', bookingData),
+  create: (bookingData: Omit<Booking, 'id' | 'renterId' | 'renter' | 'vehicle' | 'createdAt' | 'updatedAt'>) => 
+    api.post<ApiResponse<Booking>>('/bookings', bookingData),
   
-  update: (id: string, bookingData: any) => 
-    api.put(`/bookings/${id}`, bookingData),
+  update: (id: string, bookingData: Partial<Omit<Booking, 'id' | 'renterId' | 'renter' | 'vehicle' | 'createdAt' | 'updatedAt'>>) => 
+    api.put<ApiResponse<Booking>>(`/bookings/${id}`, bookingData),
   
   cancel: (id: string) => 
-    api.post(`/bookings/${id}/cancel`),
+    api.post<ApiResponse<Booking>>(`/bookings/${id}/cancel`),
   
   approve: (id: string) => 
-    api.post(`/bookings/${id}/approve`),
+    api.post<ApiResponse<Booking>>(`/bookings/${id}/approve`),
   
   reject: (id: string) => 
-    api.post(`/bookings/${id}/reject`),
+    api.post<ApiResponse<Booking>>(`/bookings/${id}/reject`),
 };
 
 // Payments API
 export const paymentsAPI = {
   createPaymentIntent: (bookingId: string, amount: number) => 
-    api.post('/payments/create-payment-intent', { bookingId, amount }),
+    api.post<ApiResponse<{ clientSecret: string }>>('/payments/create-payment-intent', { bookingId, amount }),
   
   confirmPayment: (paymentIntentId: string) => 
-    api.post('/payments/confirm-payment', { paymentIntentId }),
+    api.post<ApiResponse<{ status: string }>>('/payments/confirm-payment', { paymentIntentId }),
   
   refund: (paymentId: string) => 
-    api.post('/payments/refund', { paymentId }),
+    api.post<ApiResponse<{ status: string }>>('/payments/refund', { paymentId }),
   
-  createPayfastPayment: (paymentData: any) => 
-    api.post('/payments/create-payfast-payment', paymentData),
+  createPayfastPayment: (paymentData: PaymentData) => 
+    api.post<ApiResponse<{ paymentUrl: string }>>('/payments/create-payfast-payment', paymentData),
   
   getPaymentMethods: () => 
-    api.get('/payments/methods'),
+    api.get<ApiResponse<{ methods: string[] }>>('/payments/methods'),
 };
 
 // Dashboard API

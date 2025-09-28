@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import type { ImportMeta } from '../types/api';
 
 // Analytics service
 class AnalyticsService {
@@ -9,23 +10,23 @@ class AnalyticsService {
     if (this.isInitialized) return;
     
     // Initialize analytics (Google Analytics, Mixpanel, etc.)
-    if (typeof window !== 'undefined' && (window as any).gtag) {
+    if (typeof window !== 'undefined' && window.gtag) {
       this.isInitialized = true;
     }
   }
 
   trackPageView(path: string, title?: string) {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('config', (import.meta as any).env?.VITE_GA_TRACKING_ID || '', {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('config', (import.meta as ImportMeta).env?.VITE_GA_TRACKING_ID || '', {
         page_path: path,
         page_title: title
       });
     }
   }
 
-  trackEvent(eventName: string, parameters?: Record<string, any>) {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', eventName, parameters);
+  trackEvent(eventName: string, parameters?: Record<string, unknown>) {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', eventName, parameters);
     }
   }
 
@@ -154,6 +155,6 @@ export const useErrorTracking = () => {
 // Declare global types
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
+    gtag?: (...args: unknown[]) => void;
   }
 }

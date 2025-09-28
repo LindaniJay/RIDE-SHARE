@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import CarVideoBackground from '../components/CarVideoBackground';
 import GlassForm from '../components/GlassForm';
 import GlassInput from '../components/GlassInput';
@@ -34,8 +34,11 @@ const Login: React.FC = () => {
       // Redirect based on role will be handled by the AuthContext
       // The user will be redirected to the appropriate dashboard
       navigate('/dashboard');
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Login failed. Please try again.');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
+        : 'Login failed. Please try again.';
+      setError(errorMessage || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }

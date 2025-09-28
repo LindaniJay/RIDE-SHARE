@@ -1,9 +1,10 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import type { ImportMeta } from '../types/api';
 
 // Create axios instance
 const createApiClient = (): AxiosInstance => {
   const client = axios.create({
-    baseURL: (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api',
+    baseURL: (import.meta as ImportMeta).env?.VITE_API_URL || 'http://localhost:5000/api',
     timeout: 10000,
     headers: {
       'Content-Type': 'application/json',
@@ -40,7 +41,7 @@ const createApiClient = (): AxiosInstance => {
           const refreshToken = localStorage.getItem('refreshToken');
           if (refreshToken) {
             const response = await axios.post(
-              `${(import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api'}/auth/refresh`,
+              `${(import.meta as ImportMeta).env?.VITE_API_URL || 'http://localhost:5000/api'}/auth/refresh`,
               { refreshToken }
             );
 

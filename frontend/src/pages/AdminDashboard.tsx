@@ -105,7 +105,7 @@ const AdminDashboard: React.FC = () => {
           totalBookings: 2, // From seed data
           totalRevenue: 2700, // From seed data
           activeUsers: 6,
-          pendingBookings: allListings.filter((l: any) => l.status === 'pending').length,
+          pendingBookings: allListings.filter((l: { status: string }) => l.status === 'pending').length,
           supportTickets: 0
         });
       }

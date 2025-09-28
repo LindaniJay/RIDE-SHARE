@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
     const { page = 1, limit = 10, search, minPrice, maxPrice, location, type, status } = req.query;
     
     const offset = (Number(page) - 1) * Number(limit);
-    const whereClause: any = {};
+    const whereClause: Record<string, unknown> = {};
     
     // Only show approved listings to public
     if (!status) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import AdminDashboard from './AdminDashboard';
 import CarVideoBackground from '../components/CarVideoBackground';
 import GlassCard from '../components/GlassCard';

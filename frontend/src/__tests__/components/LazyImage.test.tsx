@@ -9,7 +9,7 @@ mockIntersectionObserver.mockReturnValue({
   unobserve: vi.fn(),
   disconnect: vi.fn()
 });
-global.IntersectionObserver = mockIntersectionObserver as any;
+global.IntersectionObserver = mockIntersectionObserver as unknown as typeof IntersectionObserver;
 
 describe('LazyImage', () => {
   const defaultProps = {

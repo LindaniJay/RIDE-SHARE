@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import CarVideoBackground from '../components/CarVideoBackground';
 import GlassForm from '../components/GlassForm';
 import GlassInput from '../components/GlassInput';
@@ -43,8 +43,11 @@ const Register: React.FC = () => {
         role: formData.role,
       });
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error && 'response' in err 
+        ? (err as { response?: { data?: { error?: string } } }).response?.data?.error 
+        : 'Registration failed';
+      setError(errorMessage || 'Registration failed');
     } finally {
       setLoading(false);
     }
