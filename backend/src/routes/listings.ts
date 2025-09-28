@@ -36,7 +36,7 @@ const approveListingSchema = z.object({
 router.get("/", async (req, res) => {
   try {
     const { page = 1, limit = 10, search, minPrice, maxPrice, location, type, status, sortBy = 'createdAt', sortOrder = 'DESC', latitude, longitude } = req.query as any;
-    const cacheKey = `listings:${JSON.stringify(req.query)}`;
+    const cacheKey = `listings:${JSON.stringify({ page, limit, search, minPrice, maxPrice, location, type, status, sortBy, sortOrder, latitude, longitude })}`;
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       return res.json(cached);
@@ -52,10 +52,10 @@ router.get("/", async (req, res) => {
     
     if (search) {
       whereClause[Op.or] = [
-        { title: { [Op.iLike]: `%${search}%` } },
-        { make: { [Op.iLike]: `%${search}%` } },
-        { model: { [Op.iLike]: `%${search}%` } },
-        { location: { [Op.iLike]: `%${search}%` } },
+        { title: { [Op.like]: `%${search}%` } },
+        { make: { [Op.like]: `%${search}%` } },
+        { model: { [Op.like]: `%${search}%` } },
+        { location: { [Op.like]: `%${search}%` } },
       ];
     }
     
@@ -68,7 +68,7 @@ router.get("/", async (req, res) => {
     }
     
     if (location) {
-      whereClause.location = { [Op.iLike]: `%${location}%` };
+      whereClause.location = { [Op.like]: `%${location}%` };
     }
     
     if (type) {
@@ -90,7 +90,7 @@ router.get("/", async (req, res) => {
       ],
       limit: Number(limit),
       offset,
-      order: [[String(sortBy), String(sortOrder).toUpperCase() === 'ASC' ? 'ASC' : 'DESC']],
+      order: [[String(sortBy) === 'price' ? 'pricePerDay' : String(sortBy), String(sortOrder).toUpperCase() === 'ASC' ? 'ASC' : 'DESC']],
     });
     
     let result: any = {

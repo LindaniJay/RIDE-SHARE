@@ -16,13 +16,21 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
 
   try {
     // Test override to simplify auth in integration tests
-    if (process.env.NODE_ENV === 'test' && token === 'valid-token') {
-      const user = await User.findByPk(1);
-      if (!user) {
-        return res.status(401).json({ error: "Invalid token" });
+    if (process.env.NODE_ENV === 'test') {
+      if (token === 'valid-token') {
+        const user = await User.findByPk(1);
+        if (!user) {
+          return res.status(401).json({ error: "Invalid token" });
+        }
+        req.user = user;
+        return next();
       }
-      req.user = user;
-      return next();
+      if (token === 'other-user-token') {
+        // Build a non-owner user for authorization checks
+        const other = User.build({ id: 999, firstName: 'Other', lastName: 'User', email: 'other@example.com', password: 'x', passwordHash: 'x', role: 'renter' } as any);
+        req.user = other as User;
+        return next();
+      }
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number; role: string };
