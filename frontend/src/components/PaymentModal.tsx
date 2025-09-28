@@ -49,7 +49,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const fetchPaymentMethods = async () => {
     try {
       const response = await paymentsAPI.getPaymentMethods();
-      setPaymentMethods(response.data.methods);
+      setPaymentMethods((response.data.methods || []) as unknown as PaymentMethod[]);
       // Default to Payfast for South African users
       setSelectedMethod('payfast');
     } catch (error) {
@@ -93,15 +93,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         // Redirect to Payfast
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = response.data.redirectUrl;
+        form.action = (response.data as any).paymentUrl;
         
-        Object.entries(response.data.payfastData).forEach(([key, value]) => {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = key;
-          input.value = value as string;
-          form.appendChild(input);
-        });
+        if (response.data.payfastData) {
+          Object.entries(response.data.payfastData).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value as string;
+            form.appendChild(input);
+          });
+        }
         
         document.body.appendChild(form);
         form.submit();

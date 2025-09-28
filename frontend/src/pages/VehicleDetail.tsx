@@ -71,7 +71,7 @@ const VehicleDetail: React.FC = () => {
     setLoading(true);
     try {
       const response = await vehiclesAPI.getById(id!);
-      setVehicle(response.data);
+      setVehicle(response.data as unknown as Vehicle);
     } catch (error) {
       console.error('Error fetching vehicle:', error);
       // Mock data for demonstration
@@ -139,18 +139,19 @@ const VehicleDetail: React.FC = () => {
     try {
       const bookingData = {
         vehicleId: vehicle.id,
-        pickupDate: bookingForm.pickupDate,
-        returnDate: bookingForm.returnDate,
+        startDate: bookingForm.pickupDate,
+        endDate: bookingForm.returnDate,
         totalDays: bookingForm.totalDays,
         totalPrice: bookingForm.totalPrice,
-        specialRequests: bookingForm.specialRequests
+        specialRequests: bookingForm.specialRequests,
+        status: 'pending' as const
       };
 
       const response = await bookingsAPI.create(bookingData);
       
       // Store booking data for payment
       setCurrentBooking({
-        id: response.data.id,
+        id: (response.data as any).id || 'temp-id',
         totalAmount: bookingForm.totalPrice * 1.1, // Include service fee
         vehicleName: `${vehicle.make} ${vehicle.model}`,
         pickupDate: bookingForm.pickupDate,

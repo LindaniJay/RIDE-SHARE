@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import type { ImportMeta } from '../types/api';
+// Removed unused ImportMeta import
 
 // Analytics service
 class AnalyticsService {
