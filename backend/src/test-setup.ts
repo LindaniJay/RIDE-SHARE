@@ -8,7 +8,12 @@ beforeAll(async () => {
     console.log('Test database connection established successfully.');
     
     // Sync all models for tests
-    await sequelize.sync({ force: true });
+    // In PostgreSQL, use alter: true to avoid enum type conflicts
+    if (sequelize.getDialect() === 'postgres') {
+      await sequelize.sync({ alter: true });
+    } else {
+      await sequelize.sync({ force: true });
+    }
   } catch (error) {
     console.warn('Unable to connect to test database:', error);
     // Don't exit, just warn and continue
@@ -18,7 +23,12 @@ beforeAll(async () => {
 beforeEach(async () => {
   try {
     // Clean database before each test
-    await sequelize.sync({ force: true });
+    if (sequelize.getDialect() === 'postgres') {
+      // For PostgreSQL, just sync without force to avoid enum issues
+      await sequelize.sync({ alter: true });
+    } else {
+      await sequelize.sync({ force: true });
+    }
   } catch (error) {
     console.warn('Database sync failed in beforeEach:', error);
   }

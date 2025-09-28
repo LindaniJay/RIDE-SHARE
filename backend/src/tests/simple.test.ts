@@ -14,7 +14,12 @@ describe('Database Connection', () => {
 
   it('should have correct database configuration', () => {
     const config = sequelize.options;
-    expect(config.dialect).toBe('sqlite');
-    expect(config.storage).toBe(':memory:');
+    // In CI, we use PostgreSQL; locally we use SQLite
+    if (process.env.CI === 'true') {
+      expect(config.dialect).toBe('postgres');
+    } else {
+      expect(config.dialect).toBe('sqlite');
+      expect(config.storage).toBe(':memory:');
+    }
   });
 });

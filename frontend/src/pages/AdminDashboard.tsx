@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+// import { useAuth } from '../context/AuthContext'; // Currently unused but may be needed for admin features
 
 interface AdminStats {
   totalUsers: number;
