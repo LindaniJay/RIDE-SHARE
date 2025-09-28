@@ -148,3 +148,6 @@ declare global {
     readonly env: ImportMetaEnv;
   }
 }
+
+// Export for backward compatibility
+export type { ImportMetaEnv };

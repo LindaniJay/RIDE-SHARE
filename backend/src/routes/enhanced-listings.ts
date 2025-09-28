@@ -88,7 +88,7 @@ router.get('/', async (req, res) => {
     
     // Enhanced search functionality
     if (searchTerm) {
-      whereClause[Op.or] = [
+      (whereClause as any)[Op.or] = [
         { title: { [Op.iLike]: `%${searchTerm}%` } },
         { make: { [Op.iLike]: `%${searchTerm}%` } },
         { model: { [Op.iLike]: `%${searchTerm}%` } },
@@ -99,9 +99,9 @@ router.get('/', async (req, res) => {
     
     // Price filtering
     if (minPriceNum || maxPriceNum) {
-      whereClause.pricePerDay = {};
-      if (minPriceNum) whereClause.pricePerDay[Op.gte] = Number(minPriceNum);
-      if (maxPriceNum) whereClause.pricePerDay[Op.lte] = Number(maxPriceNum);
+      whereClause.pricePerDay = {} as Record<string, unknown>;
+      if (minPriceNum) (whereClause.pricePerDay as Record<string, unknown>)[Op.gte] = Number(minPriceNum);
+      if (maxPriceNum) (whereClause.pricePerDay as Record<string, unknown>)[Op.lte] = Number(maxPriceNum);
     }
     
     // Location filtering
@@ -298,7 +298,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
       status: 'pending', // Requires approval
       features: listingData.features || [], // Ensure features is always an array
       images: listingData.images || [], // Ensure images is always an array
-    } as Partial<Listing>); // Type assertion to handle the strict typing
+    });
     
     // Clear relevant caches
     await cacheService.del('listings:*');

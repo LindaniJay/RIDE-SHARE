@@ -53,7 +53,7 @@ router.get('/', async (req, res) => {
     }
     
     if (searchTerm) {
-      whereClause[Op.or] = [
+      (whereClause as any)[Op.or] = [
         { title: { [Op.iLike]: `%${searchTerm}%` } },
         { make: { [Op.iLike]: `%${searchTerm}%` } },
         { model: { [Op.iLike]: `%${searchTerm}%` } },
@@ -62,11 +62,11 @@ router.get('/', async (req, res) => {
     }
     
     if (minPriceNum) {
-      whereClause.pricePerDay = { ...whereClause.pricePerDay, [Op.gte]: Number(minPriceNum) };
+      whereClause.pricePerDay = { ...(whereClause.pricePerDay as Record<string, unknown>), [Op.gte]: Number(minPriceNum) };
     }
     
     if (maxPriceNum) {
-      whereClause.pricePerDay = { ...whereClause.pricePerDay, [Op.lte]: Number(maxPriceNum) };
+      whereClause.pricePerDay = { ...(whereClause.pricePerDay as Record<string, unknown>), [Op.lte]: Number(maxPriceNum) };
     }
     
     if (locationStr) {

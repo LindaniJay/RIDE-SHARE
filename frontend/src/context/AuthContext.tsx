@@ -32,7 +32,7 @@ interface RegisterData {
   role?: 'renter' | 'host';
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Hook moved to separate file to fix React refresh warning
 
