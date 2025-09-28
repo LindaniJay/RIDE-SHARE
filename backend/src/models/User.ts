@@ -87,13 +87,19 @@ User.init(
 
 // Add hooks for password hashing
 User.addHook('beforeCreate', async (user: User) => {
-  if (user.password) {
+  if (user.password && !user.passwordHash) {
     user.passwordHash = await bcrypt.hash(user.password, 12);
   }
 });
 
 User.addHook('beforeUpdate', async (user: User) => {
   if (user.changed('password') && user.password) {
+    user.passwordHash = await bcrypt.hash(user.password, 12);
+  }
+});
+
+User.addHook('beforeSave', async (user: User) => {
+  if (user.password && !user.passwordHash) {
     user.passwordHash = await bcrypt.hash(user.password, 12);
   }
 });

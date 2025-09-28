@@ -22,21 +22,17 @@ describe('Enhanced Listings API', () => {
     // Clean database
     await sequelize.sync({ force: true });
     
-    // Create test user
+    // Create test user with explicit password hash
+    const passwordHash = await bcrypt.hash('testpassword123', 12);
     const user = await User.create({
       firstName: 'Test',
       lastName: 'User',
       email: 'test@example.com',
       password: 'testpassword123',
+      passwordHash: passwordHash,
       phoneNumber: '1234567890',
       role: 'host'
     });
-    
-    // Ensure password hash is set
-    if (!user.passwordHash) {
-      user.passwordHash = await bcrypt.hash('testpassword123', 12);
-      await user.save();
-    }
     
     // Create test listings
     await Listing.bulkCreate([
