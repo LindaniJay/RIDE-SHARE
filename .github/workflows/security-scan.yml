@@ -8,6 +8,16 @@ on:
   schedule:
     # Run security scans daily at 2 AM UTC
     - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      run_disabled_workflow:
+        description: 'Force run this disabled workflow'
+        required: false
+        default: 'false'
+        type: boolean
+
+# This workflow is disabled to prevent conflicts with main.yml
+# Security scanning is now handled in main.yml
 
 permissions:
   contents: read
@@ -16,6 +26,7 @@ permissions:
 
 jobs:
   trivy-scan:
+    if: github.event.inputs.run_disabled_workflow == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -42,6 +53,7 @@ jobs:
         category: 'trivy'
 
   codeql-analysis:
+    if: github.event.inputs.run_disabled_workflow == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -103,6 +115,7 @@ jobs:
         category: "/language:${{matrix.language}}"
 
   dependency-check:
+    if: github.event.inputs.run_disabled_workflow == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

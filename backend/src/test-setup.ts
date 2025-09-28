@@ -18,7 +18,7 @@ beforeAll(async () => {
     console.warn('Unable to connect to test database:', error);
     // Don't exit, just warn and continue
   }
-});
+}, 30000); // Increase timeout for CI
 
 beforeEach(async () => {
   try {

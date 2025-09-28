@@ -1,13 +1,23 @@
-name: Working CI
+name: Working CI (DISABLED)
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      run_disabled_workflow:
+        description: 'Force run this disabled workflow'
+        required: false
+        default: 'false'
+        type: boolean
+
+# This workflow is disabled to prevent conflicts with main.yml
 
 jobs:
   backend:
+    if: github.event.inputs.run_disabled_workflow == 'true'
     runs-on: ubuntu-latest
     
     steps:
@@ -32,6 +42,7 @@ jobs:
         npm run build
 
   frontend:
+    if: github.event.inputs.run_disabled_workflow == 'true'
     runs-on: ubuntu-latest
     
     steps:
