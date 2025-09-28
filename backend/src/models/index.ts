@@ -20,3 +20,4 @@ Review.belongsTo(Listing, { foreignKey: "listingId", as: "listing" });
 Review.belongsTo(User, { foreignKey: "renterId", as: "renter" });
 
 export { User, Listing, Booking, Review, sequelize };
+

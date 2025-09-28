@@ -69,4 +69,10 @@ export default defineConfig({
       }
     }
   },
+  esbuild: {
+    target: 'esnext'
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom']
+  }
 });

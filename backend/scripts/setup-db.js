@@ -23,3 +23,4 @@ try {
   console.error('Error setting up database:', error.message);
   process.exit(1);
 }
+
