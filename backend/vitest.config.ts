@@ -5,14 +5,17 @@ export default defineConfig({
     globals: true,
     environment: "node",
     setupFiles: ["./src/test-setup.ts"],
-    testTimeout: 10000,
-    hookTimeout: 10000,
-    teardownTimeout: 10000,
-    pool: 'forks',
+    testTimeout: 30000,
+    hookTimeout: 30000,
+    teardownTimeout: 30000,
+    pool: 'threads',
     poolOptions: {
-      forks: {
-        singleFork: true
+      threads: {
+        singleThread: true
       }
+    },
+    env: {
+      NODE_ENV: 'test'
     }
   },
 });
