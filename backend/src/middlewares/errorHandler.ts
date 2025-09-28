@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 
-export const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction) => {
+export const errorHandler = (err: any, req: Request, res: Response) => {
   console.error(err.stack);
 
   if (err.name === 'ValidationError') {

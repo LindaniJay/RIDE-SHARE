@@ -1,7 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
-import { User } from './User';
-import { Booking } from './Booking';
 
 export interface VehicleAttributes {
   id: number;

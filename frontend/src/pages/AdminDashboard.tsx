@@ -49,7 +49,7 @@ interface Booking {
 }
 
 const AdminDashboard: React.FC = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Currently unused but may be needed for admin features
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     totalVehicles: 0,

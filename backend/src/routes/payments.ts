@@ -257,8 +257,8 @@ router.post('/create-payfast-payment', authenticateToken, async (req: AuthReques
       custom_str2: req.user!.id.toString(),
     };
     
-    // Generate signature
-    const signature = generatePayfastSignature(payfastData);
+    // Generate signature (currently unused but may be needed for Payfast integration)
+    // const signature = generatePayfastSignature(payfastData);
     // payfastData.signature = signature; // TypeScript error - signature not in type
     
     // Store payment ID in booking
@@ -285,29 +285,14 @@ router.post('/create-payfast-payment', authenticateToken, async (req: AuthReques
 // Payfast notification handler
 router.post('/payfast-notify', async (req, res) => {
   try {
-    const {
-      m_payment_id: _m_payment_id,
-      pf_payment_id: _pf_payment_id,
-      payment_status,
-      item_name: _item_name,
-      item_description: _item_description,
-      amount_gross: _amount_gross,
-      amount_fee: _amount_fee,
-      amount_net: _amount_net,
-      custom_str1: _custom_str1,
-      custom_str2: _custom_str2,
-      name_first: _name_first,
-      name_last: _name_last,
-      email_address: _email_address,
-      signature: _signature
-    } = req.body;
+    const { payment_status } = req.body;
     
     // Verify signature
     const data = { ...req.body };
     delete data.signature;
     const calculatedSignature = generatePayfastSignature(data);
     
-    if (calculatedSignature !== _signature) {
+    if (calculatedSignature !== req.body.signature) {
       return res.status(400).json({ error: 'Invalid signature' });
     }
     
