@@ -11,12 +11,12 @@ interface SEOProps {
 }
 
 const SEO: React.FC<SEOProps> = ({
-  title = "RideShare SA - South Africa's Leading Peer-to-Peer Vehicle Rental Platform",
-  description = "Rent vehicles from trusted hosts across South Africa. Find cars, bakkies, SUVs and more. Safe, secure, and insured rentals with local payment options including Payfast.",
-  keywords = "vehicle rental, car rental, South Africa, peer-to-peer, bakkie rental, SUV rental, Cape Town, Johannesburg, Durban, Payfast, EFT, SnapScan",
-  image = "https://rideshare-sa.co.za/og-image.jpg",
-  url = "https://rideshare-sa.co.za",
-  type = "website"
+  title = 'RideShare SA - South Africa\'s Leading Peer-to-Peer Vehicle Rental Platform',
+  description = 'Rent vehicles from trusted hosts across South Africa. Find cars, bakkies, SUVs and more. Safe, secure, and insured rentals with local payment options including Payfast.',
+  keywords = 'vehicle rental, car rental, South Africa, peer-to-peer, bakkie rental, SUV rental, Cape Town, Johannesburg, Durban, Payfast, EFT, SnapScan',
+  image = 'https://rideshare-sa.co.za/og-image.jpg',
+  url = 'https://rideshare-sa.co.za',
+  type = 'website'
 }) => {
   const fullTitle = title.includes('RideShare SA') ? title : `${title} | RideShare SA`;
   
@@ -70,37 +70,37 @@ const SEO: React.FC<SEOProps> = ({
       {/* Structured Data */}
       <script type="application/ld+json">
         {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          "name": "RideShare SA",
-          "url": "https://rideshare-sa.co.za",
-          "logo": "https://rideshare-sa.co.za/logo.png",
-          "description": "South Africa's leading peer-to-peer vehicle rental platform",
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "123 Long Street",
-            "addressLocality": "Cape Town",
-            "addressRegion": "Western Cape",
-            "postalCode": "8001",
-            "addressCountry": "ZA"
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          'name': 'RideShare SA',
+          'url': 'https://rideshare-sa.co.za',
+          'logo': 'https://rideshare-sa.co.za/logo.png',
+          'description': 'South Africa\'s leading peer-to-peer vehicle rental platform',
+          'address': {
+            '@type': 'PostalAddress',
+            'streetAddress': '123 Long Street',
+            'addressLocality': 'Cape Town',
+            'addressRegion': 'Western Cape',
+            'postalCode': '8001',
+            'addressCountry': 'ZA'
           },
-          "contactPoint": {
-            "@type": "ContactPoint",
-            "telephone": "+27-21-123-4567",
-            "contactType": "customer service",
-            "availableLanguage": ["English", "Afrikaans"]
+          'contactPoint': {
+            '@type': 'ContactPoint',
+            'telephone': '+27-21-123-4567',
+            'contactType': 'customer service',
+            'availableLanguage': ['English', 'Afrikaans']
           },
-          "sameAs": [
-            "https://facebook.com/rideshare-sa",
-            "https://twitter.com/rideshare-sa",
-            "https://instagram.com/rideshare-sa"
+          'sameAs': [
+            'https://facebook.com/rideshare-sa',
+            'https://twitter.com/rideshare-sa',
+            'https://instagram.com/rideshare-sa'
           ],
-          "areaServed": {
-            "@type": "Country",
-            "name": "South Africa"
+          'areaServed': {
+            '@type': 'Country',
+            'name': 'South Africa'
           },
-          "serviceType": "Vehicle Rental",
-          "priceRange": "R150-R2000 per day"
+          'serviceType': 'Vehicle Rental',
+          'priceRange': 'R150-R2000 per day'
         })}
       </script>
     </Helmet>

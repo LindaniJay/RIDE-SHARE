@@ -1,16 +1,16 @@
-import express from "express";
-import { z } from "zod";
-import { Op } from "sequelize";
-import Stripe from "stripe";
-import crypto from "crypto";
-import { Booking } from "../models/Booking";
-import { authenticateToken, AuthRequest } from "../middlewares/auth";
+import express from 'express';
+import { z } from 'zod';
+import { Op } from 'sequelize';
+import Stripe from 'stripe';
+import crypto from 'crypto';
+import { Booking } from '../models/Booking';
+import { authenticateToken, AuthRequest } from '../middlewares/auth';
 
 const router = express.Router();
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
+  apiVersion: '2023-10-16',
 });
 
 // Payfast configuration
@@ -18,7 +18,7 @@ const PAYFAST_CONFIG = {
   merchantId: process.env.PAYFAST_MERCHANT_ID!,
   merchantKey: process.env.PAYFAST_MERCHANT_KEY!,
   passphrase: process.env.PAYFAST_PASSPHRASE!,
-  sandbox: process.env.NODE_ENV !== "production",
+  sandbox: process.env.NODE_ENV !== 'production',
   returnUrl: process.env.PAYFAST_RETURN_URL!,
   cancelUrl: process.env.PAYFAST_CANCEL_URL!,
   notifyUrl: process.env.PAYFAST_NOTIFY_URL!,
@@ -27,15 +27,15 @@ const PAYFAST_CONFIG = {
 // Generate Payfast signature
 const generatePayfastSignature = (data: any) => {
   const string = Object.keys(data)
-    .filter(key => data[key] !== "" && key !== "signature")
+    .filter(key => data[key] !== '' && key !== 'signature')
     .sort()
     .map(key => `${key}=${encodeURIComponent(data[key])}`)
-    .join("&");
+    .join('&');
   
   return crypto
-    .createHash("md5")
+    .createHash('md5')
     .update(string + `&passphrase=${PAYFAST_CONFIG.passphrase}`)
-    .digest("hex");
+    .digest('hex');
 };
 
 // Validation schemas
@@ -58,7 +58,7 @@ const createPayfastPaymentSchema = z.object({
 });
 
 // Create payment intent
-router.post("/create-payment-intent", authenticateToken, async (req: AuthRequest, res) => {
+router.post('/create-payment-intent', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { bookingId, amount } = createPaymentIntentSchema.parse(req.body);
     
@@ -71,17 +71,17 @@ router.post("/create-payment-intent", authenticateToken, async (req: AuthRequest
     });
     
     if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
+      return res.status(404).json({ error: 'Booking not found' });
     }
     
-    if (booking.status !== "pending") {
-      return res.status(400).json({ error: "Booking is not in pending status" });
+    if (booking.status !== 'pending') {
+      return res.status(400).json({ error: 'Booking is not in pending status' });
     }
     
     // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
-      currency: "usd",
+      currency: 'usd',
       metadata: {
         bookingId: bookingId.toString(),
         renterId: req.user!.id.toString(),
@@ -94,22 +94,22 @@ router.post("/create-payment-intent", authenticateToken, async (req: AuthRequest
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: "Validation error", details: error.errors });
+      return res.status(400).json({ error: 'Validation error', details: error.errors });
     }
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Confirm payment
-router.post("/confirm-payment", authenticateToken, async (req: AuthRequest, res) => {
+router.post('/confirm-payment', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { paymentIntentId } = confirmPaymentSchema.parse(req.body);
     
     // Retrieve payment intent from Stripe
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     
-    if (paymentIntent.status !== "succeeded") {
-      return res.status(400).json({ error: "Payment not successful" });
+    if (paymentIntent.status !== 'succeeded') {
+      return res.status(400).json({ error: 'Payment not successful' });
     }
     
     // Update booking status
@@ -117,32 +117,32 @@ router.post("/confirm-payment", authenticateToken, async (req: AuthRequest, res)
     const booking = await Booking.findByPk(bookingId);
     
     if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
+      return res.status(404).json({ error: 'Booking not found' });
     }
     
     if (booking.renterId !== req.user!.id) {
-      return res.status(403).json({ error: "Unauthorized" });
+      return res.status(403).json({ error: 'Unauthorized' });
     }
     
     await booking.update({ 
-      status: "confirmed",
+      status: 'confirmed',
       // paymentIntentId: paymentIntentId, // Field not in new model
     });
     
     res.json({ 
-      message: "Payment confirmed successfully",
+      message: 'Payment confirmed successfully',
       booking: booking,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: "Validation error", details: error.errors });
+      return res.status(400).json({ error: 'Validation error', details: error.errors });
     }
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Get payment history
-router.get("/history", authenticateToken, async (req: AuthRequest, res) => {
+router.get('/history', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -150,7 +150,7 @@ router.get("/history", authenticateToken, async (req: AuthRequest, res) => {
     const bookings = await Booking.findAndCountAll({
       where: { 
         renterId: req.user!.id,
-        status: ["confirmed", "completed"],
+        status: ['confirmed', 'completed'],
         paymentIntentId: { [Op.ne]: null },
       } as any,
       limit: Number(limit),
@@ -168,12 +168,12 @@ router.get("/history", authenticateToken, async (req: AuthRequest, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Refund payment
-router.post("/refund", authenticateToken, async (req: AuthRequest, res) => {
+router.post('/refund', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { bookingId } = req.body;
     
@@ -181,12 +181,12 @@ router.post("/refund", authenticateToken, async (req: AuthRequest, res) => {
       where: { 
         id: bookingId,
         renterId: req.user!.id,
-        status: "confirmed",
+        status: 'confirmed',
       },
     });
     
     if (!booking) {
-      return res.status(404).json({ error: "Booking not found or not eligible for refund" });
+      return res.status(404).json({ error: 'Booking not found or not eligible for refund' });
     }
     
     // Payment fields not available in new model
@@ -201,21 +201,21 @@ router.post("/refund", authenticateToken, async (req: AuthRequest, res) => {
     
     // Update booking status
     await booking.update({ 
-      status: "cancelled",
+      status: 'cancelled',
       // refundId: refund.id, // Field not in new model
     });
     
     res.json({ 
-      message: "Refund processed successfully",
+      message: 'Refund processed successfully',
       refundId: refund.id,
     });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Create Payfast payment
-router.post("/create-payfast-payment", authenticateToken, async (req: AuthRequest, res) => {
+router.post('/create-payfast-payment', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { bookingId, amount, firstName, lastName, email, cellNumber } = createPayfastPaymentSchema.parse(req.body);
     
@@ -228,11 +228,11 @@ router.post("/create-payfast-payment", authenticateToken, async (req: AuthReques
     });
     
     if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
+      return res.status(404).json({ error: 'Booking not found' });
     }
     
-    if (booking.status !== "pending") {
-      return res.status(400).json({ error: "Booking is not in pending status" });
+    if (booking.status !== 'pending') {
+      return res.status(400).json({ error: 'Booking is not in pending status' });
     }
     
     // Generate unique payment ID
@@ -248,7 +248,7 @@ router.post("/create-payfast-payment", authenticateToken, async (req: AuthReques
       name_first: firstName,
       name_last: lastName,
       email_address: email,
-      cell_number: cellNumber || "",
+      cell_number: cellNumber || '',
       m_payment_id: paymentId,
       amount: amount.toFixed(2),
       item_name: `RideShare SA - Booking #${bookingId}`,
@@ -271,35 +271,35 @@ router.post("/create-payfast-payment", authenticateToken, async (req: AuthReques
       paymentId,
       payfastData,
       redirectUrl: PAYFAST_CONFIG.sandbox 
-        ? "https://sandbox.payfast.co.za/eng/process" 
-        : "https://www.payfast.co.za/eng/process"
+        ? 'https://sandbox.payfast.co.za/eng/process' 
+        : 'https://www.payfast.co.za/eng/process'
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: "Validation error", details: error.errors });
+      return res.status(400).json({ error: 'Validation error', details: error.errors });
     }
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Payfast notification handler
-router.post("/payfast-notify", async (req, res) => {
+router.post('/payfast-notify', async (req, res) => {
   try {
     const {
-      m_payment_id,
-      pf_payment_id,
+      m_payment_id: _m_payment_id,
+      pf_payment_id: _pf_payment_id,
       payment_status,
-      item_name,
-      item_description,
-      amount_gross,
-      amount_fee,
-      amount_net,
-      custom_str1,
-      custom_str2,
-      name_first,
-      name_last,
-      email_address,
-      signature
+      item_name: _item_name,
+      item_description: _item_description,
+      amount_gross: _amount_gross,
+      amount_fee: _amount_fee,
+      amount_net: _amount_net,
+      custom_str1: _custom_str1,
+      custom_str2: _custom_str2,
+      name_first: _name_first,
+      name_last: _name_last,
+      email_address: _email_address,
+      signature: _signature
     } = req.body;
     
     // Verify signature
@@ -307,8 +307,8 @@ router.post("/payfast-notify", async (req, res) => {
     delete data.signature;
     const calculatedSignature = generatePayfastSignature(data);
     
-    if (calculatedSignature !== signature) {
-      return res.status(400).json({ error: "Invalid signature" });
+    if (calculatedSignature !== _signature) {
+      return res.status(400).json({ error: 'Invalid signature' });
     }
     
     // Find booking
@@ -319,13 +319,13 @@ router.post("/payfast-notify", async (req, res) => {
     });
     
     if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
+      return res.status(404).json({ error: 'Booking not found' });
     }
     
-    if (payment_status === "COMPLETE") {
+    if (payment_status === 'COMPLETE') {
       // Update booking status
       await booking.update({
-        status: "confirmed",
+        status: 'confirmed',
         // paymentMethod: "payfast", // Field not in new model
         // paymentStatus: "completed", // Field not in new model
         // paymentReference: pf_payment_id, // Field not in new model
@@ -334,38 +334,38 @@ router.post("/payfast-notify", async (req, res) => {
         // hostAmount: parseFloat(amount_net), // Field not in new model
       });
       
-      res.status(200).send("OK");
+      res.status(200).send('OK');
     } else {
       // Payment failed
       await booking.update({
-        status: "cancelled",
+        status: 'cancelled',
         // paymentStatus: "failed", // Field not in new model
       });
       
-      res.status(200).send("OK");
+      res.status(200).send('OK');
     }
   } catch (error) {
-    console.error("Payfast notification error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Payfast notification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Get payment methods
-router.get("/methods", (req, res) => {
+router.get('/methods', (req, res) => {
   res.json({
     methods: [
       {
-        id: "stripe",
-        name: "Credit Card (International)",
-        description: "Visa, Mastercard, American Express",
-        icon: "💳",
+        id: 'stripe',
+        name: 'Credit Card (International)',
+        description: 'Visa, Mastercard, American Express',
+        icon: '💳',
         supported: true
       },
       {
-        id: "payfast",
-        name: "Payfast (South Africa)",
-        description: "EFT, Credit Card, SnapScan, Zapper",
-        icon: "🇿🇦",
+        id: 'payfast',
+        name: 'Payfast (South Africa)',
+        description: 'EFT, Credit Card, SnapScan, Zapper',
+        icon: '🇿🇦',
         supported: true
       }
     ]

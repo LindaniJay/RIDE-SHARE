@@ -1,4 +1,4 @@
-import { sequelize } from '../config/database';
+// import { sequelize } from '../config/database';
 import { User } from '../models/User';
 import { Listing } from '../models/Listing';
 import bcrypt from 'bcryptjs';
@@ -28,7 +28,7 @@ const seedData = async () => {
       phoneNumber: '+27 11 987 6543'
     });
 
-    const renter1 = await User.create({
+    await User.create({
       firstName: 'Mike',
       lastName: 'Wilson',
       email: 'mike@example.com',
@@ -180,7 +180,7 @@ const seedData = async () => {
 
     console.log('✅ Database seeded successfully!');
     console.log(`📊 Created ${listings.length} vehicle listings`);
-    console.log(`👥 Created 3 users (2 hosts, 1 renter)`);
+    console.log('👥 Created 3 users (2 hosts, 1 renter)');
     
   } catch (error) {
     console.error('❌ Error seeding database:', error);

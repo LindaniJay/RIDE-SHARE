@@ -1,38 +1,38 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import request from "supertest";
-import app from "../src/app";
+import { describe, it, expect } from 'vitest';
+import request from 'supertest';
+import app from '../app';
 
-describe("Auth API", () => {
-  it("should register a new user", async () => {
+describe('Auth API', () => {
+  it('should register a new user', async () => {
     const userData = {
-      email: "test@example.com",
-      password: "password123",
-      firstName: "Test",
-      lastName: "User",
-      role: "renter",
+      email: 'test@example.com',
+      password: 'password123',
+      firstName: 'Test',
+      lastName: 'User',
+      role: 'renter',
     };
 
     const response = await request(app)
-      .post("/api/auth/register")
+      .post('/api/auth/register')
       .send(userData);
 
     expect(response.status).toBe(201);
-    expect(response.body).toHaveProperty("user");
-    expect(response.body).toHaveProperty("accessToken");
+    expect(response.body).toHaveProperty('user');
+    expect(response.body).toHaveProperty('accessToken');
   });
 
-  it("should login with valid credentials", async () => {
+  it('should login with valid credentials', async () => {
     const loginData = {
-      email: "test@example.com",
-      password: "password123",
+      email: 'test@example.com',
+      password: 'password123',
     };
 
     const response = await request(app)
-      .post("/api/auth/login")
+      .post('/api/auth/login')
       .send(loginData);
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("user");
-    expect(response.body).toHaveProperty("accessToken");
+    expect(response.body).toHaveProperty('user');
+    expect(response.body).toHaveProperty('accessToken');
   });
 });

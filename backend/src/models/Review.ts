@@ -1,7 +1,5 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/database";
-import { User } from "./User";
-import { Listing } from "./Listing";
+import { DataTypes, Model, Optional } from 'sequelize';
+import { sequelize } from '../config/database';
 
 export interface ReviewAttributes {
   id: number;
@@ -13,7 +11,7 @@ export interface ReviewAttributes {
   updatedAt?: Date;
 }
 
-export interface ReviewCreationAttributes extends Optional<ReviewAttributes, "id" | "createdAt" | "updatedAt"> {}
+export interface ReviewCreationAttributes extends Optional<ReviewAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
 export class Review extends Model<ReviewAttributes, ReviewCreationAttributes> implements ReviewAttributes {
   public id!: number;
@@ -36,16 +34,16 @@ Review.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "listings",
-        key: "id",
+        model: 'listings',
+        key: 'id',
       },
     },
     renterId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "users",
-        key: "id",
+        model: 'users',
+        key: 'id',
       },
     },
     rating: {
@@ -63,8 +61,8 @@ Review.init(
   },
   {
     sequelize,
-    modelName: "Review",
-    tableName: "reviews",
+    modelName: 'Review',
+    tableName: 'reviews',
   }
 );
 

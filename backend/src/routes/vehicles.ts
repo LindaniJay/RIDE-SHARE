@@ -1,13 +1,12 @@
-import express from "express";
-import { Op } from "sequelize";
-import { Listing } from "../models/Listing";
-import { User } from "../models/User";
-import { Vehicle } from "../models/Vehicle";
+import express from 'express';
+import { Op } from 'sequelize';
+import { Listing } from '../models/Listing';
+import { User } from '../models/User';
 
 const router = express.Router();
 
 // Get all vehicles (redirect to listings)
-router.get("/", async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { page = 1, limit = 10, search, minPrice, maxPrice, location, type, status } = req.query;
     
@@ -51,8 +50,8 @@ router.get("/", async (req, res) => {
       include: [
         {
           model: User,
-          as: "host",
-          attributes: ["id", "firstName", "lastName", "email", "phoneNumber"],
+          as: 'host',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber'],
         },
       ],
       limit: Number(limit),
@@ -70,13 +69,13 @@ router.get("/", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching vehicles:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Error fetching vehicles:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Search vehicles endpoint
-router.get("/search", async (req, res) => {
+router.get('/search', async (req, res) => {
   // Just call the main vehicles logic directly
   try {
     const vehicles = await Listing.findAll({
@@ -91,13 +90,13 @@ router.get("/search", async (req, res) => {
     });
     res.json(vehicles);
   } catch (error) {
-    console.error("Error fetching vehicles:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Error fetching vehicles:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Get vehicle by ID
-router.get("/:id", async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -105,20 +104,20 @@ router.get("/:id", async (req, res) => {
       include: [
         {
           model: User,
-          as: "host",
-          attributes: ["id", "firstName", "lastName", "email", "phoneNumber"],
+          as: 'host',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber'],
         },
       ],
     });
     
     if (!vehicle) {
-      return res.status(404).json({ error: "Vehicle not found" });
+      return res.status(404).json({ error: 'Vehicle not found' });
     }
     
     res.json(vehicle);
   } catch (error) {
-    console.error("Error fetching vehicle:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Error fetching vehicle:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

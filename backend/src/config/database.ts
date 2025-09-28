@@ -1,5 +1,5 @@
-import { Sequelize } from "sequelize";
-import dotenv from "dotenv";
+import { Sequelize } from 'sequelize';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -22,8 +22,8 @@ if (isCI && databaseUrl) {
 } else if (isTest) {
   // Use in-memory SQLite for tests to avoid native module issues
   sequelize = new Sequelize({
-    dialect: "sqlite",
-    storage: ":memory:",
+    dialect: 'sqlite',
+    storage: ':memory:',
     logging: false,
     define: {
       timestamps: true,
@@ -39,9 +39,9 @@ if (isCI && databaseUrl) {
 } else {
   // Use SQLite locally
   sequelize = new Sequelize({
-    dialect: "sqlite",
-    storage: "./database.sqlite",
-    logging: process.env.NODE_ENV === "development" ? console.log : false,
+    dialect: 'sqlite',
+    storage: './database.sqlite',
+    logging: process.env.NODE_ENV === 'development' ? console.log : false,
     define: {
       timestamps: true,
       underscored: true,

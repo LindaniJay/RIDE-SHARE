@@ -1,7 +1,5 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/database";
-import { User } from "./User";
-import { Listing } from "./Listing";
+import { DataTypes, Model, Optional } from 'sequelize';
+import { sequelize } from '../config/database';
 
 export interface BookingAttributes {
   id: number;
@@ -10,12 +8,12 @@ export interface BookingAttributes {
   startDate: Date;
   endDate: Date;
   totalPrice: number;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export interface BookingCreationAttributes extends Optional<BookingAttributes, "id" | "createdAt" | "updatedAt"> {}
+export interface BookingCreationAttributes extends Optional<BookingAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
 export class Booking extends Model<BookingAttributes, BookingCreationAttributes> implements BookingAttributes {
   public id!: number;
@@ -24,7 +22,7 @@ export class Booking extends Model<BookingAttributes, BookingCreationAttributes>
   public startDate!: Date;
   public endDate!: Date;
   public totalPrice!: number;
-  public status!: "pending" | "confirmed" | "cancelled" | "completed";
+  public status!: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -40,16 +38,16 @@ Booking.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "listings",
-        key: "id",
+        model: 'listings',
+        key: 'id',
       },
     },
     renterId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "users",
-        key: "id",
+        model: 'users',
+        key: 'id',
       },
     },
     startDate: {
@@ -65,15 +63,15 @@ Booking.init(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM("pending", "confirmed", "cancelled", "completed"),
+      type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'completed'),
       allowNull: false,
-      defaultValue: "pending",
+      defaultValue: 'pending',
     },
   },
   {
     sequelize,
-    modelName: "Booking",
-    tableName: "bookings",
+    modelName: 'Booking',
+    tableName: 'bookings',
   }
 );
 

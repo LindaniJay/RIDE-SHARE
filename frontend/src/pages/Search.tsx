@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { apiClient } from "../api/client";
-import SEO from "../components/SEO";
-import CarVideoBackground from "../components/CarVideoBackground";
-import Glassmorphism from "../components/Glassmorphism";
-import GlassInput from "../components/GlassInput";
-import GlassButton from "../components/GlassButton";
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { apiClient } from '../api/client';
+import SEO from '../components/SEO';
+import CarVideoBackground from '../components/CarVideoBackground';
+import Glassmorphism from '../components/Glassmorphism';
+import GlassInput from '../components/GlassInput';
+import GlassButton from '../components/GlassButton';
 
 interface Vehicle {
   id: string;
@@ -35,14 +35,14 @@ const Search: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const [filters, setFilters] = useState({
-    location: searchParams.get("location") || "",
-    pickupDate: searchParams.get("pickupDate") || "",
-    returnDate: searchParams.get("returnDate") || "",
-    vehicleType: searchParams.get("vehicleType") || "",
-    minPrice: "",
-    maxPrice: "",
+    location: searchParams.get('location') || '',
+    pickupDate: searchParams.get('pickupDate') || '',
+    returnDate: searchParams.get('returnDate') || '',
+    vehicleType: searchParams.get('vehicleType') || '',
+    minPrice: '',
+    maxPrice: '',
     features: [] as string[],
-    sortBy: "price",
+    sortBy: 'price',
   });
 
   useEffect(() => {
@@ -58,8 +58,8 @@ const Search: React.FC = () => {
       });
       setVehicles(response.data.vehicles || []);
     } catch (err) {
-      console.error("Error fetching vehicles:", err);
-      setError("Failed to load vehicles. Please try again.");
+      console.error('Error fetching vehicles:', err);
+      setError('Failed to load vehicles. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -83,30 +83,30 @@ const Search: React.FC = () => {
 
   const applyFilters = () => {
     const params = new URLSearchParams();
-    if (filters.location) params.append("location", filters.location);
-    if (filters.pickupDate) params.append("pickupDate", filters.pickupDate);
-    if (filters.returnDate) params.append("returnDate", filters.returnDate);
-    if (filters.vehicleType) params.append("vehicleType", filters.vehicleType);
-    if (filters.minPrice) params.append("minPrice", filters.minPrice);
-    if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
+    if (filters.location) params.append('location', filters.location);
+    if (filters.pickupDate) params.append('pickupDate', filters.pickupDate);
+    if (filters.returnDate) params.append('returnDate', filters.returnDate);
+    if (filters.vehicleType) params.append('vehicleType', filters.vehicleType);
+    if (filters.minPrice) params.append('minPrice', filters.minPrice);
+    if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
     if (filters.features.length > 0)
-      params.append("features", filters.features.join(","));
-    if (filters.sortBy) params.append("sortBy", filters.sortBy);
+      params.append('features', filters.features.join(','));
+    if (filters.sortBy) params.append('sortBy', filters.sortBy);
     navigate(`/search?${params.toString()}`);
   };
 
   const clearFilters = () => {
     setFilters({
-      location: "",
-      pickupDate: "",
-      returnDate: "",
-      vehicleType: "",
-      minPrice: "",
-      maxPrice: "",
+      location: '',
+      pickupDate: '',
+      returnDate: '',
+      vehicleType: '',
+      minPrice: '',
+      maxPrice: '',
       features: [],
-      sortBy: "price",
+      sortBy: 'price',
     });
-    navigate("/search");
+    navigate('/search');
   };
 
 
@@ -145,11 +145,11 @@ const Search: React.FC = () => {
                     onClick={() => setShowFilters(!showFilters)}
                     className="lg:hidden text-white/80 hover:text-white"
                   >
-                    {showFilters ? "Hide" : "Show"}
+                    {showFilters ? 'Hide' : 'Show'}
                   </button>
                 </div>
 
-                <div className={`space-y-6 ${showFilters ? "block" : "hidden lg:block"}`}>
+                <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
                   {/* Location */}
                   <div>
                     <label className="block text-sm font-medium text-white/80 mb-2">
@@ -159,7 +159,7 @@ const Search: React.FC = () => {
                       type="text"
                       placeholder="e.g., Cape Town"
                       value={filters.location}
-                      onChange={(e) => handleFilterChange("location", e.target.value)}
+                      onChange={(e) => handleFilterChange('location', e.target.value)}
                       icon="📍"
                     />
                   </div>
@@ -172,7 +172,7 @@ const Search: React.FC = () => {
                     <GlassInput
                       type="date"
                       value={filters.pickupDate}
-                      onChange={(e) => handleFilterChange("pickupDate", e.target.value)}
+                      onChange={(e) => handleFilterChange('pickupDate', e.target.value)}
                       icon="🗓️"
                     />
                   </div>
@@ -183,7 +183,7 @@ const Search: React.FC = () => {
                     <GlassInput
                       type="date"
                       value={filters.returnDate}
-                      onChange={(e) => handleFilterChange("returnDate", e.target.value)}
+                      onChange={(e) => handleFilterChange('returnDate', e.target.value)}
                       icon="🗓️"
                     />
                   </div>
@@ -195,7 +195,7 @@ const Search: React.FC = () => {
                     </label>
                     <select
                       value={filters.vehicleType}
-                      onChange={(e) => handleFilterChange("vehicleType", e.target.value)}
+                      onChange={(e) => handleFilterChange('vehicleType', e.target.value)}
                       className="w-full px-4 py-3 rounded-xl text-white placeholder-white/50 bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 dark:focus:ring-white/10 transition-all duration-300 ease-in-out"
                     >
                       <option value="" className="bg-gray-800 text-white">All Types</option>
@@ -216,14 +216,14 @@ const Search: React.FC = () => {
                         type="number"
                         placeholder="Min"
                         value={filters.minPrice}
-                        onChange={(e) => handleFilterChange("minPrice", e.target.value)}
+                        onChange={(e) => handleFilterChange('minPrice', e.target.value)}
                         icon="R"
                       />
                       <GlassInput
                         type="number"
                         placeholder="Max"
                         value={filters.maxPrice}
-                        onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
+                        onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
                         icon="R"
                       />
                     </div>
@@ -236,11 +236,11 @@ const Search: React.FC = () => {
                     </label>
                     <div className="space-y-2">
                       {[
-                        "Air Conditioning",
-                        "Automatic",
-                        "GPS",
-                        "Bluetooth",
-                        "Child Seat",
+                        'Air Conditioning',
+                        'Automatic',
+                        'GPS',
+                        'Bluetooth',
+                        'Child Seat',
                       ].map((feature) => (
                         <div key={feature} className="flex items-center">
                           <input
@@ -266,7 +266,7 @@ const Search: React.FC = () => {
                   </GlassButton>
                   {Object.values(filters).some(
                     (val) =>
-                      (typeof val === "string" && val !== "") ||
+                      (typeof val === 'string' && val !== '') ||
                       (Array.isArray(val) && val.length > 0)
                   ) && (
                     <GlassButton onClick={clearFilters} className="w-full mt-2" variant="outline" icon="🧹">
@@ -309,7 +309,7 @@ const Search: React.FC = () => {
                       </span>
                       <select
                         value={filters.sortBy}
-                        onChange={(e) => handleFilterChange("sortBy", e.target.value)}
+                        onChange={(e) => handleFilterChange('sortBy', e.target.value)}
                         className="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       >
                         <option value="price">Price (Low to High)</option>

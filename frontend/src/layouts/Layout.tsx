@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
-import Chatbot from "../components/Chatbot";
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import Chatbot from '../components/Chatbot';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,15 +19,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const navItems = [
-    { name: "Home", path: "/" },
-    { name: "Browse Rentals", path: "/search" },
-    { name: "List Your Vehicle", path: "/dashboard/host" },
-    { name: "About Us", path: "/about" },
-    { name: "Contact", path: "/contact" },
+    { name: 'Home', path: '/' },
+    { name: 'Browse Rentals', path: '/search' },
+    { name: 'List Your Vehicle', path: '/dashboard/host' },
+    { name: 'About Us', path: '/about' },
+    { name: 'Contact', path: '/contact' },
   ];
 
   return (
-    <div className={`min-h-screen ${isDark ? "dark bg-gray-900" : "bg-gray-50"}`}>
+    <div className={`min-h-screen ${isDark ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       <nav className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -46,8 +46,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   to={item.path}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive(item.path)
-                      ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20"
-                      : "text-gray-700 dark:text-gray-200 hover:text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                      : 'text-gray-700 dark:text-gray-200 hover:text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   {item.name}
@@ -59,9 +59,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
-                {isDark ? "☀️" : "🌙"}
+                {isDark ? '☀️' : '🌙'}
               </button>
               
               {user ? (
@@ -69,9 +69,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Link
                     to="/dashboard"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive("/dashboard") || location.pathname.startsWith("/dashboard")
-                        ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20"
-                        : "text-gray-700 dark:text-gray-200 hover:text-primary-600"
+                      isActive('/dashboard') || location.pathname.startsWith('/dashboard')
+                        ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                        : 'text-gray-700 dark:text-gray-200 hover:text-primary-600'
                     }`}
                   >
                     Dashboard
@@ -88,9 +88,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Link
                     to="/login"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive("/login")
-                        ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20"
-                        : "text-gray-700 dark:text-gray-200 hover:text-primary-600"
+                      isActive('/login')
+                        ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                        : 'text-gray-700 dark:text-gray-200 hover:text-primary-600'
                     }`}
                   >
                     Login
@@ -127,8 +127,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
                       isActive(item.path)
-                        ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20"
-                        : "text-gray-700 dark:text-gray-200 hover:text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                        : 'text-gray-700 dark:text-gray-200 hover:text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                     }`}
                   >
                     {item.name}
@@ -140,9 +140,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       to="/dashboard"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                        isActive("/dashboard") || location.pathname.startsWith("/dashboard")
-                          ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20"
-                          : "text-gray-700 dark:text-gray-200 hover:text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        isActive('/dashboard') || location.pathname.startsWith('/dashboard')
+                          ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                          : 'text-gray-700 dark:text-gray-200 hover:text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                       }`}
                     >
                       Dashboard
@@ -163,9 +163,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       to="/login"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                        isActive("/login")
-                          ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20"
-                          : "text-gray-700 dark:text-gray-200 hover:text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        isActive('/login')
+                          ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                          : 'text-gray-700 dark:text-gray-200 hover:text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                       }`}
                     >
                       Login

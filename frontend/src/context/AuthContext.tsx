@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import axios from "axios";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import axios from 'axios';
 
 interface User {
   id: number;
   email: string;
   firstName: string;
   lastName: string;
-  role: "renter" | "host" | "admin";
+  role: 'renter' | 'host' | 'admin';
   isEmailVerified: boolean;
   phone?: string;
 }
@@ -29,7 +29,7 @@ interface RegisterData {
   firstName: string;
   lastName: string;
   phone?: string;
-  role?: "renter" | "host";
+  role?: 'renter' | 'host';
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,7 +37,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get("/api/auth/me");
+      const response = await axios.get('/api/auth/me');
       setUser(response.data.user);
     } catch (error) {
       setUser(null);
@@ -62,27 +62,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const login = async (email: string, password: string) => {
-    const response = await axios.post("/api/auth/login", { email, password });
+    const response = await axios.post('/api/auth/login', { email, password });
     setUser(response.data.user);
-    localStorage.setItem("accessToken", response.data.accessToken);
+    localStorage.setItem('accessToken', response.data.accessToken);
   };
 
   const register = async (userData: RegisterData) => {
-    const response = await axios.post("/api/auth/register", userData);
+    const response = await axios.post('/api/auth/register', userData);
     setUser(response.data.user);
-    localStorage.setItem("accessToken", response.data.accessToken);
+    localStorage.setItem('accessToken', response.data.accessToken);
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("accessToken");
-    axios.post("/api/auth/logout");
+    localStorage.removeItem('accessToken');
+    axios.post('/api/auth/logout');
   };
 
   // Role-based helper functions
-  const isAdmin = () => user?.role === "admin";
-  const isHost = () => user?.role === "host";
-  const isRenter = () => user?.role === "renter";
+  const isAdmin = () => user?.role === 'admin';
+  const isHost = () => user?.role === 'host';
+  const isRenter = () => user?.role === 'renter';
   const hasRole = (role: string) => user?.role === role;
 
   const value = {

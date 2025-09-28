@@ -1,7 +1,7 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/database";
-import { User } from "./User";
-import { Booking } from "./Booking";
+import { DataTypes, Model, Optional } from 'sequelize';
+import { sequelize } from '../config/database';
+import { User } from './User';
+import { Booking } from './Booking';
 
 export interface VehicleAttributes {
   id: number;
@@ -9,7 +9,7 @@ export interface VehicleAttributes {
   make: string;
   model: string;
   year: number;
-  type: "car" | "truck" | "trailer" | "motorcycle" | "van" | "suv";
+  type: 'car' | 'truck' | 'trailer' | 'motorcycle' | 'van' | 'suv';
   dailyRate: number;
   location: string;
   latitude?: number;
@@ -22,7 +22,7 @@ export interface VehicleAttributes {
   updatedAt?: Date;
 }
 
-export interface VehicleCreationAttributes extends Optional<VehicleAttributes, "id" | "createdAt" | "updatedAt"> {}
+export interface VehicleCreationAttributes extends Optional<VehicleAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
 export class Vehicle extends Model<VehicleAttributes, VehicleCreationAttributes> implements VehicleAttributes {
   public id!: number;
@@ -30,7 +30,7 @@ export class Vehicle extends Model<VehicleAttributes, VehicleCreationAttributes>
   public make!: string;
   public model!: string;
   public year!: number;
-  public type!: "car" | "truck" | "trailer" | "motorcycle" | "van" | "suv";
+  public type!: 'car' | 'truck' | 'trailer' | 'motorcycle' | 'van' | 'suv';
   public dailyRate!: number;
   public location!: string;
   public latitude?: number;
@@ -54,8 +54,8 @@ Vehicle.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "users",
-        key: "id",
+        model: 'users',
+        key: 'id',
       },
     },
     make: {
@@ -75,7 +75,7 @@ Vehicle.init(
       },
     },
     type: {
-      type: DataTypes.ENUM("car", "truck", "trailer", "motorcycle", "van", "suv"),
+      type: DataTypes.ENUM('car', 'truck', 'trailer', 'motorcycle', 'van', 'suv'),
       allowNull: false,
     },
     dailyRate: {
@@ -119,11 +119,9 @@ Vehicle.init(
   },
   {
     sequelize,
-    modelName: "Vehicle",
-    tableName: "vehicles",
+    modelName: 'Vehicle',
+    tableName: 'vehicles',
   }
 );
 
-// Define associations
-Vehicle.belongsTo(User, { foreignKey: "hostId", as: "host" });
-Vehicle.hasMany(Booking, { foreignKey: "vehicleId", as: "bookings" });
+// Associations are defined in models/index.ts

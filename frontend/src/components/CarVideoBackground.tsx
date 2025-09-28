@@ -9,7 +9,7 @@ interface CarVideoBackgroundProps {
 }
 
 const CarVideoBackground: React.FC<CarVideoBackgroundProps> = ({
-  className = "",
+  className = '',
   overlay = true,
   overlayOpacity = 0.4,
   children,
@@ -20,16 +20,16 @@ const CarVideoBackground: React.FC<CarVideoBackgroundProps> = ({
 
   // Multiple car video sources for variety
   const videoSources = [
-    "https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c0fd273d2c6d9a064f3ae35579b2bbdf&profile_id=165&oauth2_token_id=57447761",
-    "https://player.vimeo.com/external/456789012.sd.mp4?s=1234567890abcdef&profile_id=165&oauth2_token_id=57447761",
-    "https://player.vimeo.com/external/789012345.sd.mp4?s=abcdef1234567890&profile_id=165&oauth2_token_id=57447761"
+    'https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c0fd273d2c6d9a064f3ae35579b2bbdf&profile_id=165&oauth2_token_id=57447761',
+    'https://player.vimeo.com/external/456789012.sd.mp4?s=1234567890abcdef&profile_id=165&oauth2_token_id=57447761',
+    'https://player.vimeo.com/external/789012345.sd.mp4?s=abcdef1234567890&profile_id=165&oauth2_token_id=57447761'
   ];
 
   // Fallback images for different variants
   const fallbackImages = {
-    hero: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-    subtle: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-    minimal: "https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+    hero: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+    subtle: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+    minimal: 'https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
   };
 
   // Video settings based on variant

@@ -1,11 +1,11 @@
-import express from "express";
-import { z } from "zod";
-import { Op } from "sequelize";
-import { Listing } from "../models/Listing";
-import { User } from "../models/User";
-import { authenticateToken, AuthRequest } from "../middlewares/auth";
-import { cacheService } from "../services/cache";
-import { sequelize } from "../config/database";
+import express from 'express';
+import { z } from 'zod';
+import { Op } from 'sequelize';
+import { Listing } from '../models/Listing';
+import { User } from '../models/User';
+import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { cacheService } from '../services/cache';
+import { sequelize } from '../config/database';
 
 const router = express.Router();
 
@@ -15,9 +15,9 @@ const createListingSchema = z.object({
   make: z.string().min(1).max(50),
   model: z.string().min(1).max(50),
   year: z.number().int().min(1900).max(new Date().getFullYear() + 1),
-  type: z.enum(["car", "trailer", "bakkie", "truck", "motorcycle", "van", "suv"]),
-  transmission: z.enum(["manual", "automatic"]),
-  fuelType: z.enum(["petrol", "diesel", "electric"]),
+  type: z.enum(['car', 'trailer', 'bakkie', 'truck', 'motorcycle', 'van', 'suv']),
+  transmission: z.enum(['manual', 'automatic']),
+  fuelType: z.enum(['petrol', 'diesel', 'electric']),
   seats: z.number().int().min(1).max(50),
   features: z.array(z.string()).optional(),
   pricePerDay: z.number().int().min(0).max(10000),
@@ -32,7 +32,7 @@ const createListingSchema = z.object({
 const updateListingSchema = createListingSchema.partial();
 
 // Enhanced search with caching
-router.get("/", async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { 
       page = 1, 
@@ -68,7 +68,7 @@ router.get("/", async (req, res) => {
     
     // Only show approved listings to public
     if (!req.query.admin) {
-      whereClause.status = "approved";
+      whereClause.status = 'approved';
     }
     
     // Enhanced search functionality
@@ -164,8 +164,8 @@ router.get("/", async (req, res) => {
       include: [
         {
           model: User,
-          as: "host",
-          attributes: ["id", "firstName", "lastName", "email", "phoneNumber", "rating", "profileImage"],
+          as: 'host',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'rating', 'profileImage'],
         },
       ],
       limit: Number(limit),
@@ -209,22 +209,22 @@ router.get("/", async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('Enhanced listings error:', error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Helper function to calculate distance between two coordinates
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Earth's radius in kilometers
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
+// Helper function to calculate distance between two coordinates (currently unused)
+// function _calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+//   const R = 6371; // Earth's radius in kilometers
+//   const dLat = (lat2 - lat1) * Math.PI / 180;
+//   const dLon = (lon2 - lon1) * Math.PI / 180;
+//   const a = 
+//     Math.sin(dLat/2) * Math.sin(dLat/2) +
+//     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+//     Math.sin(dLon/2) * Math.sin(dLon/2);
+//   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+//   return R * c;
+// }
 
 // Helper functions for filter options
 async function getAvailableTypes() {
@@ -258,29 +258,29 @@ async function getPriceRange() {
 }
 
 // Enhanced listing creation with validation
-router.post("/", authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const listingData = createListingSchema.parse(req.body);
     
     // Additional business logic validation
     if (listingData.pricePerDay < 50) {
       return res.status(400).json({ 
-        error: "Price too low", 
-        message: "Minimum price per day is R50" 
+        error: 'Price too low', 
+        message: 'Minimum price per day is R50' 
       });
     }
     
     if (listingData.year < 2000) {
       return res.status(400).json({ 
-        error: "Vehicle too old", 
-        message: "Vehicles must be from 2000 or newer" 
+        error: 'Vehicle too old', 
+        message: 'Vehicles must be from 2000 or newer' 
       });
     }
     
     const listing = await Listing.create({
       ...listingData,
       hostId: req.user!.id,
-      status: "pending", // Requires approval
+      status: 'pending', // Requires approval
       features: listingData.features || [], // Ensure features is always an array
       images: listingData.images || [], // Ensure images is always an array
     } as any); // Type assertion to handle the strict typing
@@ -292,28 +292,28 @@ router.post("/", authenticateToken, async (req: AuthRequest, res) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
-        error: "Validation error", 
+        error: 'Validation error', 
         details: error.errors 
       });
     }
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Enhanced listing update
-router.put("/:id", authenticateToken, async (req: AuthRequest, res) => {
+router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const updateData = updateListingSchema.parse(req.body);
     
     const listing = await Listing.findByPk(id);
     if (!listing) {
-      return res.status(404).json({ error: "Listing not found" });
+      return res.status(404).json({ error: 'Listing not found' });
     }
     
     // Check ownership
     if (listing.hostId !== req.user!.id && req.user!.role !== 'admin') {
-      return res.status(403).json({ error: "Not authorized" });
+      return res.status(403).json({ error: 'Not authorized' });
     }
     
     await listing.update(updateData);
@@ -325,11 +325,11 @@ router.put("/:id", authenticateToken, async (req: AuthRequest, res) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
-        error: "Validation error", 
+        error: 'Validation error', 
         details: error.errors 
       });
     }
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import request from 'supertest';
-import { app } from '../app';
+import app from '../app';
 import { sequelize } from '../config/database';
 import { User, Listing } from '../models';
 import { cacheService } from '../services/cache';

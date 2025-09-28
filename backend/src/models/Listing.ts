@@ -1,8 +1,5 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/database";
-import { User } from "./User";
-import { Booking } from "./Booking";
-import { Review } from "./Review";
+import { DataTypes, Model, Optional } from 'sequelize';
+import { sequelize } from '../config/database';
 
 export interface ListingAttributes {
   id: number;
@@ -11,22 +8,22 @@ export interface ListingAttributes {
   make: string;
   model: string;
   year: number;
-  type: "car" | "trailer" | "bakkie" | "truck" | "motorcycle" | "van" | "suv";
-  transmission: "manual" | "automatic";
-  fuelType: "petrol" | "diesel" | "electric";
+  type: 'car' | 'trailer' | 'bakkie' | 'truck' | 'motorcycle' | 'van' | 'suv';
+  transmission: 'manual' | 'automatic';
+  fuelType: 'petrol' | 'diesel' | 'electric';
   seats: number;
   features: string[];
   pricePerDay: number;
   location: string;
   images: string[];
   availability: any; // JSON field for date ranges
-  status: "pending" | "approved" | "declined";
+  status: 'pending' | 'approved' | 'declined';
   declineReason?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export interface ListingCreationAttributes extends Optional<ListingAttributes, "id" | "createdAt" | "updatedAt"> {}
+export interface ListingCreationAttributes extends Optional<ListingAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
 export class Listing extends Model<ListingAttributes, ListingCreationAttributes> implements ListingAttributes {
   public id!: number;
@@ -35,16 +32,16 @@ export class Listing extends Model<ListingAttributes, ListingCreationAttributes>
   public make!: string;
   public model!: string;
   public year!: number;
-  public type!: "car" | "trailer" | "bakkie" | "truck" | "motorcycle" | "van" | "suv";
-  public transmission!: "manual" | "automatic";
-  public fuelType!: "petrol" | "diesel" | "electric";
+  public type!: 'car' | 'trailer' | 'bakkie' | 'truck' | 'motorcycle' | 'van' | 'suv';
+  public transmission!: 'manual' | 'automatic';
+  public fuelType!: 'petrol' | 'diesel' | 'electric';
   public seats!: number;
   public features!: string[];
   public pricePerDay!: number;
   public location!: string;
   public images!: string[];
   public availability!: any;
-  public status!: "pending" | "approved" | "declined";
+  public status!: 'pending' | 'approved' | 'declined';
   public declineReason?: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -61,8 +58,8 @@ Listing.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "users",
-        key: "id",
+        model: 'users',
+        key: 'id',
       },
     },
     title: {
@@ -86,15 +83,15 @@ Listing.init(
       },
     },
     type: {
-      type: DataTypes.ENUM("car", "trailer", "bakkie", "truck", "motorcycle", "van", "suv"),
+      type: DataTypes.ENUM('car', 'trailer', 'bakkie', 'truck', 'motorcycle', 'van', 'suv'),
       allowNull: false,
     },
     transmission: {
-      type: DataTypes.ENUM("manual", "automatic"),
+      type: DataTypes.ENUM('manual', 'automatic'),
       allowNull: false,
     },
     fuelType: {
-      type: DataTypes.ENUM("petrol", "diesel", "electric"),
+      type: DataTypes.ENUM('petrol', 'diesel', 'electric'),
       allowNull: false,
     },
     seats: {
@@ -131,9 +128,9 @@ Listing.init(
       defaultValue: {},
     },
     status: {
-      type: DataTypes.ENUM("pending", "approved", "declined"),
+      type: DataTypes.ENUM('pending', 'approved', 'declined'),
       allowNull: false,
-      defaultValue: "pending",
+      defaultValue: 'pending',
     },
     declineReason: {
       type: DataTypes.STRING,
@@ -142,8 +139,8 @@ Listing.init(
   },
   {
     sequelize,
-    modelName: "Listing",
-    tableName: "listings",
+    modelName: 'Listing',
+    tableName: 'listings',
   }
 );
 

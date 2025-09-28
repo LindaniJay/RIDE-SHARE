@@ -1,16 +1,16 @@
-import express from "express";
-import { authenticateToken, AuthRequest } from "../middlewares/auth";
-import { User } from "../models/User";
-import { Listing } from "../models/Listing";
-import { Booking } from "../models/Booking";
-import { Review } from "../models/Review";
-import { Op } from "sequelize";
-import { sequelize } from "../config/database";
+import express from 'express';
+import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { User } from '../models/User';
+import { Listing } from '../models/Listing';
+import { Booking } from '../models/Booking';
+import { Review } from '../models/Review';
+import { Op } from 'sequelize';
+import { sequelize } from '../config/database';
 
 const router = express.Router();
 
 // Get platform statistics (public endpoint)
-router.get("/", async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     // Get total vehicles (approved listings)
     const totalVehicles = await Listing.count({
@@ -70,15 +70,15 @@ router.get("/", async (req, res) => {
 
     res.json(stats);
   } catch (error) {
-    console.error("Error fetching platform stats:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Error fetching platform stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Get detailed admin statistics (admin only)
-router.get("/admin", authenticateToken, async (req: AuthRequest, res) => {
-  if (req.user!.role !== "admin") {
-    return res.status(403).json({ error: "Only admins can access detailed statistics" });
+router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
+  if (req.user!.role !== 'admin') {
+    return res.status(403).json({ error: 'Only admins can access detailed statistics' });
   }
 
   try {
@@ -138,8 +138,8 @@ router.get("/admin", authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(adminStats);
   } catch (error) {
-    console.error("Error fetching admin stats:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Error fetching admin stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

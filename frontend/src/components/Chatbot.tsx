@@ -174,7 +174,7 @@ const Chatbot: React.FC = () => {
             initial={{ opacity: 0, y: 20, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.8 }}
-            transition={{ duration: 0.3, type: "spring", damping: 25, stiffness: 500 }}
+            transition={{ duration: 0.3, type: 'spring', damping: 25, stiffness: 500 }}
             className="fixed bottom-24 right-6 w-80 h-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 flex flex-col"
           >
             {/* Header */}

@@ -1,9 +1,9 @@
-import express from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { z } from "zod";
-import { User } from "../models/User";
-import { authenticateToken, AuthRequest } from "../middlewares/auth";
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
+import { User } from '../models/User';
+import { authenticateToken, AuthRequest } from '../middlewares/auth';
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ const registerSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   phone: z.string().optional(),
-  role: z.enum(["renter", "host"]), // Required role selection
+  role: z.enum(['renter', 'host']), // Required role selection
 });
 
 const loginSchema = z.object({
@@ -23,14 +23,14 @@ const loginSchema = z.object({
 });
 
 // Register
-router.post("/register", async (req, res) => {
+router.post('/register', async (req, res) => {
   try {
     const { email, password, firstName, lastName, phone, role } = registerSchema.parse(req.body);
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(409).json({ error: "User already exists" });
+      return res.status(409).json({ error: 'User already exists' });
     }
 
     // Hash password
@@ -52,25 +52,25 @@ router.post("/register", async (req, res) => {
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET!,
-      { expiresIn: "15m" }
+      { expiresIn: '15m' }
     );
 
     const refreshToken = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: "7d" }
+      { expiresIn: '7d' }
     );
 
     // Set refresh token as httpOnly cookie
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.status(201).json({
-      message: "User created successfully",
+      message: 'User created successfully',
       user: {
         id: user.id,
         email: user.email,
@@ -82,52 +82,52 @@ router.post("/register", async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: "Validation error", details: error.errors });
+      return res.status(400).json({ error: 'Validation error', details: error.errors });
     }
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Login
-router.post("/login", async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
 
     // Find user
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Check password
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Generate tokens with role
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET!,
-      { expiresIn: "15m" }
+      { expiresIn: '15m' }
     );
 
     const refreshToken = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: "7d" }
+      { expiresIn: '7d' }
     );
 
     // Set refresh token as httpOnly cookie
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.json({
-      message: "Login successful",
+      message: 'Login successful',
       user: {
         id: user.id,
         email: user.email,
@@ -139,49 +139,49 @@ router.post("/login", async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: "Validation error", details: error.errors });
+      return res.status(400).json({ error: 'Validation error', details: error.errors });
     }
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Refresh token
-router.post("/refresh", async (req, res) => {
+router.post('/refresh', async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
 
     if (!refreshToken) {
-      return res.status(401).json({ error: "Refresh token required" });
+      return res.status(401).json({ error: 'Refresh token required' });
     }
 
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: number };
     const user = await User.findByPk(decoded.userId);
 
     if (!user) {
-      return res.status(401).json({ error: "Invalid refresh token" });
+      return res.status(401).json({ error: 'Invalid refresh token' });
     }
 
     // Generate new access token with role
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET!,
-      { expiresIn: "15m" }
+      { expiresIn: '15m' }
     );
 
     res.json({ accessToken });
   } catch (error) {
-    res.status(401).json({ error: "Invalid refresh token" });
+    res.status(401).json({ error: 'Invalid refresh token' });
   }
 });
 
 // Logout
-router.post("/logout", (req, res) => {
-  res.clearCookie("refreshToken");
-  res.json({ message: "Logout successful" });
+router.post('/logout', (req, res) => {
+  res.clearCookie('refreshToken');
+  res.json({ message: 'Logout successful' });
 });
 
 // Get current user
-router.get("/me", authenticateToken, async (req: AuthRequest, res) => {
+router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
   res.json({
     user: {
       id: req.user!.id,

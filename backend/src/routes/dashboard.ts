@@ -1,14 +1,14 @@
-import express from "express";
-import { authenticateToken, AuthRequest } from "../middlewares/auth";
-import { Booking } from "../models/Booking";
-import { Vehicle } from "../models/Vehicle";
-import { User } from "../models/User";
-import { Op } from "sequelize";
+import express from 'express';
+import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { Booking } from '../models/Booking';
+import { Vehicle } from '../models/Vehicle';
+import { User } from '../models/User';
+import { Op } from 'sequelize';
 
 const router = express.Router();
 
 // Get renter dashboard stats
-router.get("/renter", authenticateToken, async (req: AuthRequest, res) => {
+router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
     
@@ -20,14 +20,14 @@ router.get("/renter", authenticateToken, async (req: AuthRequest, res) => {
     const activeBookings = await Booking.count({
       where: { 
         renterId: userId,
-        status: ["pending", "confirmed"]
+        status: ['pending', 'confirmed']
       }
     });
     
     const completedBookings = await Booking.count({
       where: { 
         renterId: userId,
-        status: "completed"
+        status: 'completed'
       }
     });
     
@@ -35,7 +35,7 @@ router.get("/renter", authenticateToken, async (req: AuthRequest, res) => {
     const totalSpent = await Booking.sum('totalPrice', {
       where: { 
         renterId: userId,
-        status: "completed"
+        status: 'completed'
       }
     }) || 0;
     
@@ -45,7 +45,7 @@ router.get("/renter", authenticateToken, async (req: AuthRequest, res) => {
       include: [
         {
           model: Vehicle,
-          as: "vehicle",
+          as: 'vehicle',
         },
       ],
       order: [['createdAt', 'DESC']],
@@ -62,12 +62,12 @@ router.get("/renter", authenticateToken, async (req: AuthRequest, res) => {
       recentBookings,
     });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Get host dashboard stats
-router.get("/host", authenticateToken, async (req: AuthRequest, res) => {
+router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
     
@@ -88,7 +88,7 @@ router.get("/host", authenticateToken, async (req: AuthRequest, res) => {
       include: [
         {
           model: Vehicle,
-          as: "vehicle",
+          as: 'vehicle',
           where: { hostId: userId }
         }
       ]
@@ -96,13 +96,13 @@ router.get("/host", authenticateToken, async (req: AuthRequest, res) => {
     
     const upcomingBookings = await Booking.count({
       where: {
-        status: "confirmed",
+        status: 'confirmed',
         startDate: { [Op.gte]: new Date() }
       },
       include: [
         {
           model: Vehicle,
-          as: "vehicle",
+          as: 'vehicle',
           where: { hostId: userId }
         }
       ]
@@ -117,7 +117,7 @@ router.get("/host", authenticateToken, async (req: AuthRequest, res) => {
     
     const totalEarnings = await Booking.sum('totalPrice', {
       where: {
-        status: "completed",
+        status: 'completed',
         listingId: { [Op.in]: vehicleIds }
       }
     }) || 0;
@@ -127,12 +127,12 @@ router.get("/host", authenticateToken, async (req: AuthRequest, res) => {
       include: [
         {
           model: Vehicle,
-          as: "vehicle",
+          as: 'vehicle',
           where: { hostId: userId }
         },
         {
           model: User,
-          as: "user",
+          as: 'user',
         }
       ],
       order: [['createdAt', 'DESC']],
@@ -150,16 +150,16 @@ router.get("/host", authenticateToken, async (req: AuthRequest, res) => {
       recentBookings,
     });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Get admin dashboard stats
-router.get("/admin", authenticateToken, async (req: AuthRequest, res) => {
+router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
   try {
     // Check if user is admin
-    if (req.user!.role !== "admin") {
-      return res.status(403).json({ error: "Admin access required" });
+    if (req.user!.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
     }
     
     // Get platform statistics
@@ -170,8 +170,8 @@ router.get("/admin", authenticateToken, async (req: AuthRequest, res) => {
     const activeUsers = await User.count({
       where: {
         [Op.or]: [
-          { role: "renter" },
-          { role: "host" }
+          { role: 'renter' },
+          { role: 'host' }
         ]
       }
     });
@@ -186,11 +186,11 @@ router.get("/admin", authenticateToken, async (req: AuthRequest, res) => {
       include: [
         {
           model: Vehicle,
-          as: "vehicle",
+          as: 'vehicle',
         },
         {
           model: User,
-          as: "user",
+          as: 'user',
         }
       ],
       order: [['createdAt', 'DESC']],
@@ -208,7 +208,7 @@ router.get("/admin", authenticateToken, async (req: AuthRequest, res) => {
       recentBookings,
     });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

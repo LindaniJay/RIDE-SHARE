@@ -1,45 +1,45 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from 'express';
 
-export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
 
-  if (err.name === "ValidationError") {
+  if (err.name === 'ValidationError') {
     return res.status(400).json({
-      error: "Validation Error",
+      error: 'Validation Error',
       details: err.errors,
     });
   }
 
-  if (err.name === "SequelizeValidationError") {
+  if (err.name === 'SequelizeValidationError') {
     return res.status(400).json({
-      error: "Database Validation Error",
+      error: 'Database Validation Error',
       details: err.errors.map((e: any) => e.message),
     });
   }
 
-  if (err.name === "SequelizeUniqueConstraintError") {
+  if (err.name === 'SequelizeUniqueConstraintError') {
     return res.status(409).json({
-      error: "Duplicate Entry",
-      message: "A record with this information already exists",
+      error: 'Duplicate Entry',
+      message: 'A record with this information already exists',
     });
   }
 
-  if (err.name === "JsonWebTokenError") {
+  if (err.name === 'JsonWebTokenError') {
     return res.status(401).json({
-      error: "Invalid Token",
-      message: "The provided token is invalid",
+      error: 'Invalid Token',
+      message: 'The provided token is invalid',
     });
   }
 
-  if (err.name === "TokenExpiredError") {
+  if (err.name === 'TokenExpiredError') {
     return res.status(401).json({
-      error: "Token Expired",
-      message: "The provided token has expired",
+      error: 'Token Expired',
+      message: 'The provided token has expired',
     });
   }
 
   res.status(err.status || 500).json({
-    error: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    error: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };

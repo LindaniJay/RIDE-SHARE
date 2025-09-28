@@ -1,10 +1,10 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import bcrypt from "bcryptjs";
-import { sequelize } from "../config/database";
-import { Listing } from "./Listing";
-import { Booking } from "./Booking";
-import { Review } from "./Review";
-import { Vehicle } from "./Vehicle";
+import { DataTypes, Model, Optional } from 'sequelize';
+import bcrypt from 'bcryptjs';
+import { sequelize } from '../config/database';
+import { Listing } from './Listing';
+import { Booking } from './Booking';
+import { Review } from './Review';
+import { Vehicle } from './Vehicle';
 
 export interface UserAttributes {
   id: number;
@@ -13,14 +13,14 @@ export interface UserAttributes {
   email: string;
   password: string; // Virtual field for input
   passwordHash: string;
-  role: "renter" | "host" | "admin";
+  role: 'renter' | 'host' | 'admin';
   phoneNumber?: string;
   isEmailVerified?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export interface UserCreationAttributes extends Optional<UserAttributes, "id" | "createdAt" | "updatedAt"> {}
+export interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: number;
@@ -29,7 +29,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public email!: string;
   public password!: string; // Virtual field
   public passwordHash!: string;
-  public role!: "renter" | "host" | "admin";
+  public role!: 'renter' | 'host' | 'admin';
   public phoneNumber?: string;
   public isEmailVerified?: boolean;
   public readonly createdAt!: Date;
@@ -68,9 +68,9 @@ User.init(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM("renter", "host", "admin"),
+      type: DataTypes.ENUM('renter', 'host', 'admin'),
       allowNull: false,
-      defaultValue: "renter",
+      defaultValue: 'renter',
     },
     phoneNumber: {
       type: DataTypes.STRING,
@@ -84,8 +84,8 @@ User.init(
   },
   {
     sequelize,
-    modelName: "User",
-    tableName: "users",
+    modelName: 'User',
+    tableName: 'users',
   }
 );
 
@@ -103,7 +103,7 @@ User.addHook('beforeUpdate', async (user: User) => {
 });
 
 // Define associations
-User.hasMany(Listing, { foreignKey: "hostId", as: "listings" });
-User.hasMany(Vehicle, { foreignKey: "hostId", as: "vehicles" });
-User.hasMany(Booking, { foreignKey: "renterId", as: "bookings" });
-User.hasMany(Review, { foreignKey: "renterId", as: "reviews" });
+User.hasMany(Listing, { foreignKey: 'hostId', as: 'listings' });
+User.hasMany(Vehicle, { foreignKey: 'hostId', as: 'vehicles' });
+User.hasMany(Booking, { foreignKey: 'renterId', as: 'bookings' });
+User.hasMany(Review, { foreignKey: 'renterId', as: 'reviews' });

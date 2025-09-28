@@ -67,36 +67,36 @@ const VehicleDetail: React.FC = () => {
       const response = await vehiclesAPI.getById(id!);
       setVehicle(response.data);
     } catch (error) {
-      console.error("Error fetching vehicle:", error);
+      console.error('Error fetching vehicle:', error);
       // Mock data for demonstration
       setVehicle({
         id: id!,
-        make: "Toyota",
-        model: "Hilux",
+        make: 'Toyota',
+        model: 'Hilux',
         year: 2022,
-        type: "bakkie",
+        type: 'bakkie',
         pricePerDay: 250,
-        location: "Cape Town, South Africa",
+        location: 'Cape Town, South Africa',
         images: [
-          "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800",
-          "https://images.unsplash.com/photo-1549317336-206569e8475c?w=800",
-          "https://images.unsplash.com/photo-1555215695-3004980dd54e?w=800"
+          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800',
+          'https://images.unsplash.com/photo-1549317336-206569e8475c?w=800',
+          'https://images.unsplash.com/photo-1555215695-3004980dd54e?w=800'
         ],
-        features: ["4WD", "Air Conditioning", "Bluetooth", "GPS Navigation", "Leather Seats", "Backup Camera"],
+        features: ['4WD', 'Air Conditioning', 'Bluetooth', 'GPS Navigation', 'Leather Seats', 'Backup Camera'],
         rating: 4.8,
         reviewCount: 24,
-        description: "Perfect for your South African adventure! This reliable Toyota Hilux is ideal for exploring the beautiful landscapes of the Western Cape. With 4WD capabilities and all the modern features you need, it's perfect for both city driving and off-road adventures.",
+        description: 'Perfect for your South African adventure! This reliable Toyota Hilux is ideal for exploring the beautiful landscapes of the Western Cape. With 4WD capabilities and all the modern features you need, it\'s perfect for both city driving and off-road adventures.',
         host: {
-          id: "host1",
-          name: "John M.",
+          id: 'host1',
+          name: 'John M.',
           rating: 4.9,
-          responseTime: "1 hour",
-          joinDate: "2022-03-15",
+          responseTime: '1 hour',
+          joinDate: '2022-03-15',
           totalTrips: 47
         },
         availability: {
-          startDate: "2024-01-01",
-          endDate: "2024-12-31"
+          startDate: '2024-01-01',
+          endDate: '2024-12-31'
         }
       });
     } finally {
@@ -171,13 +171,13 @@ const VehicleDetail: React.FC = () => {
 
   const getVehicleTypeIcon = (type: string) => {
     const icons: { [key: string]: string } = {
-      car: "🚗",
-      bakkie: "🚛",
-      suv: "🚙",
-      van: "🚐",
-      luxury: "🏎️"
+      car: '🚗',
+      bakkie: '🚛',
+      suv: '🚙',
+      van: '🚐',
+      luxury: '🏎️'
     };
-    return icons[type] || "🚗";
+    return icons[type] || '🚗';
   };
 
   if (loading) {

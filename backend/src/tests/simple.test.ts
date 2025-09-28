@@ -13,7 +13,7 @@ describe('Database Connection', () => {
   });
 
   it('should have correct database configuration', () => {
-    const config = sequelize.config;
+    const config = sequelize.options;
     expect(config.dialect).toBe('sqlite');
     expect(config.storage).toBe(':memory:');
   });

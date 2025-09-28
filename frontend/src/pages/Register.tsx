@@ -1,23 +1,23 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import CarVideoBackground from "../components/CarVideoBackground";
-import GlassForm from "../components/GlassForm";
-import GlassInput from "../components/GlassInput";
-import GlassButton from "../components/GlassButton";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import CarVideoBackground from '../components/CarVideoBackground';
+import GlassForm from '../components/GlassForm';
+import GlassInput from '../components/GlassInput';
+import GlassButton from '../components/GlassButton';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    phone: "",
-    role: "renter" as "renter" | "host",
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phone: '',
+    role: 'renter' as 'renter' | 'host',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -25,10 +25,10 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      setError('Passwords do not match');
       setLoading(false);
       return;
     }
@@ -42,9 +42,9 @@ const Register: React.FC = () => {
         phone: formData.phone,
         role: formData.role,
       });
-      navigate("/dashboard");
+      navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || "Registration failed");
+      setError(err.response?.data?.error || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -123,7 +123,7 @@ const Register: React.FC = () => {
                 <select
                   name="role"
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as "renter" | "host" })}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'renter' | 'host' })}
                   className="w-full px-4 py-3 rounded-xl text-white placeholder-white/50 bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 dark:focus:ring-white/10 transition-all duration-300 ease-in-out"
                 >
                   <option value="renter" className="bg-gray-800 text-white">🚗 Rent vehicles</option>
@@ -163,12 +163,12 @@ const Register: React.FC = () => {
               gradient={true}
               icon="🚀"
             >
-              {loading ? "Creating account..." : "Create account"}
+              {loading ? 'Creating account...' : 'Create account'}
             </GlassButton>
 
             <div className="text-center">
               <p className="text-white/70 text-sm">
-                Already have an account?{" "}
+                Already have an account?{' '}
                 <Link to="/login" className="font-medium text-white hover:text-white/80 transition-colors">
                   Sign in here
                 </Link>
