@@ -4,15 +4,18 @@ import { sequelize } from "../config/database";
 import { Listing } from "./Listing";
 import { Booking } from "./Booking";
 import { Review } from "./Review";
+import { Vehicle } from "./Vehicle";
 
 export interface UserAttributes {
   id: number;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string; // Virtual field for input
   passwordHash: string;
   role: "renter" | "host" | "admin";
   phoneNumber?: string;
+  isEmailVerified?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -21,12 +24,14 @@ export interface UserCreationAttributes extends Optional<UserAttributes, "id" | 
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: number;
-  public name!: string;
+  public firstName!: string;
+  public lastName!: string;
   public email!: string;
   public password!: string; // Virtual field
   public passwordHash!: string;
   public role!: "renter" | "host" | "admin";
   public phoneNumber?: string;
+  public isEmailVerified?: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -38,7 +43,11 @@ User.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    name: {
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    lastName: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -67,6 +76,11 @@ User.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    isEmailVerified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
   },
   {
     sequelize,
@@ -90,5 +104,6 @@ User.addHook('beforeUpdate', async (user: User) => {
 
 // Define associations
 User.hasMany(Listing, { foreignKey: "hostId", as: "listings" });
+User.hasMany(Vehicle, { foreignKey: "hostId", as: "vehicles" });
 User.hasMany(Booking, { foreignKey: "renterId", as: "bookings" });
 User.hasMany(Review, { foreignKey: "renterId", as: "reviews" });

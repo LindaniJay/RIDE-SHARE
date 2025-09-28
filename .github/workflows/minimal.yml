@@ -1,58 +1,56 @@
-name: Setup Node Example (DISABLED)
+name: Minimal Working CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
-  setup-node-backend:
+  backend-build:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Node.js for Backend
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: backend/package-lock.json
         
-    - name: Install Backend Dependencies
+    - name: Install dependencies
       run: |
         cd backend
         npm ci
         
-    - name: Verify Backend Setup
+    - name: Build backend
       run: |
         cd backend
-        npm run --version
-        node --version
+        npm run build
 
-  setup-node-frontend:
+  frontend-build:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Node.js for Frontend
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
         
-    - name: Install Frontend Dependencies
+    - name: Install dependencies
       run: |
         cd frontend
         npm ci
         
-    - name: Verify Frontend Setup
+    - name: Build frontend
       run: |
         cd frontend
-        npm run --version
-        node --version
+        npm run build

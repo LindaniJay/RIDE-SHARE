@@ -3,11 +3,9 @@ import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import CarVideoBackground from '../components/CarVideoBackground';
 import LazyImage from '../components/LazyImage';
-import { useAnalytics, usePageTracking } from '../hooks/useAnalytics';
+import { usePageTracking } from '../hooks/useAnalytics';
 
 const Home: React.FC = () => {
-  const analytics = useAnalytics();
-  
   // Track page views
   usePageTracking();
 

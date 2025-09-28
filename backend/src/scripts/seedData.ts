@@ -9,7 +9,8 @@ const seedData = async () => {
 
     // Create sample users
     const host1 = await User.create({
-      name: 'John Smith',
+      firstName: 'John',
+      lastName: 'Smith',
       email: 'john@example.com',
       password: 'password123',
       passwordHash: await bcrypt.hash('password123', 12),
@@ -18,7 +19,8 @@ const seedData = async () => {
     });
 
     const host2 = await User.create({
-      name: 'Sarah Johnson',
+      firstName: 'Sarah',
+      lastName: 'Johnson',
       email: 'sarah@example.com',
       password: 'password123',
       passwordHash: await bcrypt.hash('password123', 12),
@@ -27,7 +29,8 @@ const seedData = async () => {
     });
 
     const renter1 = await User.create({
-      name: 'Mike Wilson',
+      firstName: 'Mike',
+      lastName: 'Wilson',
       email: 'mike@example.com',
       password: 'password123',
       passwordHash: await bcrypt.hash('password123', 12),

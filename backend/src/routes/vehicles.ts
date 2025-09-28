@@ -2,6 +2,7 @@ import express from "express";
 import { Op } from "sequelize";
 import { Listing } from "../models/Listing";
 import { User } from "../models/User";
+import { Vehicle } from "../models/Vehicle";
 
 const router = express.Router();
 
@@ -76,9 +77,23 @@ router.get("/", async (req, res) => {
 
 // Search vehicles endpoint
 router.get("/search", async (req, res) => {
-  // Redirect to main vehicles endpoint
-  req.url = '/';
-  router.handle(req, res);
+  // Just call the main vehicles logic directly
+  try {
+    const vehicles = await Listing.findAll({
+      where: { status: 'approved' },
+      include: [
+        {
+          model: User,
+          as: 'host',
+          attributes: ['id', 'firstName', 'lastName', 'email']
+        }
+      ]
+    });
+    res.json(vehicles);
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // Get vehicle by ID

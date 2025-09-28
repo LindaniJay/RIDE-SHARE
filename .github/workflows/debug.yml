@@ -1,0 +1,136 @@
+name: Debug Workflow
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  debug-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
+    - name: Debug - Check Node version
+      run: |
+        echo "Node version:"
+        node --version
+        echo "NPM version:"
+        npm --version
+        
+    - name: Debug - Check package.json
+      run: |
+        cd backend
+        echo "Backend package.json scripts:"
+        cat package.json | grep -A 20 '"scripts"'
+        
+    - name: Debug - Install dependencies
+      run: |
+        cd backend
+        npm ci --verbose
+        
+    - name: Debug - Check if build works
+      run: |
+        cd backend
+        npm run build || echo "Build failed, but continuing..."
+        
+    - name: Debug - Check if tests work
+      run: |
+        cd backend
+        npm run test || echo "Tests failed, but continuing..."
+      env:
+        NODE_ENV: test
+        
+    - name: Debug - Check linting
+      run: |
+        cd backend
+        npm run lint || echo "Linting failed, but continuing..."
+        
+    - name: Debug - Check formatting
+      run: |
+        cd backend
+        npm run format:check || echo "Formatting check failed, but continuing..."
+
+  debug-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Debug - Check Node version
+      run: |
+        echo "Node version:"
+        node --version
+        echo "NPM version:"
+        npm --version
+        
+    - name: Debug - Check package.json
+      run: |
+        cd frontend
+        echo "Frontend package.json scripts:"
+        cat package.json | grep -A 10 '"scripts"'
+        
+    - name: Debug - Install dependencies
+      run: |
+        cd frontend
+        npm ci --verbose
+        
+    - name: Debug - Check if build works
+      run: |
+        cd frontend
+        npm run build || echo "Build failed, but continuing..."
+        
+    - name: Debug - Check if tests work
+      run: |
+        cd frontend
+        npm test || echo "Tests failed, but continuing..."
+        
+    - name: Debug - Check linting
+      run: |
+        cd frontend
+        npm run lint || echo "Linting failed, but continuing..."
+
+  debug-environment:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Debug - Check file structure
+      run: |
+        echo "Root directory contents:"
+        ls -la
+        echo "Backend directory contents:"
+        ls -la backend/
+        echo "Frontend directory contents:"
+        ls -la frontend/
+        
+    - name: Debug - Check for config files
+      run: |
+        echo "Looking for config files:"
+        find . -name "*.json" -o -name "*.js" -o -name "*.ts" -o -name "*.yml" -o -name "*.yaml" | head -20
+        
+    - name: Debug - Check package-lock files
+      run: |
+        echo "Checking for package-lock files:"
+        find . -name "package-lock.json" -exec echo "Found: {}" \;
+        find . -name "yarn.lock" -exec echo "Found: {}" \;
