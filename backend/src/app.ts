@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import { sequelize } from './config/database';
 import authRoutes from './routes/auth';
 import listingRoutes from './routes/listings';
+import enhancedListingRoutes from './routes/enhanced-listings';
 import vehicleRoutes from './routes/vehicles';
 import bookingRoutes from './routes/bookings';
 import reviewRoutes from './routes/reviews';
@@ -50,7 +51,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/listings', listingRoutes);
+app.use('/api/listings', enhancedListingRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
@@ -84,6 +85,9 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only start server if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
 
 export default app;

@@ -8,9 +8,9 @@ beforeAll(async () => {
     console.log('Test database connection established successfully.');
     
     // Sync all models for tests
-    // In PostgreSQL, use alter: true to avoid enum type conflicts
+    // For PostgreSQL, use force: true to recreate tables and avoid enum conflicts
     if (sequelize.getDialect() === 'postgres') {
-      await sequelize.sync({ alter: true });
+      await sequelize.sync({ force: true });
     } else {
       await sequelize.sync({ force: true });
     }
@@ -24,8 +24,8 @@ beforeEach(async () => {
   try {
     // Clean database before each test
     if (sequelize.getDialect() === 'postgres') {
-      // For PostgreSQL, just sync without force to avoid enum issues
-      await sequelize.sync({ alter: true });
+      // For PostgreSQL, use force: true to recreate tables and avoid enum issues
+      await sequelize.sync({ force: true });
     } else {
       await sequelize.sync({ force: true });
     }

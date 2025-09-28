@@ -2,7 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import { User } from '../models/User';
+import { User } from '../models';
 import { authenticateToken, AuthRequest } from '../middlewares/auth';
 
 const router = express.Router();
@@ -33,7 +33,7 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'User already exists' });
     }
 
-    // Hash password
+    // Hash password manually
     const passwordHash = await bcrypt.hash(password, 12);
     
     // Create user
@@ -81,10 +81,11 @@ router.post('/register', async (req, res) => {
       accessToken,
     });
   } catch (error) {
+    console.error('Register error:', error);
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Validation error', details: error.errors });
     }
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 
