@@ -34,8 +34,6 @@ interface RegisterData {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Hook moved to separate file to fix React refresh warning
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);

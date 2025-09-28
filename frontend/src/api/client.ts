@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import type { ImportMeta } from '../types/api';
 
 // Create axios instance
 const createApiClient = (): AxiosInstance => {
