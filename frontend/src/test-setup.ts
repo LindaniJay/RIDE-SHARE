@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 // Add polyfills for missing globals
 if (typeof globalThis.URL === 'undefined') {
   globalThis.URL = class URL {
-    constructor(url: string, _base?: string) {
+    constructor(url: string) {
       // Simple URL implementation for testing
       this.href = url;
     }

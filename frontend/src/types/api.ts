@@ -150,4 +150,4 @@ declare global {
 }
 
 // Export for backward compatibility
-export type { ImportMetaEnv };
+export type { ImportMetaEnv as ImportMetaEnvType };

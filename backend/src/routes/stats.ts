@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
       where: { status: 'completed' },
       raw: true
     });
-    const totalEarnings = (totalEarningsResult as { totalEarnings: number })?.totalEarnings || 0;
+    const totalEarnings = (totalEarningsResult as unknown as { totalEarnings: number })?.totalEarnings || 0;
 
     // Get active hosts (users with role 'host' who have approved listings)
     const activeHosts = await User.count({
@@ -57,7 +57,7 @@ router.get('/', async (req, res) => {
       ],
       raw: true
     });
-    const averageRating = (averageRatingResult as { averageRating: number })?.averageRating || 0;
+    const averageRating = (averageRatingResult as unknown as { averageRating: number })?.averageRating || 0;
 
     const stats = {
       totalVehicles: totalVehicles || 0,
@@ -160,7 +160,7 @@ async function getBasicStats() {
     where: { status: 'completed' },
     raw: true
   });
-  const totalEarnings = (totalEarningsResult as { totalEarnings: number })?.totalEarnings || 0;
+  const totalEarnings = (totalEarningsResult as unknown as { totalEarnings: number })?.totalEarnings || 0;
 
   const activeHosts = await User.count({
     where: { 
@@ -184,7 +184,7 @@ async function getBasicStats() {
     ],
     raw: true
   });
-  const averageRating = (averageRatingResult as { averageRating: number })?.averageRating || 0;
+  const averageRating = (averageRatingResult as unknown as { averageRating: number })?.averageRating || 0;
 
   return {
     totalVehicles: totalVehicles || 0,
