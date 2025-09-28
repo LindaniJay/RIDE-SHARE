@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { vehiclesAPI, bookingsAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -57,11 +57,7 @@ const VehicleDetail: React.FC = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [currentBooking, setCurrentBooking] = useState<any>(null);
 
-  useEffect(() => {
-    fetchVehicle();
-  }, [id]);
-
-  const fetchVehicle = async () => {
+  const fetchVehicle = useCallback(async () => {
     setLoading(true);
     try {
       const response = await vehiclesAPI.getById(id!);
@@ -102,7 +98,11 @@ const VehicleDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchVehicle();
+  }, [fetchVehicle]);
 
   const handleDateChange = (field: 'pickupDate' | 'returnDate', value: string) => {
     const newForm = { ...bookingForm, [field]: value };

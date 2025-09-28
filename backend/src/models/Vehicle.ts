@@ -1,7 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
-import { User } from "./User";
-import { Booking } from "./Booking";
+// Associations are wired in models/index to avoid circular imports
 
 export interface VehicleAttributes {
   id: number;
@@ -124,6 +123,4 @@ Vehicle.init(
   }
 );
 
-// Define associations
-Vehicle.belongsTo(User, { foreignKey: "hostId", as: "host" });
-Vehicle.hasMany(Booking, { foreignKey: "vehicleId", as: "bookings" });
+// Associations are defined in models/index.ts

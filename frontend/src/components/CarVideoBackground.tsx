@@ -53,7 +53,7 @@ const CarVideoBackground: React.FC<CarVideoBackgroundProps> = ({
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [videoSources.length]);
 
   const settings = videoSettings[variant];
 

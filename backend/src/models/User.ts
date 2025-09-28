@@ -1,10 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import bcrypt from "bcryptjs";
 import { sequelize } from "../config/database";
-import { Listing } from "./Listing";
-import { Booking } from "./Booking";
-import { Review } from "./Review";
-import { Vehicle } from "./Vehicle";
+// Associations are defined centrally in models/index.ts to avoid cycles
 
 export interface UserAttributes {
   id: number;
@@ -102,8 +99,4 @@ User.addHook('beforeUpdate', async (user: User) => {
   }
 });
 
-// Define associations
-User.hasMany(Listing, { foreignKey: "hostId", as: "listings" });
-User.hasMany(Vehicle, { foreignKey: "hostId", as: "vehicles" });
-User.hasMany(Booking, { foreignKey: "renterId", as: "bookings" });
-User.hasMany(Review, { foreignKey: "renterId", as: "reviews" });
+// Associations are defined in models/index.ts

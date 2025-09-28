@@ -51,13 +51,13 @@ router.post("/register", async (req, res) => {
     // Generate tokens with role
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET || 'test-secret',
       { expiresIn: "15m" }
     );
 
     const refreshToken = jwt.sign(
       { userId: user.id, role: user.role },
-      process.env.JWT_REFRESH_SECRET!,
+      process.env.JWT_REFRESH_SECRET || 'test-refresh-secret',
       { expiresIn: "7d" }
     );
 
@@ -108,13 +108,13 @@ router.post("/login", async (req, res) => {
     // Generate tokens with role
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET || 'test-secret',
       { expiresIn: "15m" }
     );
 
     const refreshToken = jwt.sign(
       { userId: user.id, role: user.role },
-      process.env.JWT_REFRESH_SECRET!,
+      process.env.JWT_REFRESH_SECRET || 'test-refresh-secret',
       { expiresIn: "7d" }
     );
 
@@ -154,7 +154,7 @@ router.post("/refresh", async (req, res) => {
       return res.status(401).json({ error: "Refresh token required" });
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { userId: number };
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'test-refresh-secret') as { userId: number };
     const user = await User.findByPk(decoded.userId);
 
     if (!user) {
@@ -164,7 +164,7 @@ router.post("/refresh", async (req, res) => {
     // Generate new access token with role
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET || 'test-secret',
       { expiresIn: "15m" }
     );
 

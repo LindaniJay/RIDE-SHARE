@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { apiClient } from "../api/client";
 import SEO from "../components/SEO";
@@ -45,11 +45,7 @@ const Search: React.FC = () => {
     sortBy: "price",
   });
 
-  useEffect(() => {
-    fetchVehicles();
-  }, [searchParams]);
-
-  const fetchVehicles = async () => {
+  const fetchVehicles = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -63,7 +59,11 @@ const Search: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchParams]);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, [fetchVehicles]);
 
   const handleFilterChange = (name: string, value: string | boolean) => {
     setFilters((prev) => ({

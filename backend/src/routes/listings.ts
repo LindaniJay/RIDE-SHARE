@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Op } from "sequelize";
 import { Listing } from "../models/Listing";
 import { User } from "../models/User";
+import { cacheService } from "../services/cache";
 import { authenticateToken, AuthRequest } from "../middlewares/auth";
 
 const router = express.Router();
@@ -34,7 +35,12 @@ const approveListingSchema = z.object({
 // Get all listings (public)
 router.get("/", async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, minPrice, maxPrice, location, type, status } = req.query;
+    const { page = 1, limit = 10, search, minPrice, maxPrice, location, type, status, sortBy = 'createdAt', sortOrder = 'DESC', latitude, longitude } = req.query as any;
+    const cacheKey = `listings:${JSON.stringify(req.query)}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
     
     const offset = (Number(page) - 1) * Number(limit);
     const whereClause: any = {};
@@ -79,23 +85,46 @@ router.get("/", async (req, res) => {
         {
           model: User,
           as: "host",
-          attributes: ["id", "name", "email", "phoneNumber"],
+          attributes: ["id", "firstName", "lastName", "email", "phoneNumber"],
         },
       ],
       limit: Number(limit),
       offset,
-      order: [['createdAt', 'DESC']],
+      order: [[String(sortBy), String(sortOrder).toUpperCase() === 'ASC' ? 'ASC' : 'DESC']],
     });
     
-    res.json({
-      listings: listings.rows,
+    let result: any = {
+      listings: listings.rows.map((l: any) => l.toJSON()),
       pagination: {
         page: Number(page),
         limit: Number(limit),
         total: listings.count,
         pages: Math.ceil(listings.count / Number(limit)),
       },
-    });
+    };
+
+    // Distance calculation if coordinates provided
+    if (latitude && longitude) {
+      const toRad = (v: number) => (v * Math.PI) / 180;
+      const calcDistance = (lat1: number, lon1: number, lat2?: number, lon2?: number) => {
+        if (lat2 == null || lon2 == null) return undefined;
+        const R = 6371; // km
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      };
+      const lat = Number(latitude);
+      const lon = Number(longitude);
+      result.listings = result.listings.map((l: any) => ({
+        ...l,
+        distance: calcDistance(lat, lon, l.latitude, l.longitude),
+      }));
+    }
+
+    await cacheService.set(cacheKey, result);
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
@@ -132,6 +161,12 @@ router.post("/", authenticateToken, async (req: AuthRequest, res) => {
     }
     
     const listingData = createListingSchema.parse(req.body);
+    if (listingData.pricePerDay < 50) {
+      return res.status(400).json({ error: "Price too low" });
+    }
+    if (listingData.year < 2000) {
+      return res.status(400).json({ error: "Vehicle too old" });
+    }
     
     const listing = await Listing.create({
       ...listingData,
