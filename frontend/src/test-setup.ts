@@ -1,6 +1,17 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Add polyfills for missing globals
+if (typeof globalThis.URL === 'undefined') {
+  globalThis.URL = class URL {
+    constructor(url: string, base?: string) {
+      // Simple URL implementation for testing
+      this.href = url;
+    }
+    href: string;
+  } as any;
+}
+
 // Mock IntersectionObserver
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
