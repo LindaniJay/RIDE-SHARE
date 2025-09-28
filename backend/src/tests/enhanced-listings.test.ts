@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import request from 'supertest';
+import bcrypt from 'bcryptjs';
 import app from '../app';
 import { sequelize } from '../config/database';
 import { User, Listing } from '../models';
@@ -22,7 +23,7 @@ describe('Enhanced Listings API', () => {
     await sequelize.sync({ force: true });
     
     // Create test user
-    await User.create({
+    const user = await User.create({
       firstName: 'Test',
       lastName: 'User',
       email: 'test@example.com',
@@ -30,6 +31,12 @@ describe('Enhanced Listings API', () => {
       phoneNumber: '1234567890',
       role: 'host'
     });
+    
+    // Ensure password hash is set
+    if (!user.passwordHash) {
+      user.passwordHash = await bcrypt.hash('testpassword123', 12);
+      await user.save();
+    }
     
     // Create test listings
     await Listing.bulkCreate([

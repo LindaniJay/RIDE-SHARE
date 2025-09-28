@@ -10,8 +10,8 @@ const databaseUrl = process.env.DATABASE_URL;
 
 let sequelize: Sequelize;
 
-if (isCI && databaseUrl) {
-  // Use PostgreSQL in CI
+if (isTest && databaseUrl) {
+  // Use PostgreSQL for tests in CI
   sequelize = new Sequelize(databaseUrl, {
     logging: false,
     define: {
@@ -20,7 +20,7 @@ if (isCI && databaseUrl) {
     },
   });
 } else if (isTest) {
-  // Use in-memory SQLite for tests to avoid native module issues
+  // Use in-memory SQLite for tests locally
   sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: ':memory:',
@@ -35,6 +35,15 @@ if (isCI && databaseUrl) {
       acquire: 30000,
       idle: 10000
     }
+  });
+} else if (isCI && databaseUrl) {
+  // Use PostgreSQL in CI
+  sequelize = new Sequelize(databaseUrl, {
+    logging: false,
+    define: {
+      timestamps: true,
+      underscored: true,
+    },
   });
 } else {
   // Use SQLite locally

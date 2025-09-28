@@ -14,12 +14,14 @@ describe('Database Connection', () => {
 
   it('should have correct database configuration', () => {
     const config = sequelize.options;
-    // In CI, we use PostgreSQL; locally we use SQLite
-    if (process.env.CI === 'true') {
+    // In CI with DATABASE_URL, we use PostgreSQL; otherwise SQLite
+    if (process.env.CI === 'true' && process.env.DATABASE_URL) {
       expect(config.dialect).toBe('postgres');
     } else {
       expect(config.dialect).toBe('sqlite');
-      expect(config.storage).toBe(':memory:');
+      if (process.env.NODE_ENV === 'test') {
+        expect(config.storage).toBe(':memory:');
+      }
     }
   });
 });
