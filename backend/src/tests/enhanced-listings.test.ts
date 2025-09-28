@@ -24,7 +24,7 @@ describe('Enhanced Listings API', () => {
     
     // Create test user with explicit password hash
     const passwordHash = await bcrypt.hash('testpassword123', 12);
-    const user = await User.create({
+    await User.create({
       firstName: 'Test',
       lastName: 'User',
       email: 'test@example.com',

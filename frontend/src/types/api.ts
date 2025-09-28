@@ -103,10 +103,14 @@ export interface SearchParams {
 }
 
 export interface PaymentData {
-  bookingId: string;
+  bookingId: number;
   amount: number;
-  currency: string;
-  paymentMethod: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  cellNumber?: string;
+  currency?: string;
+  paymentMethod?: string;
   returnUrl?: string;
   cancelUrl?: string;
 }
@@ -116,6 +120,13 @@ export interface ApiResponse<T = unknown> {
   data: T;
   message?: string;
   error?: string;
+  loading?: boolean;
+  user?: User;
+  payfastData?: {
+    paymentUrl: string;
+    redirectUrl?: string;
+  };
+  methods?: string[];
 }
 
 export interface PaginatedResponse<T = unknown> {
@@ -132,6 +143,8 @@ export interface ImportMetaEnv {
   readonly VITE_GA_TRACKING_ID: string;
 }
 
-export interface ImportMeta {
-  readonly env: ImportMetaEnv;
+declare global {
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
 }

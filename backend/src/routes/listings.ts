@@ -36,6 +36,14 @@ router.get('/', async (req, res) => {
   try {
     const { page = 1, limit = 10, search, minPrice, maxPrice, location, type, status } = req.query;
     
+    // Type-safe query parameter extraction
+    const searchTerm = typeof search === 'string' ? search : undefined;
+    const minPriceNum = typeof minPrice === 'string' ? minPrice : undefined;
+    const maxPriceNum = typeof maxPrice === 'string' ? maxPrice : undefined;
+    const locationStr = typeof location === 'string' ? location : undefined;
+    const typeStr = typeof type === 'string' ? type : undefined;
+    const statusStr = typeof status === 'string' ? status : undefined;
+    
     const offset = (Number(page) - 1) * Number(limit);
     const whereClause: Record<string, unknown> = {};
     
@@ -44,33 +52,33 @@ router.get('/', async (req, res) => {
       whereClause.status = 'approved';
     }
     
-    if (search) {
+    if (searchTerm) {
       whereClause[Op.or] = [
-        { title: { [Op.iLike]: `%${search}%` } },
-        { make: { [Op.iLike]: `%${search}%` } },
-        { model: { [Op.iLike]: `%${search}%` } },
-        { location: { [Op.iLike]: `%${search}%` } },
+        { title: { [Op.iLike]: `%${searchTerm}%` } },
+        { make: { [Op.iLike]: `%${searchTerm}%` } },
+        { model: { [Op.iLike]: `%${searchTerm}%` } },
+        { location: { [Op.iLike]: `%${searchTerm}%` } },
       ];
     }
     
-    if (minPrice) {
-      whereClause.pricePerDay = { ...whereClause.pricePerDay, [Op.gte]: Number(minPrice) };
+    if (minPriceNum) {
+      whereClause.pricePerDay = { ...whereClause.pricePerDay, [Op.gte]: Number(minPriceNum) };
     }
     
-    if (maxPrice) {
-      whereClause.pricePerDay = { ...whereClause.pricePerDay, [Op.lte]: Number(maxPrice) };
+    if (maxPriceNum) {
+      whereClause.pricePerDay = { ...whereClause.pricePerDay, [Op.lte]: Number(maxPriceNum) };
     }
     
-    if (location) {
-      whereClause.location = { [Op.iLike]: `%${location}%` };
+    if (locationStr) {
+      whereClause.location = { [Op.iLike]: `%${locationStr}%` };
     }
     
-    if (type) {
-      whereClause.type = type;
+    if (typeStr) {
+      whereClause.type = typeStr;
     }
     
-    if (status) {
-      whereClause.status = status;
+    if (statusStr) {
+      whereClause.status = statusStr;
     }
     
     const listings = await Listing.findAndCountAll({

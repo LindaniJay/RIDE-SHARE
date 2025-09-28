@@ -54,6 +54,21 @@ router.get('/', async (req, res) => {
       radius = 50 // km
     } = req.query;
     
+    // Type-safe query parameter extraction
+    const searchTerm = typeof search === 'string' ? search : undefined;
+    const minPriceNum = typeof minPrice === 'string' ? minPrice : undefined;
+    const maxPriceNum = typeof maxPrice === 'string' ? maxPrice : undefined;
+    const locationStr = typeof location === 'string' ? location : undefined;
+    const typeStr = typeof type === 'string' ? type : undefined;
+    const statusStr = typeof status === 'string' ? status : undefined;
+    const featuresStr = typeof features === 'string' ? features : undefined;
+    const transmissionStr = typeof transmission === 'string' ? transmission : undefined;
+    const fuelTypeStr = typeof fuelType === 'string' ? fuelType : undefined;
+    const seatsNum = typeof seats === 'string' ? seats : undefined;
+    const latitudeNum = typeof latitude === 'string' ? latitude : undefined;
+    const longitudeNum = typeof longitude === 'string' ? longitude : undefined;
+    const radiusNum = typeof radius === 'string' ? radius : undefined;
+    
     // Create cache key
     const cacheKey = `listings:${JSON.stringify(req.query)}`;
     
@@ -72,33 +87,33 @@ router.get('/', async (req, res) => {
     }
     
     // Enhanced search functionality
-    if (search) {
+    if (searchTerm) {
       whereClause[Op.or] = [
-        { title: { [Op.iLike]: `%${search}%` } },
-        { make: { [Op.iLike]: `%${search}%` } },
-        { model: { [Op.iLike]: `%${search}%` } },
-        { location: { [Op.iLike]: `%${search}%` } },
-        { description: { [Op.iLike]: `%${search}%` } },
+        { title: { [Op.iLike]: `%${searchTerm}%` } },
+        { make: { [Op.iLike]: `%${searchTerm}%` } },
+        { model: { [Op.iLike]: `%${searchTerm}%` } },
+        { location: { [Op.iLike]: `%${searchTerm}%` } },
+        { description: { [Op.iLike]: `%${searchTerm}%` } },
       ];
     }
     
     // Price filtering
-    if (minPrice || maxPrice) {
+    if (minPriceNum || maxPriceNum) {
       whereClause.pricePerDay = {};
-      if (minPrice) whereClause.pricePerDay[Op.gte] = Number(minPrice);
-      if (maxPrice) whereClause.pricePerDay[Op.lte] = Number(maxPrice);
+      if (minPriceNum) whereClause.pricePerDay[Op.gte] = Number(minPriceNum);
+      if (maxPriceNum) whereClause.pricePerDay[Op.lte] = Number(maxPriceNum);
     }
     
     // Location filtering
-    if (location) {
-      whereClause.location = { [Op.iLike]: `%${location}%` };
+    if (locationStr) {
+      whereClause.location = { [Op.iLike]: `%${locationStr}%` };
     }
     
     // Geographic search
-    if (latitude && longitude) {
-      const lat = Number(latitude);
-      const lng = Number(longitude);
-      const rad = Number(radius);
+    if (latitudeNum && longitudeNum) {
+      const lat = Number(latitudeNum);
+      const lng = Number(longitudeNum);
+      const rad = Number(radiusNum || 50);
       
       // Simple bounding box search (for production, use PostGIS or similar)
       const latRange = rad / 111; // Rough conversion: 1 degree ≈ 111 km
@@ -113,36 +128,36 @@ router.get('/', async (req, res) => {
     }
     
     // Type filtering
-    if (type) {
-      whereClause.type = type;
+    if (typeStr) {
+      whereClause.type = typeStr;
     }
     
     // Status filtering
-    if (status) {
-      whereClause.status = status;
+    if (statusStr) {
+      whereClause.status = statusStr;
     }
     
     // Feature filtering
-    if (features) {
-      const featureArray = Array.isArray(features) ? features : [features];
+    if (featuresStr) {
+      const featureArray = Array.isArray(featuresStr) ? featuresStr : [featuresStr];
       whereClause.features = {
         [Op.contains]: featureArray
       };
     }
     
     // Transmission filtering
-    if (transmission) {
-      whereClause.transmission = transmission;
+    if (transmissionStr) {
+      whereClause.transmission = transmissionStr;
     }
     
     // Fuel type filtering
-    if (fuelType) {
-      whereClause.fuelType = fuelType;
+    if (fuelTypeStr) {
+      whereClause.fuelType = fuelTypeStr;
     }
     
     // Seats filtering
-    if (seats) {
-      whereClause.seats = { [Op.gte]: Number(seats) };
+    if (seatsNum) {
+      whereClause.seats = { [Op.gte]: Number(seatsNum) };
     }
     
     // Sorting options
