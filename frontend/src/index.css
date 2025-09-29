@@ -11,10 +11,12 @@
   
   body {
     background: 
-      linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.9) 100%),
-      url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><pattern id="cars" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse"><g fill="%23333" opacity="0.1"><path d="M20 40h160v20H20zM30 60h140v10H30zM40 80h120v5H40zM50 90h100v3H50z"/><circle cx="50" cy="120" r="15" fill="%23444"/><circle cx="150" cy="120" r="15" fill="%23444"/><path d="M20 140h160v15H20z"/><path d="M30 160h140v8H30z"/></g></pattern></defs><rect width="1200" height="800" fill="%23000"/><rect width="1200" height="800" fill="url(%23cars)"/></svg>');
+      linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.8) 100%),
+      url('/background-rideshare.png');
     background-attachment: fixed;
     background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     min-height: 100vh;
   }
   

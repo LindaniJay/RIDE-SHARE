@@ -18,7 +18,7 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { register, authMethod, setAuthMethod } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,42 +76,6 @@ const Register: React.FC = () => {
               </div>
             )}
 
-            {/* Authentication Method Selector */}
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-              <label className="block text-sm font-medium text-white mb-3">
-                Authentication Method
-              </label>
-              <div className="flex space-x-4">
-                <button
-                  type="button"
-                  onClick={() => setAuthMethod('firebase')}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    authMethod === 'firebase'
-                      ? 'bg-blue-500/20 text-blue-200 border border-blue-400/30'
-                      : 'bg-white/10 text-white/70 border border-white/20 hover:bg-white/20'
-                  }`}
-                >
-                  🔥 Firebase
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAuthMethod('express')}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    authMethod === 'express'
-                      ? 'bg-green-500/20 text-green-200 border border-green-400/30'
-                      : 'bg-white/10 text-white/70 border border-white/20 hover:bg-white/20'
-                  }`}
-                >
-                  ⚡ Express JWT
-                </button>
-              </div>
-              <p className="text-xs text-white/60 mt-2">
-                {authMethod === 'firebase' 
-                  ? 'Using Firebase Authentication with Firestore'
-                  : 'Using Express JWT with in-memory storage'
-                }
-              </p>
-            </div>
             
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">

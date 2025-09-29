@@ -32,20 +32,20 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, className }) 
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 ${className}`}>
+    <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${className}`}>
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-3xl font-extrabold text-white">
             Admin Access
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-gray-300">
             Sign in to access the admin dashboard
           </p>
         </div>
 
-        <Card className="mt-8">
+        <Card className="mt-8 bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-center">Administrator Login</CardTitle>
+            <CardTitle className="text-center text-white">Administrator Login</CardTitle>
           </CardHeader>
           <CardContent>
             <Form onSubmit={handleAdminLogin}>
@@ -102,33 +102,15 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, className }) 
               </div>
             </Form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Admin Accounts</span>
-                </div>
-              </div>
-
-              <div className="mt-4 text-xs text-gray-500 space-y-1">
-                <p><strong>Jonase:</strong> Jonase@rideshare.co.za</p>
-                <p><strong>Toni:</strong> Toni@rideshare.co.za</p>
-                <p><strong>Soso:</strong> soso@rideshare.co.za</p>
-                <p><strong>Anitha:</strong> Anitha@rideshare.co.za</p>
-                <p className="mt-2 text-center"><strong>Password:</strong> password123</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
         <div className="text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-white/90 bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20">
             Regular users should use{' '}
             <button
               onClick={() => navigate('/login')}
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-medium text-blue-300 hover:text-blue-200 transition-colors"
             >
               Firebase authentication
             </button>
