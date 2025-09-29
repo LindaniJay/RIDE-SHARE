@@ -118,7 +118,7 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
     const totalEarnings = await Booking.sum('totalPrice', {
       where: {
         status: 'completed',
-        listingId: { [Op.in]: vehicleIds }
+        vehicleId: { [Op.in]: vehicleIds }
       }
     }) || 0;
     

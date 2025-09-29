@@ -175,7 +175,10 @@ const seedData = async () => {
     ];
 
     for (const listingData of listings) {
-      await Listing.create(listingData);
+      await Listing.create({
+        ...listingData,
+        availability: {}
+      });
     }
 
     console.log('✅ Database seeded successfully!');

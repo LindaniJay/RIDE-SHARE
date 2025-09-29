@@ -108,7 +108,7 @@ router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
       },
       raw: true
     });
-    const recentRevenue = (recentRevenueResult as { recentRevenue: number })?.recentRevenue || 0;
+    const recentRevenue = (recentRevenueResult as any)?.recentRevenue || 0;
 
     // Pending listings
     const pendingListings = await Listing.count({

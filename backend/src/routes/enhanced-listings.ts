@@ -88,7 +88,7 @@ router.get('/', async (req, res) => {
     
     // Enhanced search functionality
     if (searchTerm) {
-      whereClause[Op.or] = [
+      (whereClause as any)[Op.or] = [
         { title: { [Op.iLike]: `%${searchTerm}%` } },
         { make: { [Op.iLike]: `%${searchTerm}%` } },
         { model: { [Op.iLike]: `%${searchTerm}%` } },
@@ -100,8 +100,8 @@ router.get('/', async (req, res) => {
     // Price filtering
     if (minPriceNum || maxPriceNum) {
       whereClause.pricePerDay = {} as Record<string, unknown>;
-      if (minPriceNum) (whereClause.pricePerDay as Record<string, unknown>)[Op.gte] = Number(minPriceNum);
-      if (maxPriceNum) (whereClause.pricePerDay as Record<string, unknown>)[Op.lte] = Number(maxPriceNum);
+      if (minPriceNum) (whereClause.pricePerDay as any)[Op.gte] = Number(minPriceNum);
+      if (maxPriceNum) (whereClause.pricePerDay as any)[Op.lte] = Number(maxPriceNum);
     }
     
     // Location filtering
@@ -163,15 +163,15 @@ router.get('/', async (req, res) => {
     // Sorting options
     const orderOptions: [string, string][] = [];
     if (sortBy === 'price') {
-      orderOptions.push(['pricePerDay', sortOrder]);
+      orderOptions.push(['pricePerDay', sortOrder as string]);
     } else if (sortBy === 'rating') {
-      orderOptions.push(['averageRating', sortOrder]);
+      orderOptions.push(['averageRating', sortOrder as string]);
     } else if (sortBy === 'distance' && latitude && longitude) {
       // For distance sorting, we'd need to calculate distance in the query
       // This is a simplified version
       orderOptions.push(['createdAt', 'DESC']);
     } else {
-      orderOptions.push([sortBy, sortOrder]);
+      orderOptions.push([sortBy as string, sortOrder as string]);
     }
     
     const listings = await Listing.findAndCountAll({
@@ -298,6 +298,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
       status: 'pending', // Requires approval
       features: listingData.features || [], // Ensure features is always an array
       images: listingData.images || [], // Ensure images is always an array
+      availability: listingData.availability || {},
     });
     
     // Clear relevant caches

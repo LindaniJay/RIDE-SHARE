@@ -53,7 +53,7 @@ router.get('/', async (req, res) => {
     }
     
     if (searchTerm) {
-      whereClause[Op.or] = [
+      (whereClause as any)[Op.or] = [
         { title: { [Op.iLike]: `%${searchTerm}%` } },
         { make: { [Op.iLike]: `%${searchTerm}%` } },
         { model: { [Op.iLike]: `%${searchTerm}%` } },

@@ -26,7 +26,7 @@ router.get('/listing/:listingId', async (req, res) => {
     const offset = (Number(page) - 1) * Number(limit);
     
     const reviews = await Review.findAndCountAll({
-      where: { listingId: req.params.listingId },
+      where: { vehicleId: req.params.listingId },
       include: [
         {
           model: User,
@@ -145,7 +145,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     // Check if user has already reviewed this listing
     const existingReview = await Review.findOne({
       where: {
-        listingId: reviewData.listingId,
+        vehicleId: reviewData.listingId,
         renterId: req.user!.id,
       },
     });
@@ -157,6 +157,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     const review = await Review.create({
       ...reviewData,
       renterId: req.user!.id,
+      vehicleId: reviewData.listingId,
     });
     
     res.status(201).json(review);

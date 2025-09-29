@@ -123,7 +123,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     
     const conflictingBooking = await Booking.findOne({
       where: {
-        listingId: bookingData.listingId,
+        vehicleId: bookingData.listingId,
         status: ['confirmed', 'pending'],
         [Op.or]: [
           {
@@ -149,6 +149,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     const booking = await Booking.create({
       ...bookingData,
       renterId: req.user!.id,
+      vehicleId: bookingData.listingId,
       status: 'pending',
       startDate: new Date(bookingData.startDate),
       endDate: new Date(bookingData.endDate),
@@ -173,7 +174,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
     
     // Check if user owns the booking or is the listing host
-    const listing = await Listing.findByPk(booking.listingId);
+    const listing = await Listing.findByPk(booking.vehicleId);
     if (booking.renterId !== req.user!.id && listing?.hostId !== req.user!.id) {
       return res.status(403).json({ error: 'You can only update your own bookings' });
     }
