@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://rideshare-sa.co.za/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Disallow admin and private areas
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /admin/
+
+# Allow important pages
+Allow: /
+Allow: /search
+Allow: /about
+Allow: /contact
+Allow: /faq
+Allow: /login
+Allow: /register
