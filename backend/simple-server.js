@@ -262,11 +262,23 @@ app.post('/api/auth/verify-firebase-token', async (req, res) => {
       name: 'Firebase User'
     };
     
+    // Check if this is an admin user by email
+    const adminEmails = [
+      'Jonase@rideshare.co.za',
+      'Toni@rideshare.co.za', 
+      'soso@rideshare.co.za',
+      'Anitha@rideshare.co.za'
+    ];
+    
+    // For demo, we'll check the email from the token (in real app, decode the Firebase token)
+    const isAdmin = adminEmails.includes(req.body.email || 'user@rideshare.co.za');
+    const userRole = isAdmin ? 'admin' : 'renter';
+    
     const token = jwt.sign(
       { 
         userId: mockUser.uid, 
         email: mockUser.email, 
-        role: 'renter',
+        role: userRole,
         isFirebase: true 
       },
       'your-secret-key',
@@ -281,9 +293,10 @@ app.post('/api/auth/verify-firebase-token', async (req, res) => {
         email: mockUser.email,
         firstName: mockUser.name.split(' ')[0],
         lastName: mockUser.name.split(' ')[1] || '',
-        role: 'renter',
+        role: userRole,
         isEmailVerified: mockUser.email_verified,
-        isFirebase: true
+        isFirebase: true,
+        isAdmin: isAdmin
       }
     });
   } catch (error) {
@@ -401,6 +414,168 @@ app.get('/api/stats', (req, res) => {
     activeBookings: 0,
     pendingApprovals: 0
   });
+});
+
+// Admin API endpoints
+app.get('/api/admin/users', authenticate, (req, res) => {
+  try {
+    // Return all users (admin, hosts, renters)
+    const allUsers = [...adminUsers, ...demoUsers];
+    res.json({
+      success: true,
+      users: allUsers.map(user => ({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        joinDate: user.createdAt || user.joinDate,
+        isActive: user.isActive !== false,
+        totalBookings: user.totalBookings || 0,
+        totalEarnings: user.totalEarnings || 0
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/admin/vehicles', authenticate, (req, res) => {
+  try {
+    // Return all vehicles with their status
+    res.json({
+      success: true,
+      vehicles: vehicles.map(vehicle => ({
+        id: vehicle.id,
+        make: vehicle.make,
+        model: vehicle.model,
+        year: vehicle.year,
+        hostName: vehicle.hostName,
+        location: vehicle.location,
+        pricePerDay: vehicle.pricePerDay,
+        status: vehicle.status || 'pending',
+        totalBookings: vehicle.totalBookings || 0,
+        rating: vehicle.rating || 0
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching vehicles:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/admin/bookings', authenticate, (req, res) => {
+  try {
+    // Return all bookings
+    res.json({
+      success: true,
+      bookings: bookings.map(booking => ({
+        id: booking.id,
+        vehicleName: booking.vehicleName,
+        renterName: booking.renterName,
+        hostName: booking.hostName,
+        pickupDate: booking.pickupDate,
+        returnDate: booking.returnDate,
+        totalAmount: booking.totalAmount,
+        status: booking.status,
+        createdAt: booking.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/admin/documents', authenticate, (req, res) => {
+  try {
+    // Return pending documents for approval
+    const pendingDocs = [
+      {
+        id: '1',
+        type: 'license',
+        user: 'John Smith',
+        userEmail: 'host1@rideshare.co.za',
+        fileName: 'drivers_license.pdf',
+        uploadedAt: new Date().toISOString(),
+        status: 'pending'
+      },
+      {
+        id: '2',
+        type: 'id',
+        user: 'Mike Wilson',
+        userEmail: 'renter1@rideshare.co.za',
+        fileName: 'id_document.pdf',
+        uploadedAt: new Date().toISOString(),
+        status: 'pending'
+      }
+    ];
+    
+    res.json({
+      success: true,
+      documents: pendingDocs
+    });
+  } catch (error) {
+    console.error('Error fetching documents:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/admin/disputes', authenticate, (req, res) => {
+  try {
+    // Return disputes
+    const disputes = [
+      {
+        id: '1',
+        type: 'booking_dispute',
+        title: 'Vehicle damage claim',
+        description: 'Renter claims vehicle was damaged before rental',
+        renter: 'Mike Wilson',
+        host: 'John Smith',
+        status: 'open',
+        createdAt: new Date().toISOString(),
+        priority: 'high'
+      }
+    ];
+    
+    res.json({
+      success: true,
+      disputes: disputes
+    });
+  } catch (error) {
+    console.error('Error fetching disputes:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/admin/stats', authenticate, (req, res) => {
+  try {
+    // Calculate real-time stats
+    const totalUsers = adminUsers.length + demoUsers.length;
+    const totalVehicles = vehicles.length;
+    const totalBookings = bookings.length;
+    const totalRevenue = bookings.reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
+    const activeUsers = totalUsers; // All users are active in demo
+    const pendingBookings = bookings.filter(b => b.status === 'pending').length;
+    const supportTickets = 1; // Number of disputes
+    
+    res.json({
+      success: true,
+      stats: {
+        totalUsers,
+        totalVehicles,
+        totalBookings,
+        totalRevenue,
+        activeUsers,
+        pendingBookings,
+        supportTickets
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Health check

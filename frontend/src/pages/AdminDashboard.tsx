@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StatusBadge from '../components/StatusBadge';
+import { apiClient } from '../services/apiClient';
 // import { useAuth } from '../context/AuthContext'; // Currently unused but may be needed for admin features
 
 interface AdminStats {
@@ -75,329 +76,83 @@ const AdminDashboard: React.FC = () => {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      // Realistic mock data for RideShare SA
-      
-      // Realistic user data
-      setUsers([
-        {
-          id: '1',
-          firstName: 'Jonase',
-          lastName: 'Admin',
-          email: 'Jonase@rideshare.co.za',
-          role: 'admin',
-          joinDate: '2024-01-01',
-          isActive: true,
+      // Fetch real-time data from backend API using apiClient
+      const [usersResponse, vehiclesResponse, bookingsResponse, documentsResponse, disputesResponse, statsResponse] = await Promise.all([
+        apiClient.get('/admin/users'),
+        apiClient.get('/admin/vehicles'),
+        apiClient.get('/admin/bookings'),
+        apiClient.get('/admin/documents'),
+        apiClient.get('/admin/disputes'),
+        apiClient.get('/admin/stats')
+      ]);
+
+      // Process users data
+      if (usersResponse.success) {
+        setUsers((usersResponse.data as any)?.users || []);
+      } else {
+        console.error('Failed to fetch users:', usersResponse.message);
+      }
+
+      // Process vehicles data
+      if (vehiclesResponse.success) {
+        setVehicles((vehiclesResponse.data as any)?.vehicles || []);
+      } else {
+        console.error('Failed to fetch vehicles:', vehiclesResponse.message);
+      }
+
+      // Process bookings data
+      if (bookingsResponse.success) {
+        setBookings((bookingsResponse.data as any)?.bookings || []);
+      } else {
+        console.error('Failed to fetch bookings:', bookingsResponse.message);
+      }
+
+      // Process documents data
+      if (documentsResponse.success) {
+        setPendingDocuments((documentsResponse.data as any)?.documents || []);
+      } else {
+        console.error('Failed to fetch documents:', documentsResponse.message);
+      }
+
+      // Process disputes data
+      if (disputesResponse.success) {
+        setDisputes((disputesResponse.data as any)?.disputes || []);
+      } else {
+        console.error('Failed to fetch disputes:', disputesResponse.message);
+      }
+
+      // Process stats data
+      if (statsResponse.success) {
+        setStats((statsResponse.data as any)?.stats || {
+          totalUsers: 0,
+          totalVehicles: 0,
           totalBookings: 0,
-          totalEarnings: 0
-        },
-        {
-          id: '2',
-          firstName: 'Thabo',
-          lastName: 'Mthembu',
-          email: 'thabo.mthembu@gmail.com',
-          role: 'host',
-          joinDate: '2024-02-15',
-          isActive: true,
-          totalBookings: 12,
-          totalEarnings: 18500
-        },
-        {
-          id: '3',
-          firstName: 'Nomsa',
-          lastName: 'Dlamini',
-          email: 'nomsa.dlamini@yahoo.com',
-          role: 'host',
-          joinDate: '2024-03-20',
-          isActive: true,
-          totalBookings: 8,
-          totalEarnings: 12400
-        },
-        {
-          id: '4',
-          firstName: 'Sipho',
-          lastName: 'Nkosi',
-          email: 'sipho.nkosi@outlook.com',
-          role: 'renter',
-          joinDate: '2024-04-10',
-          isActive: true,
-          totalBookings: 5,
-          totalEarnings: 0
-        },
-        {
-          id: '5',
-          firstName: 'Lerato',
-          lastName: 'Molefe',
-          email: 'lerato.molefe@gmail.com',
-          role: 'renter',
-          joinDate: '2024-05-05',
-          isActive: true,
-          totalBookings: 3,
-          totalEarnings: 0
-        },
-        {
-          id: '6',
-          firstName: 'Mandla',
-          lastName: 'Zulu',
-          email: 'mandla.zulu@hotmail.com',
-          role: 'host',
-          joinDate: '2024-06-12',
-          isActive: true,
-          totalBookings: 15,
-          totalEarnings: 22500
-        },
-        {
-          id: '7',
-          firstName: 'Precious',
-          lastName: 'Mabena',
-          email: 'precious.mabena@gmail.com',
-          role: 'renter',
-          joinDate: '2024-07-08',
-          isActive: true,
-          totalBookings: 7,
-          totalEarnings: 0
-        },
-        {
-          id: '8',
-          firstName: 'Bongani',
-          lastName: 'Khumalo',
-          email: 'bongani.khumalo@yahoo.com',
-          role: 'host',
-          joinDate: '2024-08-15',
-          isActive: false,
-          totalBookings: 4,
-          totalEarnings: 6200
-        }
-      ]);
+          totalRevenue: 0,
+          activeUsers: 0,
+          pendingBookings: 0,
+          supportTickets: 0
+        });
+      } else {
+        console.error('Failed to fetch stats:', statsResponse.message);
+      }
 
-      // Realistic vehicle data
-      setVehicles([
-        {
-          id: '1',
-          make: 'Toyota',
-          model: 'Corolla',
-          year: 2020,
-          hostName: 'Thabo Mthembu',
-          location: 'Cape Town, Western Cape',
-          pricePerDay: 450,
-          status: 'approved',
-          totalBookings: 12,
-          rating: 4.8
-        },
-        {
-          id: '2',
-          make: 'BMW',
-          model: 'X3',
-          year: 2019,
-          hostName: 'Nomsa Dlamini',
-          location: 'Johannesburg, Gauteng',
-          pricePerDay: 800,
-          status: 'approved',
-          totalBookings: 8,
-          rating: 4.6
-        },
-        {
-          id: '3',
-          make: 'Volkswagen',
-          model: 'Polo',
-          year: 2021,
-          hostName: 'Mandla Zulu',
-          location: 'Durban, KwaZulu-Natal',
-          pricePerDay: 350,
-          status: 'pending',
-          totalBookings: 0,
-          rating: 0
-        },
-        {
-          id: '4',
-          make: 'Mercedes-Benz',
-          model: 'C-Class',
-          year: 2020,
-          hostName: 'Bongani Khumalo',
-          location: 'Pretoria, Gauteng',
-          pricePerDay: 950,
-          status: 'declined',
-          totalBookings: 4,
-          rating: 4.2
-        },
-        {
-          id: '5',
-          make: 'Ford',
-          model: 'Ranger',
-          year: 2022,
-          hostName: 'Thabo Mthembu',
-          location: 'Cape Town, Western Cape',
-          pricePerDay: 650,
-          status: 'approved',
-          totalBookings: 6,
-          rating: 4.9
-        }
-      ]);
-
-      // Realistic booking data
-      setBookings([
-        {
-          id: '1',
-          vehicleName: '2020 Toyota Corolla - Clean & Reliable',
-          renterName: 'Sipho Nkosi',
-          hostName: 'Thabo Mthembu',
-          pickupDate: '2024-12-15',
-          returnDate: '2024-12-17',
-          totalAmount: 1350,
-          status: 'confirmed',
-          createdAt: '2024-12-10'
-        },
-        {
-          id: '2',
-          vehicleName: '2019 BMW X3 - Luxury SUV',
-          renterName: 'Lerato Molefe',
-          hostName: 'Nomsa Dlamini',
-          pickupDate: '2024-12-20',
-          returnDate: '2024-12-22',
-          totalAmount: 2400,
-          status: 'pending',
-          createdAt: '2024-12-11'
-        },
-        {
-          id: '3',
-          vehicleName: '2022 Ford Ranger - Adventure Ready',
-          renterName: 'Precious Mabena',
-          hostName: 'Thabo Mthembu',
-          pickupDate: '2024-12-25',
-          returnDate: '2024-12-28',
-          totalAmount: 1950,
-          status: 'confirmed',
-          createdAt: '2024-12-12'
-        },
-        {
-          id: '4',
-          vehicleName: '2020 Toyota Corolla - Clean & Reliable',
-          renterName: 'Sipho Nkosi',
-          hostName: 'Thabo Mthembu',
-          pickupDate: '2024-12-30',
-          returnDate: '2025-01-02',
-          totalAmount: 2025,
-          status: 'completed',
-          createdAt: '2024-12-13'
-        },
-        {
-          id: '5',
-          vehicleName: '2019 BMW X3 - Luxury SUV',
-          renterName: 'Lerato Molefe',
-          hostName: 'Nomsa Dlamini',
-          pickupDate: '2025-01-05',
-          returnDate: '2025-01-07',
-          totalAmount: 1600,
-          status: 'cancelled',
-          createdAt: '2024-12-14'
-        }
-      ]);
-
-      // Realistic pending documents
-      setPendingDocuments([
-        {
-          id: '1',
-          type: 'license',
-          user: 'Sipho Nkosi',
-          userEmail: 'sipho.nkosi@outlook.com',
-          fileName: 'drivers_license_2024.pdf',
-          uploadedAt: '2024-12-01',
-          status: 'pending'
-        },
-        {
-          id: '2',
-          type: 'id',
-          user: 'Lerato Molefe',
-          userEmail: 'lerato.molefe@gmail.com',
-          fileName: 'sa_id_document.pdf',
-          uploadedAt: '2024-12-02',
-          status: 'pending'
-        },
-        {
-          id: '3',
-          type: 'vehicle_insurance',
-          user: 'Mandla Zulu',
-          userEmail: 'mandla.zulu@hotmail.com',
-          fileName: 'vehicle_insurance_2024.pdf',
-          uploadedAt: '2024-12-03',
-          status: 'pending'
-        },
-        {
-          id: '4',
-          type: 'license',
-          user: 'Precious Mabena',
-          userEmail: 'precious.mabena@gmail.com',
-          fileName: 'driving_license.pdf',
-          uploadedAt: '2024-12-04',
-          status: 'pending'
-        },
-        {
-          id: '5',
-          type: 'vehicle_registration',
-          user: 'Thabo Mthembu',
-          userEmail: 'thabo.mthembu@gmail.com',
-          fileName: 'vehicle_registration.pdf',
-          uploadedAt: '2024-12-05',
-          status: 'pending'
-        }
-      ]);
-
-      // Realistic disputes
-      setDisputes([
-        {
-          id: '1',
-          type: 'booking_dispute',
-          title: 'Vehicle damage claim',
-          description: 'Renter claims vehicle was damaged before rental period started',
-          renter: 'Sipho Nkosi',
-          host: 'Thabo Mthembu',
-          status: 'open',
-          createdAt: '2024-12-01',
-          priority: 'high'
-        },
-        {
-          id: '2',
-          type: 'payment_dispute',
-          title: 'Refund request for cancelled booking',
-          description: 'Host requesting refund for booking cancelled due to vehicle breakdown',
-          renter: 'Lerato Molefe',
-          host: 'Nomsa Dlamini',
-          status: 'in_progress',
-          createdAt: '2024-12-02',
-          priority: 'medium'
-        },
-        {
-          id: '3',
-          type: 'booking_dispute',
-          title: 'Late return fee dispute',
-          description: 'Renter disputes late return fee claiming they returned vehicle on time',
-          renter: 'Precious Mabena',
-          host: 'Mandla Zulu',
-          status: 'resolved',
-          createdAt: '2024-11-28',
-          priority: 'low'
-        }
-      ]);
-
-      // Calculate realistic stats
-      const totalUsers = 8;
-      const totalVehicles = 5;
-      const totalBookings = 5;
-      const totalRevenue = 9330; // Sum of all booking amounts
-      const activeUsers = 7; // 8 total - 1 inactive
-      const pendingBookings = 1; // Only 1 pending booking
-      const supportTickets = 3; // Number of disputes
-
-      setStats({
-        totalUsers,
-        totalVehicles,
-        totalBookings,
-        totalRevenue,
-        activeUsers,
-        pendingBookings,
-        supportTickets
-      });
     } catch (error) {
       console.error('Error fetching admin data:', error);
+      // Fallback to empty data if API fails
+      setUsers([]);
+      setVehicles([]);
+      setBookings([]);
+      setPendingDocuments([]);
+      setDisputes([]);
+      setStats({
+        totalUsers: 0,
+        totalVehicles: 0,
+        totalBookings: 0,
+        totalRevenue: 0,
+        activeUsers: 0,
+        pendingBookings: 0,
+        supportTickets: 0
+      });
     } finally {
       setLoading(false);
     }
