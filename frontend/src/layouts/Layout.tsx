@@ -118,14 +118,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <Icon name="Plus" size="sm" />
                     <span className="hidden sm:block">Sign Up</span>
                   </Link>
-                  <Link
-                    to="/admin-login"
-                    className="glass-button flex items-center space-x-1 px-2.5 py-1.5 text-white/80 hover:text-white transition-all duration-300"
-                    title="Admin Access"
-                  >
-                    <Icon name="User" size="sm" />
-                    <span className="hidden sm:block">Admin</span>
-                  </Link>
                 </div>
               )}
               
@@ -272,6 +264,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <li><a href="#" className="text-gray-300 hover:text-white transition-colors text-xs">Safety Guidelines</a></li>
                 <li><a href="#" className="text-gray-300 hover:text-white transition-colors text-xs">Terms of Service</a></li>
                 <li><a href="#" className="text-gray-300 hover:text-white transition-colors text-xs">Privacy Policy</a></li>
+                <li>
+                  <Link 
+                    to="/admin-login" 
+                    className="text-gray-300 hover:text-white transition-colors text-xs flex items-center space-x-1"
+                    title="Admin Access"
+                  >
+                    <Icon name="User" size="sm" />
+                    <span>Admin</span>
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
