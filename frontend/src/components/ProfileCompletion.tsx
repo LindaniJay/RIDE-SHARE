@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import DocumentUpload from './DocumentUpload';
 import Icon from './Icon';
+import { profileStatusService } from '../services/profileStatusService';
 
 interface ProfileCompletionProps {
   userRole: 'renter' | 'host';
@@ -85,6 +86,9 @@ export const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
 
       // Submit profile data
       await onProfileComplete(profileData);
+      
+      // Update profile status service
+      profileStatusService.setProfileCompleted(profileData);
       
     } catch (err) {
       setError('Failed to complete profile. Please try again.');

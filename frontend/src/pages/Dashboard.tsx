@@ -130,7 +130,7 @@ const RenterDashboard: React.FC = () => {
     );
   }
 
-  // Show profile completion if not completed
+  // Show profile status or completion prompt
   if (!profileCompleted && !showProfileCompletion) {
     return (
       <div className="space-y-6">
@@ -149,6 +149,19 @@ const RenterDashboard: React.FC = () => {
             </button>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Show profile status if completed
+  if (profileCompleted && !showProfileCompletion) {
+    return (
+      <div className="space-y-6">
+        <ProfileStatusDisplay 
+          onEditProfile={() => setShowProfileCompletion(true)}
+          onResubmitProfile={() => setShowProfileCompletion(true)}
+        />
+        {/* Rest of the dashboard content will be shown here */}
       </div>
     );
   }
@@ -702,7 +715,7 @@ const HostDashboard: React.FC = () => {
     );
   }
 
-  // Show profile completion if not completed
+  // Show profile status or completion prompt
   if (!profileCompleted && !showProfileCompletion) {
     return (
       <div className="space-y-6">
@@ -721,6 +734,19 @@ const HostDashboard: React.FC = () => {
             </button>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Show profile status if completed
+  if (profileCompleted && !showProfileCompletion) {
+    return (
+      <div className="space-y-6">
+        <ProfileStatusDisplay 
+          onEditProfile={() => setShowProfileCompletion(true)}
+          onResubmitProfile={() => setShowProfileCompletion(true)}
+        />
+        {/* Rest of the dashboard content will be shown here */}
       </div>
     );
   }
