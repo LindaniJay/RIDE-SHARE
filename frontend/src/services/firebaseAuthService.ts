@@ -59,19 +59,79 @@ class FirebaseAuthService {
   // Admin login (bypasses Firebase)
   async adminLogin(email: string, password: string): Promise<AuthUser> {
     try {
-      const response = await apiClient.post('/auth/admin-login', {
-        email,
-        password
-      });
+      // Mock admin users for demo purposes
+      const adminUsers = [
+        {
+          id: 'admin-1',
+          email: 'Jonase@rideshare.co.za',
+          password: 'password123',
+          firstName: 'Jonase',
+          lastName: 'Admin',
+          role: 'admin' as const,
+          isEmailVerified: true,
+          isAdmin: true
+        },
+        {
+          id: 'admin-2',
+          email: 'Toni@rideshare.co.za',
+          password: 'password123',
+          firstName: 'Toni',
+          lastName: 'Admin',
+          role: 'admin' as const,
+          isEmailVerified: true,
+          isAdmin: true
+        },
+        {
+          id: 'admin-3',
+          email: 'soso@rideshare.co.za',
+          password: 'password123',
+          firstName: 'Soso',
+          lastName: 'Admin',
+          role: 'admin' as const,
+          isEmailVerified: true,
+          isAdmin: true
+        },
+        {
+          id: 'admin-4',
+          email: 'Anitha@rideshare.co.za',
+          password: 'password123',
+          firstName: 'Anitha',
+          lastName: 'Admin',
+          role: 'admin' as const,
+          isEmailVerified: true,
+          isAdmin: true
+        }
+      ];
 
-      if (response.success) {
-        this.currentUser = (response.data as any).user;
-        localStorage.setItem('authToken', (response.data as any).accessToken);
-        this.notifyListeners();
-        return this.currentUser!;
-      } else {
-        throw new Error(response.message || 'Admin login failed');
+      // Find admin user
+      const adminUser = adminUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+      
+      if (!adminUser) {
+        throw new Error('Admin access denied');
       }
+      
+      if (password !== adminUser.password) {
+        throw new Error('Invalid admin credentials');
+      }
+
+      // Create mock token
+      const mockToken = 'mock-admin-token-' + Date.now();
+      
+      // Set current user
+      this.currentUser = {
+        id: adminUser.id,
+        email: adminUser.email,
+        firstName: adminUser.firstName,
+        lastName: adminUser.lastName,
+        role: adminUser.role,
+        isEmailVerified: adminUser.isEmailVerified,
+        isAdmin: true
+      };
+      
+      localStorage.setItem('authToken', mockToken);
+      this.notifyListeners();
+      
+      return this.currentUser;
     } catch (error) {
       console.error('Admin login error:', error);
       throw error;
