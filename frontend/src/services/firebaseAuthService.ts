@@ -65,7 +65,8 @@ class FirebaseAuthService {
       
       // Verify with backend that this user has admin role
       const response = await apiClient.post('/auth/verify-firebase-token', {
-        idToken
+        idToken,
+        email: userCredential.user.email
       });
 
       if (response.success) {

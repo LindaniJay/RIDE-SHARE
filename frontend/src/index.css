@@ -66,6 +66,11 @@
     @apply bg-gray-200/20 hover:bg-gray-200/30 text-gray-900 font-semibold py-3 px-6 rounded-lg transition-all duration-300 backdrop-blur-md border border-gray-300/30;
   }
   
+  /* Logo Enhancement Styles */
+  .logo-footer {
+    @apply bg-white/10 backdrop-blur-sm rounded-md p-1.5 shadow-lg border border-white/20;
+  }
+  
   .btn-ghost {
     @apply bg-transparent hover:bg-white/10 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 border border-white/20;
   }

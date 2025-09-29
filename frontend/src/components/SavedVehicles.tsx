@@ -96,7 +96,7 @@ export const SavedVehicles: React.FC<SavedVehiclesProps> = ({ userId, className 
     <div className={`space-y-4 ${className}`}>
       {savedVehicles.length === 0 ? (
         <div className="text-center py-8">
-          <Icon name="Heart" size="xl" className="text-white/50 mb-4" />
+          <Icon name="Heart" size="lg" className="text-white/50 mb-4" />
           <p className="text-white/70">No saved vehicles yet</p>
           <p className="text-white/50 text-sm">Browse vehicles and save your favorites!</p>
         </div>

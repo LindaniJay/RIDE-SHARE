@@ -18,7 +18,7 @@ interface AdminStats {
   supportTickets: number;
 }
 
-interface User {
+interface AdminUser {
   id: string;
   firstName: string;
   lastName: string;
@@ -30,7 +30,7 @@ interface User {
   totalEarnings: number;
 }
 
-interface Vehicle {
+interface AdminVehicle {
   id: string;
   make: string;
   model: string;
@@ -66,10 +66,10 @@ const AdminDashboard: React.FC = () => {
     pendingBookings: 0,
     supportTickets: 0
   });
-  const [users, setUsers] = useState<User[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [vehicles, setVehicles] = useState<AdminVehicle[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [profileCompletions, setProfileCompletions] = useState<ProfileData[]>([]);
+  const [profileCompletions] = useState<ProfileData[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { profileStatusService, ProfileStatus } from '../services/profileStatusService';
+import { profileStatusService } from '../services/profileStatusService';
 import Icon from './Icon';
 
 interface ProfileStatusDisplayProps {

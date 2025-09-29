@@ -36,7 +36,7 @@ class ProfileStatusService {
   }
 
   // Set profile as completed
-  setProfileCompleted(profileData: any): void {
+  setProfileCompleted(_profileData: any): void {
     const status: ProfileStatus = {
       isCompleted: true,
       completionDate: new Date(),

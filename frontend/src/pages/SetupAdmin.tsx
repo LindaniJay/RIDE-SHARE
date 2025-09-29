@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Icon from '../components/Icon';
+// import Icon from '../components/Icon';
 import { createAdminUsers } from '../scripts/createAdminUsers';
 
 const SetupAdmin: React.FC = () => {

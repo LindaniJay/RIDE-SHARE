@@ -30,17 +30,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen">
       {/* Header with Logo and Navbar */}
       <header className="fixed top-4 left-0 right-0 z-50 w-full px-4">
-        <div className="flex items-center max-w-6xl mx-auto">
+        <div className="flex items-center max-w-6xl mx-auto h-16">
           {/* Logo - Left corner */}
           <Link 
             to="/" 
-            className="flex items-center hover:opacity-80 transition-all duration-300"
+            className="flex items-center hover:opacity-80 transition-all duration-300 h-full"
           >
-            <img 
-              src="/logo.png" 
-              alt="RideShare SA Logo" 
-              className="h-[40px] w-auto drop-shadow-lg"
-            />
+            <div className="flex items-center bg-gray-700 rounded-full h-full px-8 shadow-lg">
+              <img 
+                src="/logo.png" 
+                alt="RideShare SA Logo" 
+                className="h-8 w-auto"
+              />
+            </div>
           </Link>
 
           {/* Navbar - Centered on screen */}
@@ -203,7 +205,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </header>
       
       {/* Main content with top padding to account for fixed header */}
-      <main className="pt-16">{children}</main>
+      <main className="pt-20">{children}</main>
       
       {/* Minimal Footer */}
       <footer className="bg-black/50 backdrop-blur-sm border-t border-white/10 py-4">
@@ -211,11 +213,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
             {/* Left: Logo and Copyright */}
             <div className="flex items-center space-x-4">
-              <img 
-                src="/logo.png" 
-                alt="RideShare SA Logo" 
-                className="h-6 w-auto"
-              />
+              <div className="logo-footer">
+                <img 
+                  src="/logo.png" 
+                  alt="RideShare SA Logo" 
+                  className="h-8 w-auto"
+                />
+              </div>
               <p className="text-gray-400 text-xs">
                 © 2024 RideShare SA. Cape Town, South Africa
               </p>

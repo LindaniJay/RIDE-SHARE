@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Icon from './Icon';
-import { ApprovalStatus } from '../types';
+// import { ApprovalStatus } from '../types';
 
 interface Notification {
   id: string;

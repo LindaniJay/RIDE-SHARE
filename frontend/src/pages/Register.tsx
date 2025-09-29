@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Icon from '../components/Icon';
+// import Icon from '../components/Icon';
 import { useAuth } from '../hooks/useAuth';
 import GlassForm from '../components/GlassForm';
 import GlassInput from '../components/GlassInput';

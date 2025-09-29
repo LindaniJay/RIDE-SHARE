@@ -419,7 +419,7 @@ const VehicleDetail: React.FC = () => {
 
                 <button
                   onClick={() => setShowBookingModal(true)}
-                  disabled={bookingForm.totalDays <= 0 || (user && user.approvalStatus !== 'approved')}
+                  disabled={bookingForm.totalDays <= 0 || (user && user.approvalStatus !== 'approved') || false}
                   className={`w-full py-3 px-4 rounded-md transition-colors font-semibold ${
                     !user 
                       ? 'bg-primary-600 text-white hover:bg-primary-700' 

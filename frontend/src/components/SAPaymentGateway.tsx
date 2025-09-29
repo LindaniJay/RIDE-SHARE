@@ -11,7 +11,7 @@ interface SAPaymentGatewayProps {
 
 export const SAPaymentGateway: React.FC<SAPaymentGatewayProps> = ({
   amount,
-  currency = 'ZAR',
+  // currency = 'ZAR',
   onPaymentSuccess,
   onPaymentError,
   className = ""

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { VehicleForm, VehicleType, FuelType, TransmissionType, VehicleFeature } from '../types';
+import { VehicleForm, VehicleType, VehicleFeature } from '../types';
 import DocumentUpload from './DocumentUpload';
 import Icon from './Icon';
 
@@ -42,17 +42,17 @@ export const VehicleListingForm: React.FC<VehicleListingFormProps> = ({
     { value: 'motorcycle', label: 'Motorcycle', icon: 'Bike' }
   ];
 
-  const fuelTypes: { value: FuelType; label: string }[] = [
-    { value: 'petrol', label: 'Petrol' },
-    { value: 'diesel', label: 'Diesel' },
-    { value: 'hybrid', label: 'Hybrid' },
-    { value: 'electric', label: 'Electric' }
-  ];
+  // const fuelTypes: { value: FuelType; label: string }[] = [
+  //   { value: 'petrol', label: 'Petrol' },
+  //   { value: 'diesel', label: 'Diesel' },
+  //   { value: 'hybrid', label: 'Hybrid' },
+  //   { value: 'electric', label: 'Electric' }
+  // ];
 
-  const transmissionTypes: { value: TransmissionType; label: string }[] = [
-    { value: 'manual', label: 'Manual' },
-    { value: 'automatic', label: 'Automatic' }
-  ];
+  // const transmissionTypes: { value: TransmissionType; label: string }[] = [
+  //   { value: 'manual', label: 'Manual' },
+  //   { value: 'automatic', label: 'Automatic' }
+  // ];
 
   const availableFeatures: VehicleFeature[] = [
     { id: 'aircon', name: 'Air Conditioning', category: 'comfort' },

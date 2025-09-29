@@ -1,10 +1,49 @@
 import React, { useState } from 'react';
 import Icon from './Icon';
-import { User, Vehicle, ApprovalStatus, ProfileData } from '../types';
+import { ProfileData } from '../types';
+
+interface AdminUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  joinDate: string;
+  isActive: boolean;
+  totalBookings: number;
+  totalEarnings: number;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  createdAt?: string;
+  documents?: {
+    idDocument?: string;
+    driverLicense?: string;
+    proofOfAddress?: string;
+  };
+}
+
+interface AdminVehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  hostName: string;
+  location: string;
+  pricePerDay: number;
+  status: string;
+  totalBookings: number;
+  rating: number;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  createdAt?: string;
+  documents?: {
+    registration?: string;
+    roadworthy?: string;
+    insurance?: string;
+  };
+}
 
 interface AdminApprovalPanelProps {
-  users: User[];
-  vehicles: Vehicle[];
+  users: AdminUser[];
+  vehicles: AdminVehicle[];
   profileCompletions: ProfileData[];
   onApproveUser: (userId: string, notes?: string) => void;
   onRejectUser: (userId: string, reason: string, notes?: string) => void;
@@ -118,7 +157,7 @@ export const AdminApprovalPanel: React.FC<AdminApprovalPanelProps> = ({
                       </h3>
                       <p className="text-sm text-white/70">{user.email}</p>
                       <p className="text-xs text-white/60">
-                        Registered: {new Date(user.createdAt).toLocaleDateString()}
+                        Registered: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                       </p>
                     </div>
                     <div className="flex space-x-2">
@@ -369,7 +408,7 @@ export const AdminApprovalPanel: React.FC<AdminApprovalPanelProps> = ({
                       </h3>
                       <p className="text-sm text-white/70">R{vehicle.pricePerDay}/day • {vehicle.location}</p>
                       <p className="text-xs text-white/60">
-                        Listed: {new Date(vehicle.createdAt).toLocaleDateString()}
+                        Listed: {vehicle.createdAt ? new Date(vehicle.createdAt).toLocaleDateString() : 'N/A'}
                       </p>
                     </div>
                     <div className="flex space-x-2">

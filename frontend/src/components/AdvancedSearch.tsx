@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Icon from './Icon';
+// import Icon from './Icon';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { VehicleFilters } from '../types/api';
 

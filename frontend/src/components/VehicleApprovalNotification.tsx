@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Vehicle } from '../types';
+// import { Vehicle } from '../types';
 import Icon from './Icon';
 
 interface VehicleApprovalNotificationProps {

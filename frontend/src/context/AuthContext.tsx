@@ -11,6 +11,8 @@ interface User {
   role: 'renter' | 'host' | 'admin';
   isEmailVerified: boolean;
   phone?: string;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  profileCompleted?: boolean;
 }
 
 interface AuthContextType {

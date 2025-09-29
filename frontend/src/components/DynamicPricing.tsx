@@ -125,10 +125,10 @@ export const DynamicPricing: React.FC<DynamicPricingProps> = ({
     onPriceUpdate(price);
   };
 
-  const addPricingRule = (rule: Omit<PricingRule, 'id'>) => {
-    const newRule = { ...rule, id: Date.now().toString() };
-    setPricingRules(prev => [...prev, newRule]);
-  };
+  // const addPricingRule = (rule: Omit<PricingRule, 'id'>) => {
+  //   const newRule = { ...rule, id: Date.now().toString() };
+  //   setPricingRules(prev => [...prev, newRule]);
+  // };
 
   const toggleRule = (ruleId: string) => {
     setPricingRules(prev => prev.map(rule => 
