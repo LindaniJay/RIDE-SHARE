@@ -59,11 +59,11 @@ export async function createAdminUsers() {
         createdAt: new Date().toISOString()
       });
       
-      console.log(`✅ Admin user created: ${adminUser.email}`);
+      console.log(`Admin user created: ${adminUser.email}`);
       
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
-        console.log(`⚠️ User already exists: ${adminUser.email}`);
+        console.log(`User already exists: ${adminUser.email}`);
         
         // Try to sign in and update profile
         try {
@@ -87,13 +87,13 @@ export async function createAdminUsers() {
             createdAt: new Date().toISOString()
           }, { merge: true });
           
-          console.log(`✅ Admin user profile updated: ${adminUser.email}`);
+          console.log(`Admin user profile updated: ${adminUser.email}`);
           
         } catch (signInError) {
-          console.error(`❌ Error updating user: ${adminUser.email}`, signInError);
+          console.error(`Error updating user: ${adminUser.email}`, signInError);
         }
       } else {
-        console.error(`❌ Error creating user: ${adminUser.email}`, error);
+        console.error(`Error creating user: ${adminUser.email}`, error);
       }
     }
   }

@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from './Icon';
 
 interface StatusBadgeProps {
   status: 'pending' | 'approved' | 'rejected' | 'declined' | 'verified' | 'unverified' | 'confirmed' | 'cancelled' | 'completed';
@@ -28,7 +29,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
           bg: 'bg-yellow-500/20',
           text: 'text-yellow-300',
           border: 'border-yellow-500/30',
-          icon: '⏳'
+          icon: 'Clock'
         };
       case 'rejected':
       case 'declined':
@@ -79,7 +80,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
         ${className}
       `}
     >
-      <span className="text-xs">{config.icon}</span>
+      <Icon name={config.icon} size="sm" />
       <span className="capitalize">{status}</span>
     </span>
   );

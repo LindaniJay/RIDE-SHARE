@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from '../components/Icon';
 
 interface FAQItem {
   id: string;
@@ -87,15 +88,15 @@ const FAQ: React.FC = () => {
   ];
 
   const categories = [
-    { id: 'general', name: 'General', icon: '❓' },
-    { id: 'bookings', name: 'Bookings', icon: '📋' },
-    { id: 'payments', name: 'Payments', icon: '💳' },
-    { id: 'hosting', name: 'Hosting', icon: '🏠' },
-    { id: 'safety', name: 'Safety', icon: '🛡️' },
-    { id: 'communication', name: 'Communication', icon: '💬' },
-    { id: 'requirements', name: 'Requirements', icon: '📄' },
-    { id: 'reviews', name: 'Reviews', icon: '⭐' },
-    { id: 'support', name: 'Support', icon: '🎧' }
+    { id: 'general', name: 'General', icon: 'Info' },
+    { id: 'bookings', name: 'Bookings', icon: 'Clipboard' },
+    { id: 'payments', name: 'Payments', icon: 'CreditCard' },
+    { id: 'hosting', name: 'Hosting', icon: 'Home' },
+    { id: 'safety', name: 'Safety', icon: 'Shield' },
+    { id: 'communication', name: 'Communication', icon: 'Phone' },
+    { id: 'requirements', name: 'Requirements', icon: 'FileText' },
+    { id: 'reviews', name: 'Reviews', icon: 'Star' },
+    { id: 'support', name: 'Support', icon: 'Phone' }
   ];
 
   const filteredFAQs = faqData.filter(faq => faq.category === activeCategory);
@@ -209,7 +210,8 @@ const FAQ: React.FC = () => {
                     href="mailto:support@rideshare-sa.co.za"
                     className="bg-white/20 backdrop-blur-md text-white px-6 py-2 rounded-lg font-semibold hover:bg-white/30 transition-colors"
                   >
-                    ✉️ Email Support
+                    <Icon name="Mail" size="sm" className="mr-1" />
+                    Email Support
                   </a>
                   <button className="bg-white/20 backdrop-blur-md text-white px-6 py-2 rounded-lg font-semibold hover:bg-white/30 transition-colors">
                     💬 Live Chat

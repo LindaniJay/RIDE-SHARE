@@ -53,7 +53,7 @@ const Search: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/api/vehicles', {
+      const response = await apiClient.get('/vehicles', {
         params: Object.fromEntries(searchParams.entries())
       });
       setVehicles(response.data.vehicles || []);
@@ -154,7 +154,7 @@ const Search: React.FC = () => {
                       placeholder="e.g., Cape Town"
                       value={filters.location}
                       onChange={(e) => handleFilterChange('location', e.target.value)}
-                      icon="📍"
+                      icon="MapPin"
                     />
                   </div>
 
@@ -167,7 +167,7 @@ const Search: React.FC = () => {
                       type="date"
                       value={filters.pickupDate}
                       onChange={(e) => handleFilterChange('pickupDate', e.target.value)}
-                      icon="🗓️"
+                      icon="Calendar"
                     />
                   </div>
                   <div>
@@ -178,7 +178,7 @@ const Search: React.FC = () => {
                       type="date"
                       value={filters.returnDate}
                       onChange={(e) => handleFilterChange('returnDate', e.target.value)}
-                      icon="🗓️"
+                      icon="Calendar"
                     />
                   </div>
 

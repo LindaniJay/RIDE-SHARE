@@ -6,6 +6,17 @@ import GlassCard from '../components/GlassCard';
 import DocumentUpload from '../components/DocumentUpload';
 import StatusBadge from '../components/StatusBadge';
 import Icon from '../components/Icon';
+import SavedVehicles from '../components/SavedVehicles';
+import DocumentExpiryReminder from '../components/DocumentExpiryReminder';
+import Promotions from '../components/Promotions';
+import RentalCalculator from '../components/RentalCalculator';
+import DynamicPricing from '../components/DynamicPricing';
+import FleetManagement from '../components/FleetManagement';
+import ProfileCompletion from '../components/ProfileCompletion';
+import VehicleListingForm from '../components/VehicleListingForm';
+import VehicleApprovalNotification from '../components/VehicleApprovalNotification';
+import ProfileStatusDisplay from '../components/ProfileStatusDisplay';
+import { profileStatusService } from '../services/profileStatusService';
 
 // Type definitions
 interface Booking {
@@ -40,6 +51,8 @@ const RenterDashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [profileCompleted, setProfileCompleted] = useState(profileStatusService.isProfileCompleted());
+  const [showProfileCompletion, setShowProfileCompletion] = useState(false);
 
   useEffect(() => {
     fetchRenterData();
@@ -117,6 +130,56 @@ const RenterDashboard: React.FC = () => {
     );
   }
 
+  // Show profile completion if not completed
+  if (!profileCompleted && !showProfileCompletion) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+          <div className="text-center">
+            <Icon name="User" size="lg" className="text-white/50 mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2">Complete Your Profile</h2>
+            <p className="text-white/70 mb-6">
+              To start using RideShare SA, please complete your profile and upload required documents.
+            </p>
+            <button
+              onClick={() => setShowProfileCompletion(true)}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+            >
+              Complete Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show profile completion form
+  if (showProfileCompletion) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-white">Complete Your Profile</h2>
+          <button
+            onClick={() => setShowProfileCompletion(false)}
+            className="px-4 py-2 bg-white/10 text-white/70 rounded-lg hover:bg-white/20 transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+        
+        <ProfileCompletion
+          userRole="renter"
+          onProfileComplete={(profileData) => {
+            console.log('Profile completed:', profileData);
+            setProfileCompleted(true);
+            setShowProfileCompletion(false);
+            // Here you would typically send the data to your backend
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -130,7 +193,30 @@ const RenterDashboard: React.FC = () => {
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
-            📊 Overview
+            <Icon name="BarChart" size="sm" className="mr-1" />
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('saved')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'saved'
+                ? 'bg-white/20 text-white'
+                : 'bg-white/10 text-white/70 hover:bg-white/20'
+            }`}
+          >
+            <Icon name="Heart" size="sm" className="mr-1" />
+            Saved
+          </button>
+          <button
+            onClick={() => setActiveTab('calculator')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'calculator'
+                ? 'bg-white/20 text-white'
+                : 'bg-white/10 text-white/70 hover:bg-white/20'
+            }`}
+          >
+            <Icon name="Calculator" size="sm" className="mr-1" />
+            Calculator
           </button>
           <button
             onClick={() => setActiveTab('documents')}
@@ -140,7 +226,19 @@ const RenterDashboard: React.FC = () => {
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
-            📄 Documents
+            <Icon name="FileText" size="sm" className="mr-1" />
+            Documents
+          </button>
+          <button
+            onClick={() => setActiveTab('promotions')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'promotions'
+                ? 'bg-white/20 text-white'
+                : 'bg-white/10 text-white/70 hover:bg-white/20'
+            }`}
+          >
+            <Icon name="Gift" size="sm" className="mr-1" />
+            Promotions
           </button>
           <button
             onClick={() => setActiveTab('bookings')}
@@ -150,7 +248,8 @@ const RenterDashboard: React.FC = () => {
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
-            🚗 Bookings
+            <Icon name="Car" size="sm" className="mr-1" />
+            Bookings
           </button>
           <button
             onClick={() => setActiveTab('payments')}
@@ -160,7 +259,8 @@ const RenterDashboard: React.FC = () => {
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
-            💳 Payments
+            <Icon name="CreditCard" size="sm" className="mr-1" />
+            Payments
           </button>
         </div>
       </div>
@@ -171,7 +271,7 @@ const RenterDashboard: React.FC = () => {
             <GlassCard
               title="Active Bookings"
               subtitle="Current rentals"
-              icon="🚗"
+              icon="Car"
               className="text-center"
             >
               <div className="text-3xl font-bold text-white mb-2">{activeBookings.length}</div>
@@ -181,7 +281,7 @@ const RenterDashboard: React.FC = () => {
             <GlassCard
               title="Total Spent"
               subtitle="All time spending"
-              icon="💰"
+              icon="DollarSign"
               className="text-center"
             >
               <div className="text-3xl font-bold text-white mb-2">R{totalSpent.toLocaleString()}</div>
@@ -191,11 +291,11 @@ const RenterDashboard: React.FC = () => {
             <GlassCard
               title="Verification Status"
               subtitle="Account verification"
-              icon="✅"
+              icon="CheckCircle"
               className="text-center"
             >
               <div className="text-3xl font-bold text-white mb-2">
-                {verificationStatus.profile === 'approved' ? '✅' : '⏳'}
+                <Icon name={verificationStatus.profile === 'approved' ? 'CheckCircle' : 'Clock'} size="lg" />
               </div>
               <div className="text-white/70 text-sm">
                 {verificationStatus.profile === 'approved' ? 'Verified' : 'Pending'}
@@ -207,7 +307,7 @@ const RenterDashboard: React.FC = () => {
             <GlassCard
               title="Recent Bookings"
               subtitle="Your latest vehicle rentals"
-              icon="📋"
+              icon="Clipboard"
             >
               <div className="space-y-3">
                 {bookings.slice(0, 3).map((booking) => (
@@ -242,12 +342,12 @@ const RenterDashboard: React.FC = () => {
             <GlassCard
               title="Verification Status"
               subtitle="Document verification progress"
-              icon="📋"
+              icon="Clipboard"
             >
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-white/10 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">👤</span>
+                    <Icon name="User" size="lg" />
                     <div>
                       <p className="text-white font-medium">Profile</p>
                       <p className="text-white/70 text-sm">Basic information</p>
@@ -283,6 +383,35 @@ const RenterDashboard: React.FC = () => {
         </>
       )}
 
+      {activeTab === 'saved' && (
+        <div className="space-y-6">
+          <GlassCard
+            title="Saved Vehicles"
+            subtitle="Your favorite vehicles for easy access"
+            icon="Heart"
+          >
+            <SavedVehicles userId="current-user" />
+          </GlassCard>
+        </div>
+      )}
+
+      {activeTab === 'calculator' && (
+        <div className="space-y-6">
+          <GlassCard
+            title="Rental Calculator"
+            subtitle="Calculate your rental costs with add-ons"
+            icon="🧮"
+          >
+            <RentalCalculator 
+              basePrice={250}
+              onCalculate={(total, breakdown) => {
+                console.log('Calculated total:', total, breakdown);
+              }}
+            />
+          </GlassCard>
+        </div>
+      )}
+
       {activeTab === 'documents' && (
         <div className="space-y-6">
           <GlassCard
@@ -294,23 +423,31 @@ const RenterDashboard: React.FC = () => {
               <div>
                 <h4 className="text-lg font-semibold text-white mb-4">Driver License</h4>
                 <DocumentUpload
-                  onUpload={(file) => handleDocumentUpload(file, 'license')}
-                  documentType="Driver License"
-                  acceptedTypes={['image/jpeg', 'image/png', 'application/pdf']}
-                  maxSize={5}
+                  label="Driver License"
+                  name="driverLicense"
+                  onChange={(file) => file && handleDocumentUpload(file, 'license')}
+                  accept="image/*,application/pdf"
                 />
               </div>
               
               <div>
                 <h4 className="text-lg font-semibold text-white mb-4">ID Document</h4>
                 <DocumentUpload
-                  onUpload={(file) => handleDocumentUpload(file, 'id')}
-                  documentType="ID Document"
-                  acceptedTypes={['image/jpeg', 'image/png', 'application/pdf']}
-                  maxSize={5}
+                  label="ID Document"
+                  name="idDocument"
+                  onChange={(file) => file && handleDocumentUpload(file, 'id')}
+                  accept="image/*,application/pdf"
                 />
               </div>
             </div>
+          </GlassCard>
+
+          <GlassCard
+            title="Document Expiry Reminders"
+            subtitle="Keep your documents up to date"
+            icon="⏰"
+          >
+            <DocumentExpiryReminder userId="current-user" />
           </GlassCard>
 
           <GlassCard
@@ -338,11 +475,23 @@ const RenterDashboard: React.FC = () => {
         </div>
       )}
 
+      {activeTab === 'promotions' && (
+        <div className="space-y-6">
+          <GlassCard
+            title="Available Promotions"
+            subtitle="Save money with these special offers"
+            icon="🎁"
+          >
+            <Promotions userId="current-user" />
+          </GlassCard>
+        </div>
+      )}
+
       {activeTab === 'bookings' && (
         <GlassCard
           title="My Bookings"
           subtitle="All your vehicle rentals"
-          icon="🚗"
+          icon="Car"
         >
           <div className="space-y-4">
             {bookings.map((booking) => (
@@ -390,7 +539,7 @@ const RenterDashboard: React.FC = () => {
           <GlassCard
             title="Payment History"
             subtitle="Your transaction history"
-            icon="💳"
+            icon="CreditCard"
           >
             <div className="space-y-4">
               {bookings.filter(b => b.status === 'completed').map((booking) => (
@@ -401,7 +550,7 @@ const RenterDashboard: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-white font-semibold">R{booking.totalPrice}</p>
-                    <p className="text-green-400 text-sm">✅ Paid</p>
+                    <p className="text-green-400 text-sm flex items-center space-x-1"><Icon name="CheckCircle" size="sm" /><span>Paid</span></p>
                   </div>
                 </div>
               ))}
@@ -414,13 +563,13 @@ const RenterDashboard: React.FC = () => {
           <GlassCard
             title="Payment Methods"
             subtitle="Manage your payment options"
-            icon="💳"
+            icon="CreditCard"
           >
             <div className="space-y-4">
               <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">💳</span>
+                    <Icon name="CreditCard" size="lg" />
                     <div>
                       <p className="text-white font-medium">Credit Card</p>
                       <p className="text-white/70 text-sm">**** **** **** 1234</p>
@@ -453,6 +602,9 @@ const HostDashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [profileCompleted, setProfileCompleted] = useState(profileStatusService.isProfileCompleted());
+  const [showProfileCompletion, setShowProfileCompletion] = useState(false);
+  const [showVehicleForm, setShowVehicleForm] = useState(false);
 
   useEffect(() => {
     fetchHostData();
@@ -518,6 +670,19 @@ const HostDashboard: React.FC = () => {
     ));
   };
 
+  const handleVehicleSubmit = async (vehicleData: any) => {
+    try {
+      console.log('Submitting vehicle for approval:', vehicleData);
+      // Here you would typically send the data to your backend
+      // The vehicle will be created with approvalStatus: 'pending'
+      alert('Vehicle submitted for admin approval. You will be notified once it\'s reviewed.');
+      setShowVehicleForm(false);
+    } catch (error) {
+      console.error('Failed to submit vehicle:', error);
+      alert('Failed to submit vehicle. Please try again.');
+    }
+  };
+
   const approvedListings = listings.filter(listing => listing.status === 'approved');
   const pendingListings = listings.filter(listing => listing.status === 'pending');
   const declinedListings = listings.filter(listing => listing.status === 'declined');
@@ -537,6 +702,78 @@ const HostDashboard: React.FC = () => {
     );
   }
 
+  // Show profile completion if not completed
+  if (!profileCompleted && !showProfileCompletion) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+          <div className="text-center">
+            <Icon name="User" size="lg" className="text-white/50 mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2">Complete Your Host Profile</h2>
+            <p className="text-white/70 mb-6">
+              To start hosting on RideShare SA, please complete your profile and upload required business documents.
+            </p>
+            <button
+              onClick={() => setShowProfileCompletion(true)}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+            >
+              Complete Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show profile completion form
+  if (showProfileCompletion) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-white">Complete Your Host Profile</h2>
+          <button
+            onClick={() => setShowProfileCompletion(false)}
+            className="px-4 py-2 bg-white/10 text-white/70 rounded-lg hover:bg-white/20 transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+        
+        <ProfileCompletion
+          userRole="host"
+          onProfileComplete={(profileData) => {
+            console.log('Host profile completed:', profileData);
+            setProfileCompleted(true);
+            setShowProfileCompletion(false);
+            // Here you would typically send the data to your backend
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Show vehicle listing form
+  if (showVehicleForm) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-white">List Your Vehicle</h2>
+          <button
+            onClick={() => setShowVehicleForm(false)}
+            className="px-4 py-2 bg-white/10 text-white/70 rounded-lg hover:bg-white/20 transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+        
+        <VehicleListingForm
+          onSubmit={handleVehicleSubmit}
+          onCancel={() => setShowVehicleForm(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -550,7 +787,30 @@ const HostDashboard: React.FC = () => {
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
-            📊 Overview
+            <Icon name="BarChart" size="sm" className="mr-1" />
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('fleet')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'fleet'
+                ? 'bg-white/20 text-white'
+                : 'bg-white/10 text-white/70 hover:bg-white/20'
+            }`}
+          >
+            <Icon name="Car" size="sm" className="mr-1" />
+            Fleet
+          </button>
+          <button
+            onClick={() => setActiveTab('pricing')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'pricing'
+                ? 'bg-white/20 text-white'
+                : 'bg-white/10 text-white/70 hover:bg-white/20'
+            }`}
+          >
+            <Icon name="DollarSign" size="sm" className="mr-1" />
+            Pricing
           </button>
           <button
             onClick={() => setActiveTab('vehicles')}
@@ -560,7 +820,8 @@ const HostDashboard: React.FC = () => {
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
-            🚗 Vehicles
+            <Icon name="Clipboard" size="sm" className="mr-1" />
+            Listings
           </button>
           <button
             onClick={() => setActiveTab('bookings')}
@@ -570,7 +831,8 @@ const HostDashboard: React.FC = () => {
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
-            📋 Bookings
+            <Icon name="Calendar" size="sm" className="mr-1" />
+            Bookings
           </button>
           <button
             onClick={() => setActiveTab('earnings')}
@@ -580,7 +842,8 @@ const HostDashboard: React.FC = () => {
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
-            💰 Earnings
+            <Icon name="DollarSign" size="sm" className="mr-1" />
+            Earnings
           </button>
         </div>
       </div>
@@ -591,7 +854,7 @@ const HostDashboard: React.FC = () => {
             <GlassCard
               title="Approved Listings"
               subtitle="Active vehicles"
-              icon="✅"
+              icon="CheckCircle"
               className="text-center"
             >
               <div className="text-3xl font-bold text-white mb-2">{approvedListings.length}</div>
@@ -601,7 +864,7 @@ const HostDashboard: React.FC = () => {
             <GlassCard
               title="Pending Approval"
               subtitle="Awaiting review"
-              icon="⏳"
+              icon="Clock"
               className="text-center"
             >
               <div className="text-3xl font-bold text-white mb-2">{pendingListings.length}</div>
@@ -611,7 +874,7 @@ const HostDashboard: React.FC = () => {
             <GlassCard
               title="Total Earnings"
               subtitle="All time revenue"
-              icon="💰"
+              icon="DollarSign"
               className="text-center"
             >
               <div className="text-3xl font-bold text-white mb-2">R{earnings.total.toLocaleString()}</div>
@@ -621,9 +884,17 @@ const HostDashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <GlassCard
+              title="Vehicle Approval Notifications"
+              subtitle="Latest approval updates"
+              icon="Bell"
+            >
+              <VehicleApprovalNotification hostId="current-host" />
+            </GlassCard>
+            
+            <GlassCard
               title="Recent Bookings"
               subtitle="Latest rental requests"
-              icon="📋"
+              icon="Clipboard"
             >
               <div className="space-y-3">
                 {bookings.slice(0, 3).map((booking) => (
@@ -649,12 +920,12 @@ const HostDashboard: React.FC = () => {
             <GlassCard
               title="Listing Status"
               subtitle="Vehicle approval status"
-              icon="📊"
+              icon="BarChart"
             >
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-white/10 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">✅</span>
+                    <Icon name="CheckCircle" size="lg" />
                     <div>
                       <p className="text-white font-medium">Approved</p>
                       <p className="text-white/70 text-sm">Ready to rent</p>
@@ -665,7 +936,7 @@ const HostDashboard: React.FC = () => {
                 
                 <div className="flex justify-between items-center p-3 bg-white/10 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">⏳</span>
+                    <Icon name="Clock" size="lg" />
                     <div>
                       <p className="text-white font-medium">Pending</p>
                       <p className="text-white/70 text-sm">Under review</p>
@@ -676,7 +947,7 @@ const HostDashboard: React.FC = () => {
                 
                 <div className="flex justify-between items-center p-3 bg-white/10 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">❌</span>
+                    <Icon name="XCircle" size="lg" />
                     <div>
                       <p className="text-white font-medium">Declined</p>
                       <p className="text-white/70 text-sm">Needs attention</p>
@@ -690,12 +961,42 @@ const HostDashboard: React.FC = () => {
         </>
       )}
 
+      {activeTab === 'fleet' && (
+        <div className="space-y-6">
+          <GlassCard
+            title="Fleet Management"
+            subtitle="Manage your entire vehicle fleet"
+            icon="Car"
+          >
+            <FleetManagement hostId="current-host" />
+          </GlassCard>
+        </div>
+      )}
+
+      {activeTab === 'pricing' && (
+        <div className="space-y-6">
+          <GlassCard
+            title="Dynamic Pricing"
+            subtitle="Optimize your pricing with smart rules"
+            icon="DollarSign"
+          >
+            <DynamicPricing 
+              vehicleId="sample-vehicle"
+              basePrice={250}
+              onPriceUpdate={(newPrice) => {
+                console.log('Updated price:', newPrice);
+              }}
+            />
+          </GlassCard>
+        </div>
+      )}
+
       {activeTab === 'vehicles' && (
         <div className="space-y-6">
           <GlassCard
             title="Vehicle Management"
             subtitle="Manage your vehicle listings"
-            icon="🚗"
+            icon="Car"
           >
             <div className="space-y-4">
               {listings.map((listing) => (
@@ -738,33 +1039,19 @@ const HostDashboard: React.FC = () => {
           <GlassCard
             title="Add New Vehicle"
             subtitle="List a new vehicle for rent"
-            icon="➕"
+            icon="Car"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="text-lg font-semibold text-white mb-4">Vehicle Photos</h4>
-                <DocumentUpload
-                  onUpload={(file) => console.log('Uploading vehicle photo:', file.name)}
-                  documentType="Vehicle Photos"
-                  acceptedTypes={['image/jpeg', 'image/png']}
-                  maxSize={10}
-                />
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-semibold text-white mb-4">Vehicle Documents</h4>
-                <DocumentUpload
-                  onUpload={(file) => console.log('Uploading vehicle document:', file.name)}
-                  documentType="Insurance & License"
-                  acceptedTypes={['image/jpeg', 'image/png', 'application/pdf']}
-                  maxSize={5}
-                />
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <button className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300">
-                + Add New Vehicle Listing
+            <div className="text-center py-8">
+              <Icon name="Car" size="lg" className="text-white/50 mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">List Your Vehicle</h3>
+              <p className="text-white/70 mb-6">
+                Submit your vehicle for admin approval. Once approved, it will be visible to renters.
+              </p>
+              <button
+                onClick={() => setShowVehicleForm(true)}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+              >
+                Start Vehicle Listing
               </button>
             </div>
           </GlassCard>
@@ -775,7 +1062,7 @@ const HostDashboard: React.FC = () => {
         <GlassCard
           title="Booking Requests"
           subtitle="Manage rental requests"
-          icon="📋"
+          icon="Clipboard"
         >
           <div className="space-y-4">
             {bookings.map((booking) => (
@@ -828,7 +1115,7 @@ const HostDashboard: React.FC = () => {
             <GlassCard
               title="Total Earnings"
               subtitle="All time revenue"
-              icon="💰"
+              icon="DollarSign"
               className="text-center"
             >
               <div className="text-3xl font-bold text-white mb-2">R{earnings.total.toLocaleString()}</div>
@@ -848,7 +1135,7 @@ const HostDashboard: React.FC = () => {
             <GlassCard
               title="Last Month"
               subtitle="Previous month earnings"
-              icon="📊"
+              icon="BarChart"
               className="text-center"
             >
               <div className="text-3xl font-bold text-white mb-2">R{earnings.lastMonth.toLocaleString()}</div>
@@ -859,11 +1146,13 @@ const HostDashboard: React.FC = () => {
           <GlassCard
             title="Earnings Chart"
             subtitle="Monthly revenue overview"
-            icon="📈"
+            icon="TrendingUp"
           >
             <div className="h-64 flex items-center justify-center text-white/60">
               <div className="text-center">
-                <div className="text-4xl mb-4">📊</div>
+                <div className="mb-4">
+                  <Icon name="BarChart" size="lg" className="text-white/50 mx-auto" />
+                </div>
                 <p>Earnings chart would be displayed here</p>
                 <p className="text-sm">Integration with chart library needed</p>
               </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import Icon from '../components/Icon';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -205,7 +206,7 @@ const Contact: React.FC = () => {
 
               <div className="flex items-start space-x-4">
                 <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                  <span className="text-purple-600 dark:text-purple-400 text-xl">📍</span>
+                  <Icon name="MapPin" size="lg" className="text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white">Office</h3>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Icon from '../components/Icon';
 import { vehiclesAPI, bookingsAPI } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import PaymentModal from '../components/PaymentModal';
@@ -130,6 +131,13 @@ const VehicleDetail: React.FC = () => {
       return;
     }
 
+    // Check if user is approved
+    if (user.approvalStatus !== 'approved') {
+      alert('Your account needs to be verified before you can make bookings. Please upload your documents and wait for approval.');
+      navigate('/dashboard');
+      return;
+    }
+
     if (!vehicle || bookingForm.totalDays <= 0) {
       alert('Please select valid dates');
       return;
@@ -178,13 +186,13 @@ const VehicleDetail: React.FC = () => {
 
   const getVehicleTypeIcon = (type: string) => {
     const icons: { [key: string]: string } = {
-      car: '🚗',
-      bakkie: '🚛',
-      suv: '🚙',
-      van: '🚐',
-      luxury: '🏎️'
+      car: 'Car',
+      bakkie: 'Car',
+      suv: 'Car',
+      van: 'Car',
+      luxury: 'Car'
     };
-    return icons[type] || '🚗';
+    return icons[type] || 'Car';
   };
 
   if (loading) {
@@ -212,7 +220,9 @@ const VehicleDetail: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">🚗</div>
+            <div className="mb-4">
+              <Icon name="Car" size="lg" className="text-gray-400 mx-auto" />
+            </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Vehicle not found
             </h1>
@@ -285,12 +295,13 @@ const VehicleDetail: React.FC = () => {
                     {vehicle.make} {vehicle.model} {vehicle.year}
                   </h1>
                   <p className="text-gray-600 dark:text-gray-400 flex items-center">
-                    📍 {vehicle.location}
+                    <Icon name="MapPin" size="sm" className="mr-1" />
+                    {vehicle.location}
                   </p>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center mb-2">
-                    <span className="text-yellow-400 text-xl">⭐</span>
+                    <Icon name="Star" size="sm" className="text-yellow-400" />
                     <span className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">
                       {vehicle.rating}
                     </span>
@@ -335,7 +346,7 @@ const VehicleDetail: React.FC = () => {
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-900 dark:text-white">{vehicle.host.name}</h4>
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                      <span className="text-yellow-400">⭐</span>
+                      <Icon name="Star" size="sm" className="text-yellow-400" />
                       <span className="ml-1">{vehicle.host.rating} • {vehicle.host.totalTrips} trips</span>
                       <span className="ml-2">• Responds in {vehicle.host.responseTime}</span>
                     </div>
@@ -408,10 +419,23 @@ const VehicleDetail: React.FC = () => {
 
                 <button
                   onClick={() => setShowBookingModal(true)}
-                  disabled={bookingForm.totalDays <= 0}
-                  className="w-full bg-primary-600 text-white py-3 px-4 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
+                  disabled={bookingForm.totalDays <= 0 || (user && user.approvalStatus !== 'approved')}
+                  className={`w-full py-3 px-4 rounded-md transition-colors font-semibold ${
+                    !user 
+                      ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                      : user.approvalStatus !== 'approved'
+                      ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                      : 'bg-primary-600 text-white hover:bg-primary-700'
+                  } disabled:bg-gray-400 disabled:cursor-not-allowed`}
                 >
-                  {user ? 'Request to Book' : 'Login to Book'}
+                  {!user 
+                    ? 'Login to Book' 
+                    : user.approvalStatus === 'approved' 
+                    ? 'Request to Book'
+                    : user.approvalStatus === 'pending'
+                    ? 'Account Pending Verification'
+                    : 'Account Needs Verification'
+                  }
                 </button>
 
                 <p className="text-xs text-gray-500 dark:text-gray-400 text-center">

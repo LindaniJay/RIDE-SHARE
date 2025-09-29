@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from '../components/Icon';
 import { createAdminUsers } from '../scripts/createAdminUsers';
 
 const SetupAdmin: React.FC = () => {
@@ -11,10 +12,10 @@ const SetupAdmin: React.FC = () => {
     
     try {
       await createAdminUsers();
-      setMessage('✅ Firebase admin users created successfully! You can now login with admin credentials.');
+      setMessage('Firebase admin users created successfully! You can now login with admin credentials.');
     } catch (error) {
       console.error('Error creating admin users:', error);
-      setMessage('❌ Error creating admin users. Check console for details.');
+      setMessage('Error creating admin users. Check console for details.');
     } finally {
       setIsCreating(false);
     }
@@ -49,7 +50,7 @@ const SetupAdmin: React.FC = () => {
 
           {message && (
             <div className={`p-4 rounded-lg text-sm ${
-              message.includes('✅') 
+              message.includes('successfully') 
                 ? 'bg-green-500/20 text-green-200 border border-green-400/30'
                 : 'bg-red-500/20 text-red-200 border border-red-400/30'
             }`}>

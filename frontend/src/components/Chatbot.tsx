@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Icon from './Icon';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Message {
@@ -6,6 +7,21 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
+  type?: 'text' | 'quick_reply' | 'system';
+}
+
+interface Intent {
+  keywords: string[];
+  synonyms: string[];
+  response: string;
+  followUp?: string[];
+  priority: number;
+}
+
+interface ConversationContext {
+  lastIntent?: string;
+  userPreferences?: Record<string, any>;
+  conversationHistory: string[];
 }
 
 const Chatbot: React.FC = () => {
@@ -15,12 +31,77 @@ const Chatbot: React.FC = () => {
       id: '1',
       text: 'Hi! I\'m your RideShare SA assistant. How can I help you today?',
       isUser: false,
-      timestamp: new Date()
+      timestamp: new Date(),
+      type: 'text'
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [context, setContext] = useState<ConversationContext>({
+    conversationHistory: [],
+    userPreferences: {}
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Enhanced intent definitions with better classification
+  const intents: Intent[] = [
+    {
+      keywords: ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'],
+      synonyms: ['greetings', 'salutations', 'howdy'],
+      response: 'Hello! Welcome to RideShare SA! I\'m here to help you with bookings, listings, and any questions you might have. What can I assist you with today?',
+      followUp: ['How do I book a vehicle?', 'How do I list my car?', 'What are your prices?'],
+      priority: 1
+    },
+    {
+      keywords: ['book', 'rent', 'reserve', 'hire', 'rental'],
+      synonyms: ['reservation', 'booking', 'renting', 'hiring'],
+      response: 'Great! To book a vehicle:\n\n1. Go to "Browse Rentals" in the menu\n2. Search by location and dates\n3. Filter by vehicle type and features\n4. Click "Book Now" on your chosen vehicle\n5. Complete the booking process\n\nNeed help with any of these steps?',
+      followUp: ['What documents do I need?', 'How do I cancel a booking?', 'What if the car breaks down?'],
+      priority: 2
+    },
+    {
+      keywords: ['list', 'host', 'earn', 'money', 'income'],
+      synonyms: ['hosting', 'listing', 'earning', 'revenue'],
+      response: 'Perfect! To list your vehicle and start earning:\n\n1. Click "List Your Vehicle" in the menu\n2. Create a host account (if you haven\'t already)\n3. Add vehicle details, photos, and description\n4. Set your availability and pricing\n5. Submit for approval\n\nOur hosts typically earn R200-800 per day!',
+      followUp: ['What are the requirements?', 'How much can I earn?', 'What insurance do I need?'],
+      priority: 2
+    },
+    {
+      keywords: ['price', 'cost', 'expensive', 'cheap', 'affordable'],
+      synonyms: ['pricing', 'rates', 'fees', 'costs'],
+      response: 'Our pricing is competitive and varies by vehicle:\n\n• Economy cars: R150-300/day\n• SUVs: R300-500/day\n• Luxury vehicles: R500+/day\n• Bakkies: R200-400/day\n\nAll prices include basic insurance. You can see exact pricing when browsing vehicles!',
+      followUp: ['Are there any hidden fees?', 'Do you offer discounts?', 'What payment methods do you accept?'],
+      priority: 3
+    },
+    {
+      keywords: ['safe', 'insurance', 'secure', 'protection'],
+      synonyms: ['safety', 'security', 'insured', 'protected'],
+      response: 'Safety is our #1 priority!\n\n• All vehicles are fully insured\n• Hosts are verified and background checked\n• 24/7 support team\n• Secure payment processing\n• Vehicle condition checks\n\nYou can read reviews and safety guidelines before booking.',
+      followUp: ['What insurance is included?', 'How do you verify hosts?', 'What if there\'s an accident?'],
+      priority: 3
+    },
+    {
+      keywords: ['pay', 'payment', 'eft', 'card', 'money'],
+      synonyms: ['paying', 'billing', 'transaction', 'checkout'],
+      response: 'We accept multiple payment methods:\n\n• Credit/Debit cards\n• EFT transfers\n• Payfast (South African)\n• Bank transfers\n\nPayment is 100% secure and processed when you confirm your booking. No hidden fees!',
+      followUp: ['When do I get charged?', 'Can I get a refund?', 'Do you accept cash?'],
+      priority: 3
+    },
+    {
+      keywords: ['where', 'location', 'city', 'area'],
+      synonyms: ['place', 'region', 'town', 'province'],
+      response: 'We operate across South Africa! 🇿🇦\n\nMajor cities:\n• Cape Town\n• Johannesburg\n• Durban\n• Pretoria\n• Port Elizabeth\n• Bloemfontein\n\nUse the location filter to find vehicles near you!',
+      followUp: ['Do you deliver to my area?', 'Can I pick up from the airport?', 'Are there any restrictions?'],
+      priority: 3
+    },
+    {
+      keywords: ['help', 'support', 'problem', 'issue', 'trouble'],
+      synonyms: ['assistance', 'aid', 'support', 'problem'],
+      response: 'I\'m here to help! 🤝\n\nFor additional support:\n• FAQ page: /faq\n• Email: support@rideshare-sa.co.za\n• Phone: +27 21 123 4567\n• Live chat: Right here!\n\nWhat specific issue can I help you with?',
+      followUp: ['How do I contact support?', 'What are your hours?', 'Can you escalate my issue?'],
+      priority: 4
+    }
+  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -30,57 +111,88 @@ const Chatbot: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const getBotResponse = (userMessage: string): string => {
+  // Enhanced intent classification with fuzzy matching
+  const classifyIntent = useCallback((userMessage: string): Intent | null => {
     const message = userMessage.toLowerCase();
+    const words = message.split(/\s+/);
     
-    // Greeting responses
-    if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
-      return 'Hello! Welcome to RideShare SA! I\'m here to help you with bookings, listings, and any questions you might have. What can I assist you with today?';
+    let bestMatch: Intent | null = null;
+    let bestScore = 0;
+    
+    for (const intent of intents) {
+      let score = 0;
+      
+      // Check keywords
+      for (const keyword of intent.keywords) {
+        if (message.includes(keyword)) {
+          score += 2; // Higher weight for exact keyword matches
+        }
+      }
+      
+      // Check synonyms
+      for (const synonym of intent.synonyms) {
+        if (message.includes(synonym)) {
+          score += 1.5;
+        }
+      }
+      
+      // Check individual words
+      for (const word of words) {
+        for (const keyword of intent.keywords) {
+          if (keyword.includes(word) || word.includes(keyword)) {
+            score += 0.5;
+          }
+        }
+      }
+      
+      // Apply priority multiplier
+      score *= (1 + intent.priority * 0.1);
+      
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = intent;
+      }
     }
     
-    // Booking related
-    if (message.includes('book') || message.includes('rent') || message.includes('reserve')) {
-      return 'Great! To book a vehicle:\n\n1. Go to "Browse Rentals" in the menu\n2. Search by location and dates\n3. Filter by vehicle type and features\n4. Click "Book Now" on your chosen vehicle\n5. Complete the booking process\n\nNeed help with any of these steps?';
+    // Only return match if score is above threshold
+    return bestScore > 1 ? bestMatch : null;
+  }, []);
+
+  const getBotResponse = useCallback((userMessage: string): { response: string; followUp?: string[] } => {
+    const intent = classifyIntent(userMessage);
+    
+    if (intent) {
+      // Update context with current intent
+      setContext(prev => ({
+        ...prev,
+        lastIntent: intent.keywords[0],
+        conversationHistory: [...prev.conversationHistory.slice(-4), userMessage]
+      }));
+      
+      return {
+        response: intent.response,
+        followUp: intent.followUp
+      };
     }
     
-    // Listing related
-    if (message.includes('list') || message.includes('host') || message.includes('earn')) {
-      return 'Perfect! To list your vehicle and start earning:\n\n1. Click "List Your Vehicle" in the menu\n2. Create a host account (if you haven\'t already)\n3. Add vehicle details, photos, and description\n4. Set your availability and pricing\n5. Submit for approval\n\nOur hosts typically earn R200-800 per day!';
+    // Enhanced fallback with context awareness
+    const recentMessages = context.conversationHistory.slice(-3);
+    const hasRecentBooking = recentMessages.some(msg => 
+      msg.toLowerCase().includes('book') || msg.toLowerCase().includes('rent')
+    );
+    
+    if (hasRecentBooking) {
+      return {
+        response: `I see you're interested in booking!\n\nI can help with:\n• Finding the right vehicle\n• Booking process\n• Payment options\n• Pickup locations\n\nWhat specific aspect would you like to know more about?`,
+        followUp: ['What documents do I need?', 'How do I cancel?', 'What if there\'s a problem?']
+      };
     }
     
-    // Pricing questions
-    if (message.includes('price') || message.includes('cost') || message.includes('expensive')) {
-      return 'Our pricing is competitive and varies by vehicle:\n\n• Economy cars: R150-300/day\n• SUVs: R300-500/day\n• Luxury vehicles: R500+/day\n• Bakkies: R200-400/day\n\nAll prices include basic insurance. You can see exact pricing when browsing vehicles!';
-    }
-    
-    // Safety questions
-    if (message.includes('safe') || message.includes('insurance') || message.includes('secure')) {
-      return 'Safety is our #1 priority!\n\n✅ All vehicles are fully insured\n✅ Hosts are verified and background checked\n✅ 24/7 support team\n✅ Secure payment processing\n✅ Vehicle condition checks\n\nYou can read reviews and safety guidelines before booking.';
-    }
-    
-    // Payment questions
-    if (message.includes('pay') || message.includes('payment') || message.includes('eft') || message.includes('card')) {
-      return 'We accept multiple payment methods:\n\n• Credit/Debit cards\n• EFT transfers\n• Payfast (South African)\n• Bank transfers\n\nPayment is 100% secure and processed when you confirm your booking. No hidden fees!';
-    }
-    
-    // Location questions
-    if (message.includes('where') || message.includes('location') || message.includes('city')) {
-      return 'We operate across South Africa!\n\nMajor cities:\n• Cape Town\n• Johannesburg\n• Durban\n• Pretoria\n• Port Elizabeth\n• Bloemfontein\n\nUse the location filter to find vehicles near you!';
-    }
-    
-    // Support questions
-    if (message.includes('help') || message.includes('support') || message.includes('problem')) {
-      return 'I\'m here to help!\n\nFor additional support:\n• FAQ page: /faq\n• Email: support@rideshare-sa.co.za\n• Phone: +27 21 123 4567\n• Live chat: Right here!\n\nWhat specific issue can I help you with?';
-    }
-    
-    // Contact support
-    if (message.includes('contact support') || message.includes('contact')) {
-      return 'Here\'s how to reach our support team:\n\n• Email: support@rideshare-sa.co.za\n• Phone: +27 21 123 4567\n• Live chat: Available 24/7 (that\'s me!)\n• FAQ: Visit /faq for common questions\n\nIs there something specific I can help you with right now?';
-    }
-    
-    // Default response
-    return `I understand you're asking about: "${userMessage}"\n\nI can help with:\n• Booking vehicles\n• Listing your car\n• Pricing information\n• Safety & insurance\n• Payment methods\n• Locations\n• General support\n\nWhat would you like to know more about?`;
-  };
+    return {
+      response: `I understand you're asking about: "${userMessage}"\n\nI can help with:\n• Booking vehicles\n• Listing your car\n• Pricing information\n• Safety & insurance\n• Payment methods\n• Locations\n• General support\n\nWhat would you like to know more about?`,
+      followUp: ['How do I book a vehicle?', 'How do I list my car?', 'What are your prices?', 'Is it safe?']
+    };
+  }, [classifyIntent, context.conversationHistory]);
 
   const handleSendMessage = async (messageText?: string) => {
     const messageToSend = messageText || inputValue.trim();
@@ -90,25 +202,31 @@ const Chatbot: React.FC = () => {
       id: Date.now().toString(),
       text: messageToSend,
       isUser: true,
-      timestamp: new Date()
+      timestamp: new Date(),
+      type: 'text'
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate typing delay
+    // Simulate typing delay with more realistic timing
+    const typingDelay = 800 + Math.random() * 1200; // 0.8-2 seconds
+    
     setTimeout(() => {
+      const botResponseData = getBotResponse(messageToSend);
+      
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: getBotResponse(messageToSend),
+        text: botResponseData.response,
         isUser: false,
-        timestamp: new Date()
+        timestamp: new Date(),
+        type: 'text'
       };
       
       setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds
+    }, typingDelay);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -119,52 +237,66 @@ const Chatbot: React.FC = () => {
   };
 
   const quickReplies = [
-    'How do I book a vehicle?',
-    'How do I list my car?',
-    'What are your prices?',
-    'Is it safe?',
-    'Contact support'
+    { text: 'How do I book a vehicle?', icon: 'Car' },
+    { text: 'How do I list my car?', icon: 'DollarSign' },
+    { text: 'What are your prices?', icon: 'DollarSign' },
+    { text: 'Is it safe?', icon: 'Shield' },
+    { text: 'Contact support', icon: 'Phone' }
   ];
+
+  const handleQuickReply = (replyText: string) => {
+    handleSendMessage(replyText);
+  };
 
   return (
     <>
       {/* Chat Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg z-50 transition-all duration-300"
-        whileHover={{ scale: 1.1 }}
+        className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-4 rounded-full shadow-2xl z-50 transition-all duration-300 hover:shadow-blue-500/25"
+        whileHover={{ scale: 1.1, rotate: 5 }}
         whileTap={{ scale: 0.95 }}
         aria-label="Open chat"
       >
-        <AnimatePresence mode="wait">
-          {isOpen ? (
-            <motion.svg
-              key="close"
-              initial={{ rotate: -90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: 90, opacity: 0 }}
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </motion.svg>
-          ) : (
-            <motion.svg
-              key="chat"
-              initial={{ rotate: 90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: -90, opacity: 0 }}
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </motion.svg>
+        <div className="relative">
+          <AnimatePresence mode="wait">
+            {isOpen ? (
+              <motion.svg
+                key="close"
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 90, opacity: 0 }}
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </motion.svg>
+            ) : (
+              <motion.svg
+                key="chat"
+                initial={{ rotate: 90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: -90, opacity: 0 }}
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </motion.svg>
+            )}
+          </AnimatePresence>
+          {/* Notification dot */}
+          {!isOpen && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"
+            />
           )}
-        </AnimatePresence>
+        </div>
       </motion.button>
 
       {/* Chat Window */}
@@ -175,67 +307,94 @@ const Chatbot: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.8 }}
             transition={{ duration: 0.3, type: 'spring', damping: 25, stiffness: 500 }}
-            className="fixed bottom-24 right-6 w-80 h-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 flex flex-col"
+            className="fixed bottom-24 right-6 w-96 h-[500px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 flex flex-col backdrop-blur-sm bg-white/95 dark:bg-gray-900/95"
           >
             {/* Header */}
-            <div className="bg-blue-600 text-white p-4 rounded-t-xl flex items-center justify-between">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-t-2xl flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-sm">🤖</span>
+                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 backdrop-blur-sm">
+                  <span className="text-lg">🤖</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold">RideShare Assistant</h3>
-                  <p className="text-xs text-blue-100">Online now</p>
+                  <h3 className="font-bold text-lg">RideShare Assistant</h3>
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                    <p className="text-sm text-blue-100">Online now</p>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <button
+                <motion.button
                   onClick={() => {
                     setMessages([{
                       id: '1',
                       text: 'Hi! I\'m your RideShare SA assistant. How can I help you today?',
                       isUser: false,
-                      timestamp: new Date()
+                      timestamp: new Date(),
+                      type: 'text'
                     }]);
+                    setContext({
+                      conversationHistory: [],
+                      userPreferences: {}
+                    });
                   }}
-                  className="text-white hover:text-blue-200 transition-colors p-1"
+                  className="text-white hover:text-blue-200 transition-colors p-2 rounded-lg hover:bg-white/10"
                   title="Start new conversation"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={() => setIsOpen(false)}
-                  className="text-white hover:text-blue-200 transition-colors p-1"
+                  className="text-white hover:text-blue-200 transition-colors p-2 rounded-lg hover:bg-white/10"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                </button>
+                </motion.button>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-800">
               {messages.map((message) => (
                 <motion.div
                   key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.2 }}
                   className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div
-                    className={`max-w-xs px-4 py-2 rounded-lg ${
-                      message.isUser
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                    }`}
-                  >
-                    <div className="text-sm whitespace-pre-line">{message.text}</div>
-                    <p className="text-xs opacity-70 mt-1">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                  <div className={`flex items-end space-x-2 ${message.isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                    {!message.isUser && (
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        🤖
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-xs px-4 py-3 rounded-2xl shadow-sm ${
+                        message.isUser
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-br-md'
+                          : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-bl-md'
+                      }`}
+                    >
+                      <div className="text-sm whitespace-pre-line leading-relaxed">{message.text}</div>
+                      <p className={`text-xs mt-2 ${
+                        message.isUser ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
+                      }`}>
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    {message.isUser && (
+                      <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        <Icon name="User" size="sm" />
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -246,14 +405,19 @@ const Chatbot: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex justify-start"
                 >
-                  <div className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="flex items-end space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      🤖
+                    </div>
+                    <div className="bg-white dark:bg-gray-700 px-4 py-3 rounded-2xl rounded-bl-md border border-gray-200 dark:border-gray-600 shadow-sm">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">RideShare Assistant is typing...</span>
                       </div>
-                      <span className="text-xs text-gray-500">RideShare Assistant is typing...</span>
                     </div>
                   </div>
                 </motion.div>
@@ -263,46 +427,62 @@ const Chatbot: React.FC = () => {
 
             {/* Quick Replies */}
             {messages.length === 1 && (
-              <div className="px-4 pb-2">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Quick questions:</p>
+              <div className="px-4 pb-2 bg-gray-50 dark:bg-gray-800">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 font-medium">Quick questions:</p>
                 <div className="flex flex-wrap gap-2">
                   {quickReplies.map((reply, index) => (
-                    <button
+                    <motion.button
                       key={index}
-                      onClick={() => handleSendMessage(reply)}
-                      className="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-3 py-1 rounded-full transition-colors"
+                      onClick={() => handleQuickReply(reply.text)}
+                      className="text-xs bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 px-3 py-2 rounded-full transition-all duration-200 border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-gray-500 flex items-center space-x-1 shadow-sm hover:shadow-md"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
-                      {reply}
-                    </button>
+                      <Icon name={reply.icon} size="sm" />
+                      <span>{reply.text}</span>
+                    </motion.button>
                   ))}
                 </div>
               </div>
             )}
 
             {/* Input */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Type your message..."
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
-                />
-                <button
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+              <div className="flex space-x-3">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Type your message..."
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white text-sm placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 shadow-sm focus:shadow-md"
+                  />
+                  {inputValue && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    >
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    </motion.div>
+                  )}
+                </div>
+                <motion.button
                   onClick={() => handleSendMessage()}
                   disabled={!inputValue.trim() || isTyping}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white px-4 py-3 rounded-2xl transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl disabled:shadow-none"
+                  whileHover={{ scale: inputValue.trim() && !isTyping ? 1.05 : 1 }}
+                  whileTap={{ scale: inputValue.trim() && !isTyping ? 0.95 : 1 }}
                 >
                   {isTyping ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                   )}
-                </button>
+                </motion.button>
               </div>
             </div>
           </motion.div>

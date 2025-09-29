@@ -8,9 +8,65 @@ export interface User {
   role: UserRole;
   isEmailVerified: boolean;
   profileImage?: string;
+  approvalStatus: ApprovalStatus;
+  documents?: UserDocuments;
+  profileCompleted: boolean;
+  profileCompletionDate?: Date;
+  profileData?: ProfileData;
   createdAt: Date;
   updatedAt: Date;
   lastLoginAt?: Date;
+}
+
+export interface UserDocuments {
+  id?: string;
+  driverLicense?: string;
+  proofOfAddress?: string;
+  idDocument?: string;
+  uploadedAt?: Date;
+  status: ApprovalStatus;
+  rejectionReason?: string;
+  adminNotes?: string;
+}
+
+export interface ProfileData {
+  id?: string;
+  userId: string;
+  dateOfBirth: string;
+  address: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  emergencyContact: string;
+  emergencyPhone: string;
+  // Host-specific fields
+  businessName?: string;
+  businessRegistration?: string;
+  bankAccount?: string;
+  taxNumber?: string;
+  // Document files
+  idDocument?: File;
+  driverLicense?: File;
+  proofOfAddress?: File;
+  vehicleRegistration?: File;
+  roadworthyCertificate?: File;
+  insuranceCertificate?: File;
+  submittedAt: Date;
+  status: ApprovalStatus;
+  adminNotes?: string;
+  rejectionReason?: string;
+}
+
+export interface VehicleDocuments {
+  id?: string;
+  vehicleId: string;
+  registration?: string;
+  roadworthy?: string;
+  insurance?: string;
+  uploadedAt?: Date;
+  status: ApprovalStatus;
+  rejectionReason?: string;
+  adminNotes?: string;
 }
 
 export interface Vehicle {
@@ -29,6 +85,8 @@ export interface Vehicle {
   images: string[];
   features: VehicleFeature[];
   status: VehicleStatus;
+  approvalStatus: ApprovalStatus;
+  documents?: VehicleDocuments;
   description: string;
   mileage?: number;
   fuelType: FuelType;
@@ -80,6 +138,7 @@ export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 export type PaymentMethod = 'card' | 'eft' | 'payfast';
 export type FuelType = 'petrol' | 'diesel' | 'hybrid' | 'electric';
 export type TransmissionType = 'manual' | 'automatic';
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
 // API Response types
 export interface ApiResponse<T> {
@@ -115,6 +174,11 @@ export interface RegisterForm {
   phone?: string;
   role: UserRole;
   acceptTerms: boolean;
+  documents?: {
+    idDocument?: File;
+    driverLicense?: File;
+    proofOfAddress?: File;
+  };
 }
 
 export interface VehicleForm {
@@ -127,6 +191,11 @@ export interface VehicleForm {
   description: string;
   features: VehicleFeature[];
   images: File[];
+  documents?: {
+    registration?: File;
+    roadworthy?: File;
+    insurance?: File;
+  };
 }
 
 export interface BookingForm {

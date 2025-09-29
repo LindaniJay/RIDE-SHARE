@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from './Icon';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { VehicleFilters } from '../types/api';
 
@@ -21,12 +22,12 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClose }) =>
 
 
   const vehicleTypes = [
-    { value: 'car', label: 'Car', icon: '🚗' },
-    { value: 'suv', label: 'SUV', icon: '🚙' },
-    { value: 'truck', label: 'Truck', icon: '🚛' },
-    { value: 'van', label: 'Van', icon: '🚐' },
-    { value: 'motorcycle', label: 'Motorcycle', icon: '🏍️' },
-    { value: 'trailer', label: 'Trailer', icon: '🚚' }
+    { value: 'car', label: 'Car', icon: 'Car' },
+    { value: 'suv', label: 'SUV', icon: 'Car' },
+    { value: 'truck', label: 'Truck', icon: 'Car' },
+    { value: 'van', label: 'Van', icon: 'Car' },
+    { value: 'motorcycle', label: 'Motorcycle', icon: 'Motorcycle' },
+    { value: 'trailer', label: 'Trailer', icon: 'Car' }
   ];
 
   const availableFeatures = [
@@ -157,7 +158,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClose }) =>
                 <option value="">All Types</option>
                 {vehicleTypes.map(type => (
                   <option key={type.value} value={type.value}>
-                    {type.icon} {type.label}
+                    {type.label}
                   </option>
                 ))}
               </select>

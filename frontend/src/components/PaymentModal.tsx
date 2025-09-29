@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { paymentsAPI } from '../api';
+import Icon from './Icon';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -200,7 +201,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         {/* Payment Info */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4 mb-6">
           <div className="flex items-start">
-            <span className="text-blue-600 dark:text-blue-400 text-lg mr-2">ℹ️</span>
+            <Icon name="Info" size="sm" className="text-blue-600 dark:text-blue-400 mr-2" />
             <div className="text-sm text-blue-800 dark:text-blue-300">
               <p className="font-medium mb-1">Payment Security</p>
               <p>

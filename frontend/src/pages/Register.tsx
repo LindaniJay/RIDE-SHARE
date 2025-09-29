@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Icon from '../components/Icon';
 import { useAuth } from '../hooks/useAuth';
 import GlassForm from '../components/GlassForm';
 import GlassInput from '../components/GlassInput';
@@ -87,7 +88,7 @@ const Register: React.FC = () => {
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   placeholder="First name"
-                  icon="👤"
+                  icon="User"
                 />
                 <GlassInput
                   label="Last Name"
@@ -97,7 +98,7 @@ const Register: React.FC = () => {
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   placeholder="Last name"
-                  icon="👤"
+                  icon="User"
                 />
               </div>
               
@@ -109,7 +110,7 @@ const Register: React.FC = () => {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="Enter your email"
-                icon="✉️"
+                icon="Mail"
               />
               
               <GlassInput
@@ -119,7 +120,7 @@ const Register: React.FC = () => {
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+27 82 123 4567"
-                icon="📱"
+                icon="Phone"
               />
               
               <div className="space-y-2">
@@ -132,8 +133,8 @@ const Register: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as 'renter' | 'host' })}
                   className="w-full px-4 py-3 rounded-xl text-white placeholder-white/50 bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 dark:focus:ring-white/10 transition-all duration-300 ease-in-out"
                 >
-                  <option value="renter" className="bg-gray-800 text-white">🚗 Rent vehicles</option>
-                  <option value="host" className="bg-gray-800 text-white">🏠 List my vehicles</option>
+                  <option value="renter" className="bg-gray-800 text-white">Rent vehicles</option>
+                  <option value="host" className="bg-gray-800 text-white">List my vehicles</option>
                 </select>
               </div>
               
@@ -145,7 +146,7 @@ const Register: React.FC = () => {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="Create a password"
-                icon="🔒"
+                icon="Lock"
                 variant="password"
               />
               
@@ -157,9 +158,10 @@ const Register: React.FC = () => {
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 placeholder="Confirm your password"
-                icon="🔒"
+                icon="Lock"
                 variant="password"
               />
+
             </div>
 
             <GlassButton

@@ -75,7 +75,7 @@ const Login: React.FC = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter your email"
-                icon="✉️"
+                icon="Mail"
               />
               
               <GlassInput
@@ -87,7 +87,7 @@ const Login: React.FC = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Enter your password"
-                icon="🔒"
+                icon="Lock"
                 variant="password"
               />
             </div>
@@ -117,7 +117,7 @@ const Login: React.FC = () => {
               disabled={loading}
               className="w-full"
               gradient={true}
-              icon="🚗"
+              icon="Car"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </GlassButton>

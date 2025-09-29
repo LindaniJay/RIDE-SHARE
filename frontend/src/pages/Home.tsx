@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Icon from '../components/Icon';
 import SEO from '../components/SEO';
 import { usePageTracking } from '../hooks/useAnalytics';
 
@@ -101,7 +102,9 @@ const Home: React.FC = () => {
                 <div className="text-white font-semibold">From R300/day</div>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 text-center border border-white/20 hover:bg-white/20 transition-all duration-300">
-                <div className="text-4xl mb-4">🏎️</div>
+                <div className="mb-4">
+                  <Icon name="Car" size="lg" className="text-white/50 mx-auto" />
+                </div>
                 <h3 className="text-xl font-bold text-white mb-2">Luxury</h3>
                 <div className="text-white font-semibold">From R500/day</div>
               </div>

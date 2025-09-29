@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Icon from '../components/Icon';
 import { apiClient } from '../api/client';
 
 interface PlatformStats {
@@ -46,7 +47,10 @@ const About: React.FC = () => {
     fetchStats();
   }, []);
 
-  const formatNumber = (num: number): string => {
+  const formatNumber = (num: number | undefined | null): string => {
+    if (num === undefined || num === null || isNaN(num)) {
+      return '0';
+    }
     if (num >= 1000000) {
       return `${(num / 1000000).toFixed(1)}M+`;
     } else if (num >= 1000) {
@@ -167,7 +171,7 @@ const About: React.FC = () => {
                   </div>
                   <div className="text-center bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-lg border border-white/20">
                     <div className="text-4xl font-bold text-white mb-2">
-                      {stats.averageRating.toFixed(1)}★
+                      {(stats.averageRating || 0).toFixed(1)}★
                     </div>
                     <div className="text-white text-opacity-80">Average Rating</div>
                   </div>
@@ -237,7 +241,9 @@ const About: React.FC = () => {
                   <p className="text-white text-opacity-80 text-sm">Supporting South African communities and economy</p>
                 </div>
                 <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20">
-                  <div className="text-4xl mb-4">⚡</div>
+                  <div className="mb-4">
+                    <Icon name="Zap" size="lg" className="text-white/50 mx-auto" />
+                  </div>
                   <h3 className="text-xl font-bold text-white mb-2">Innovation</h3>
                   <p className="text-white text-opacity-80 text-sm">Using technology to solve real-world problems</p>
                 </div>

@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import StatusBadge from '../components/StatusBadge';
+import AdminApprovalPanel from '../components/AdminApprovalPanel';
+import FraudDetection from '../components/FraudDetection';
+import CommissionManagement from '../components/CommissionManagement';
+import Icon from '../components/Icon';
+import { ProfileData } from '../types';
 import { apiClient } from '../services/apiClient';
 // import { useAuth } from '../context/AuthContext'; // Currently unused but may be needed for admin features
 
@@ -64,6 +69,7 @@ const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [profileCompletions, setProfileCompletions] = useState<ProfileData[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -281,7 +287,7 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mr-4">
-                <span className="text-green-600 text-xl">🚗</span>
+                <Icon name="Car" size="lg" className="text-green-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -295,7 +301,7 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mr-4">
-                <span className="text-purple-600 text-xl">📋</span>
+                <Icon name="Clipboard" size="lg" className="text-purple-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -309,7 +315,7 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center mr-4">
-                <span className="text-yellow-600 text-xl">💰</span>
+                <Icon name="DollarSign" size="lg" className="text-yellow-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -332,7 +338,7 @@ const AdminDashboard: React.FC = () => {
                 </p>
               </div>
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                <span className="text-green-600 text-xl">✅</span>
+                <Icon name="CheckCircle" size="lg" className="text-green-600" />
               </div>
             </div>
           </div>
@@ -346,7 +352,7 @@ const AdminDashboard: React.FC = () => {
                 </p>
               </div>
               <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
-                <span className="text-yellow-600 text-xl">⏳</span>
+                <Icon name="Clock" size="lg" className="text-yellow-600" />
               </div>
             </div>
           </div>
@@ -371,13 +377,16 @@ const AdminDashboard: React.FC = () => {
           <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="-mb-px flex space-x-8 overflow-x-auto">
               {[
-                { id: 'overview', name: 'Overview', icon: '📊' },
-                { id: 'users', name: 'Users', icon: '👥' },
-                { id: 'vehicles', name: 'Vehicles', icon: '🚗' },
-                { id: 'bookings', name: 'Bookings', icon: '📋' },
-                { id: 'documents', name: 'Documents', icon: '📄' },
-                { id: 'disputes', name: 'Disputes', icon: '⚖️' },
-                { id: 'analytics', name: 'Analytics', icon: '📈' }
+                { id: 'overview', name: 'Overview', icon: 'BarChart' },
+                { id: 'approvals', name: 'Approvals', icon: 'CheckCircle' },
+                { id: 'fraud', name: 'Fraud Detection', icon: 'Shield' },
+                { id: 'commission', name: 'Commission', icon: 'DollarSign' },
+                { id: 'users', name: 'Users', icon: 'Users' },
+                { id: 'vehicles', name: 'Vehicles', icon: 'Car' },
+                { id: 'bookings', name: 'Bookings', icon: 'Clipboard' },
+                { id: 'documents', name: 'Documents', icon: 'FileText' },
+                { id: 'disputes', name: 'Disputes', icon: 'Scale' },
+                { id: 'analytics', name: 'Analytics', icon: 'TrendingUp' }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -388,7 +397,7 @@ const AdminDashboard: React.FC = () => {
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <span className="mr-2">{tab.icon}</span>
+                  <Icon name={tab.icon} size="sm" className="mr-2" />
                   {tab.name}
                 </button>
               ))}
@@ -449,6 +458,67 @@ const AdminDashboard: React.FC = () => {
                   <span className="font-semibold text-blue-600">1,247</span>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'approvals' && (
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Document & Listing Approvals
+              </h3>
+                      <AdminApprovalPanel
+                        users={users}
+                        vehicles={vehicles}
+                        profileCompletions={profileCompletions}
+                        onApproveUser={(userId, notes) => {
+                          console.log('Approving user:', userId, notes);
+                          // Handle user approval
+                        }}
+                        onRejectUser={(userId, reason, notes) => {
+                          console.log('Rejecting user:', userId, reason, notes);
+                          // Handle user rejection
+                        }}
+                        onApproveVehicle={(vehicleId, notes) => {
+                          console.log('Approving vehicle:', vehicleId, notes);
+                          // Handle vehicle approval
+                        }}
+                        onRejectVehicle={(vehicleId, reason, notes) => {
+                          console.log('Rejecting vehicle:', vehicleId, reason, notes);
+                          // Handle vehicle rejection
+                        }}
+                        onApproveProfile={(profileId, notes) => {
+                          console.log('Approving profile:', profileId, notes);
+                          // Handle profile approval
+                        }}
+                        onRejectProfile={(profileId, reason, notes) => {
+                          console.log('Rejecting profile:', profileId, reason, notes);
+                          // Handle profile rejection
+                        }}
+                      />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'fraud' && (
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Fraud Detection System
+              </h3>
+              <FraudDetection />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'commission' && (
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Commission & Payout Management
+              </h3>
+              <CommissionManagement />
             </div>
           </div>
         )}
@@ -610,7 +680,7 @@ const AdminDashboard: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                         <div className="flex items-center">
-                          <span className="text-yellow-400">⭐</span>
+                          <Icon name="Star" size="sm" className="text-yellow-400" />
                           <span className="ml-1">{vehicle.rating}</span>
                         </div>
                       </td>
@@ -960,7 +1030,9 @@ const AdminDashboard: React.FC = () => {
               </h3>
               <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
                 <div className="text-center">
-                  <div className="text-4xl mb-4">📊</div>
+                  <div className="mb-4">
+                    <Icon name="BarChart" size="lg" className="text-gray-400 mx-auto" />
+                  </div>
                   <p>Revenue chart would be displayed here</p>
                   <p className="text-sm">Integration with chart library needed</p>
                 </div>

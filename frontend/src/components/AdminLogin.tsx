@@ -20,10 +20,17 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, className }) 
     setIsLoading(true);
 
     try {
-      await firebaseAuthService.adminLogin(values.email, values.password);
+      // Use Firebase authentication for admin login
+      const user = await firebaseAuthService.adminLogin(values.email, values.password);
+      
+      // Store auth data
+      localStorage.setItem('accessToken', user.id);
+      localStorage.setItem('userRole', user.role);
+      localStorage.setItem('userData', JSON.stringify(user));
+
       showSuccess('Admin login successful', 'Welcome to the admin dashboard');
       onSuccess?.();
-      navigate('/dashboard');
+      navigate('/dashboard/admin');
     } catch (error: any) {
       showError('Admin login failed', error.message || 'Invalid admin credentials');
     } finally {
@@ -33,6 +40,18 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, className }) 
 
   return (
     <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${className}`}>
+      {/* Return Button */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute top-6 left-6 glass-button flex items-center space-x-2 px-4 py-2 text-white/80 hover:text-white transition-all duration-300"
+        title="Return to Home"
+      >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Back to Home</span>
+      </button>
+
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-white">
