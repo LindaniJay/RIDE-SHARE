@@ -4,9 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense, lazy } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './components/Toast';
 import Layout from './layouts/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
-import LoadingSpinner from './components/LoadingSpinner';
+import { FullPageLoading } from './components/Loading';
 
 // Lazy load pages for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -40,34 +41,36 @@ function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <Router>
-          <AuthProvider>
-            <ThemeProvider>
-              <div className="App">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <Routes>
-                    <Route path="/" element={<Layout><Home /></Layout>} />
-                    <Route path="/search" element={<Layout><Search /></Layout>} />
-                    <Route path="/vehicle/:id" element={<Layout><VehicleDetail /></Layout>} />
-                    <Route path="/about" element={<Layout><About /></Layout>} />
-                    <Route path="/contact" element={<Layout><Contact /></Layout>} />
-                    <Route path="/faq" element={<Layout><FAQ /></Layout>} />
-                    <Route path="/dashboard/*" element={
-                      <ProtectedRoute>
-                        <Layout><Dashboard /></Layout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/login" element={<Layout><Login /></Layout>} />
-                    <Route path="/register" element={<Layout><Register /></Layout>} />
-                    <Route path="/setup-admin" element={<SetupAdmin />} />
-                    <Route path="/unauthorized" element={<Layout><Unauthorized /></Layout>} />
-                    <Route path="*" element={<Layout><NotFound /></Layout>} />
-                  </Routes>
-                </Suspense>
-              </div>
-            </ThemeProvider>
-          </AuthProvider>
-        </Router>
+        <ToastProvider>
+          <Router>
+            <AuthProvider>
+              <ThemeProvider>
+                <div className="App">
+                  <Suspense fallback={<FullPageLoading text="Loading RideShare SA..." />}>
+                    <Routes>
+                      <Route path="/" element={<Layout><Home /></Layout>} />
+                      <Route path="/search" element={<Layout><Search /></Layout>} />
+                      <Route path="/vehicle/:id" element={<Layout><VehicleDetail /></Layout>} />
+                      <Route path="/about" element={<Layout><About /></Layout>} />
+                      <Route path="/contact" element={<Layout><Contact /></Layout>} />
+                      <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+                      <Route path="/dashboard/*" element={
+                        <ProtectedRoute>
+                          <Layout><Dashboard /></Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/login" element={<Layout><Login /></Layout>} />
+                      <Route path="/register" element={<Layout><Register /></Layout>} />
+                      <Route path="/setup-admin" element={<SetupAdmin />} />
+                      <Route path="/unauthorized" element={<Layout><Unauthorized /></Layout>} />
+                      <Route path="*" element={<Layout><NotFound /></Layout>} />
+                    </Routes>
+                  </Suspense>
+                </div>
+              </ThemeProvider>
+            </AuthProvider>
+          </Router>
+        </ToastProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );
