@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { apiClient } from '../services/apiClient';
 import { FirebaseAuthService } from '../services/firebaseAuth';
 
 interface User {
@@ -19,7 +18,6 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
-  adminLogin: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
   isAdmin: () => boolean;
@@ -116,27 +114,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
-  const adminLogin = async (email: string, password: string) => {
-    try {
-      // Use Firebase authentication for admin login
-      const response = await apiClient.post('/auth/admin-login', {
-        email,
-        password
-      });
-
-      if (response.success) {
-        const data = response.data as any;
-        setUser(data.user);
-        localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('userRole', data.user.role);
-      } else {
-        throw new Error('Admin login failed');
-      }
-    } catch (error) {
-      console.error('Admin login error:', error);
-      throw error;
-    }
-  };
 
   const logout = async () => {
     await FirebaseAuthService.signOut();
@@ -152,7 +129,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     user,
     login,
     register,
-    adminLogin,
     logout,
     loading,
     isAdmin,

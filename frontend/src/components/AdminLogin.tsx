@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from './Card';
 import { Input } from './Input';
 import { Form, FormField, FormSubmit } from './Form';
 import { useToastHelpers } from './Toast';
-import { firebaseAuthService } from '../services/firebaseAuthService';
+import { FirebaseAuthService } from '../services/firebaseAuth';
+import { useAuth } from '../hooks/useAuth';
 
 interface AdminLoginProps {
   onSuccess?: () => void;
@@ -15,24 +16,26 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, className }) 
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { error: showError, success: showSuccess } = useToastHelpers();
+  const { login } = useAuth();
 
   const handleAdminLogin = async (values: Record<string, any>) => {
     setIsLoading(true);
 
     try {
       // Use Firebase authentication for admin login
-      const user = await firebaseAuthService.adminLogin(values.email, values.password);
+      await login(values.email, values.password);
       
-      // Store auth data
-      localStorage.setItem('accessToken', user.id);
-      localStorage.setItem('userRole', user.role);
-      localStorage.setItem('userData', JSON.stringify(user));
+      // Check if user has admin role
+      const currentUser = await FirebaseAuthService.getCurrentUser();
+      if (!currentUser || currentUser.role !== 'admin') {
+        throw new Error('Access denied. Admin role required.');
+      }
 
       showSuccess('Admin login successful', 'Welcome to the admin dashboard');
       onSuccess?.();
       navigate('/dashboard/admin');
     } catch (error: any) {
-      showError('Admin login failed', error.message || 'Invalid admin credentials');
+      showError('Admin login failed', error.message || 'Invalid admin credentials or insufficient permissions');
     } finally {
       setIsLoading(false);
     }
