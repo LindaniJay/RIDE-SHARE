@@ -1,0 +1,11 @@
+{
+  "name": "RideShare SA",
+  "short_name": "RideShare",
+  "description": "South Africa's Leading Peer-to-Peer Vehicle Rental Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1f2937",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": []
+}
