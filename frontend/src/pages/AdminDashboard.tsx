@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StatusBadge from '../components/StatusBadge';
 // import { useAuth } from '../context/AuthContext'; // Currently unused but may be needed for admin features
 
 interface AdminStats {
@@ -62,6 +63,8 @@ const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
+  const [disputes, setDisputes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -170,6 +173,63 @@ const AdminDashboard: React.FC = () => {
           totalAmount: 1350,
           status: 'pending',
           createdAt: '2024-12-11'
+        }
+      ]);
+
+      // Mock pending documents for approval
+      setPendingDocuments([
+        {
+          id: '1',
+          type: 'license',
+          user: 'John Doe',
+          userEmail: 'john@example.com',
+          fileName: 'driver_license.pdf',
+          uploadedAt: '2024-12-01',
+          status: 'pending'
+        },
+        {
+          id: '2',
+          type: 'id',
+          user: 'Jane Smith',
+          userEmail: 'jane@example.com',
+          fileName: 'id_document.pdf',
+          uploadedAt: '2024-12-02',
+          status: 'pending'
+        },
+        {
+          id: '3',
+          type: 'vehicle_insurance',
+          user: 'Mike Johnson',
+          userEmail: 'mike@example.com',
+          fileName: 'vehicle_insurance.pdf',
+          uploadedAt: '2024-12-03',
+          status: 'pending'
+        }
+      ]);
+
+      // Mock disputes
+      setDisputes([
+        {
+          id: '1',
+          type: 'booking_dispute',
+          title: 'Vehicle damage claim',
+          description: 'Renter claims vehicle was damaged before rental',
+          renter: 'John Doe',
+          host: 'Jane Smith',
+          status: 'open',
+          createdAt: '2024-12-01',
+          priority: 'high'
+        },
+        {
+          id: '2',
+          type: 'payment_dispute',
+          title: 'Refund request',
+          description: 'Host requesting refund for cancelled booking',
+          renter: 'Mike Wilson',
+          host: 'Sarah Johnson',
+          status: 'in_progress',
+          createdAt: '2024-12-02',
+          priority: 'medium'
         }
       ]);
     } catch (error) {
@@ -333,19 +393,22 @@ const AdminDashboard: React.FC = () => {
         {/* Tabs */}
         <div className="mb-6">
           <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="-mb-px flex space-x-8">
+            <nav className="-mb-px flex space-x-8 overflow-x-auto">
               {[
                 { id: 'overview', name: 'Overview', icon: '📊' },
                 { id: 'users', name: 'Users', icon: '👥' },
                 { id: 'vehicles', name: 'Vehicles', icon: '🚗' },
-                { id: 'bookings', name: 'Bookings', icon: '📋' }
+                { id: 'bookings', name: 'Bookings', icon: '📋' },
+                { id: 'documents', name: 'Documents', icon: '📄' },
+                { id: 'disputes', name: 'Disputes', icon: '⚖️' },
+                { id: 'analytics', name: 'Analytics', icon: '📈' }
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'border-primary-500 text-primary-600'
+                      ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -638,6 +701,251 @@ const AdminDashboard: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'documents' && (
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Document Approval
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  Review and approve user documents
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Document Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        File Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Uploaded
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {pendingDocuments.map((doc) => (
+                      <tr key={doc.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {doc.user}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {doc.userEmail}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white capitalize">
+                          {doc.type.replace('_', ' ')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {doc.fileName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {formatDate(doc.uploadedAt)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <StatusBadge status={doc.status} />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button className="text-green-600 hover:text-green-900">
+                              Approve
+                            </button>
+                            <button className="text-red-600 hover:text-red-900">
+                              Reject
+                            </button>
+                            <button className="text-blue-600 hover:text-blue-900">
+                              View
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'disputes' && (
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Dispute Management
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  Handle user disputes and issues
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Dispute
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Parties
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Priority
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {disputes.map((dispute) => (
+                      <tr key={dispute.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {dispute.title}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">
+                            {dispute.description}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          <div>{dispute.renter}</div>
+                          <div className="text-gray-500 dark:text-gray-400">vs {dispute.host}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white capitalize">
+                          {dispute.type.replace('_', ' ')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            dispute.priority === 'high' 
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                              : dispute.priority === 'medium'
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
+                              : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                          }`}>
+                            {dispute.priority}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <StatusBadge status={dispute.status as any} />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button className="text-blue-600 hover:text-blue-900">
+                              View Details
+                            </button>
+                            <button className="text-green-600 hover:text-green-900">
+                              Resolve
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  User Analytics
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-300">Total Users</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{stats.totalUsers}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-300">Active Users</span>
+                    <span className="font-semibold text-green-600">{stats.activeUsers}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-300">New This Month</span>
+                    <span className="font-semibold text-blue-600">12</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Revenue Analytics
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-300">Total Revenue</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{formatPrice(stats.totalRevenue)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-300">This Month</span>
+                    <span className="font-semibold text-green-600">R{Math.floor(stats.totalRevenue * 0.3).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-300">Growth Rate</span>
+                    <span className="font-semibold text-blue-600">+15.2%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Platform Health
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600 mb-2">99.9%</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">Uptime</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">120ms</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">Avg Response Time</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-600 mb-2">1,247</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">Active Sessions</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Monthly Revenue Chart
+              </h3>
+              <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">📊</div>
+                  <p>Revenue chart would be displayed here</p>
+                  <p className="text-sm">Integration with chart library needed</p>
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
-export const errorHandler = (err: unknown, req: Request, res: Response) => {
+export const errorHandler = (err: unknown, req: Request, res: Response, next: NextFunction) => {
   const error = err as Error & { status?: number; errors?: { message: string }[] };
   console.error(error.stack);
 

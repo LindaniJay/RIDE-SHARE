@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import CarVideoBackground from '../components/CarVideoBackground';
 import GlassForm from '../components/GlassForm';
 import GlassInput from '../components/GlassInput';
 import GlassButton from '../components/GlassButton';
@@ -19,7 +18,7 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { register } = useAuth();
+  const { register, authMethod, setAuthMethod } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +41,16 @@ const Register: React.FC = () => {
         phone: formData.phone,
         role: formData.role,
       });
-      navigate('/dashboard');
+      
+      // Get user role from localStorage and redirect accordingly
+      const userRole = localStorage.getItem('userRole');
+      if (userRole === 'admin') {
+        navigate('/dashboard/admin');
+      } else if (userRole === 'host') {
+        navigate('/dashboard/host');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error && 'response' in err 
         ? (err as { response?: { data?: { error?: string } } }).response?.data?.error 
@@ -55,13 +63,7 @@ const Register: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <CarVideoBackground 
-        variant="subtle" 
-        overlay={true} 
-        overlayOpacity={0.7}
-        className="min-h-screen"
-      >
-        <div className="max-w-md w-full space-y-8 relative z-10">
+      <div className="max-w-md w-full space-y-8">
           <GlassForm
             title="Join RideShare SA"
             subtitle="Create your account and start your journey"
@@ -73,6 +75,43 @@ const Register: React.FC = () => {
                 <p className="text-sm text-red-200">{error}</p>
               </div>
             )}
+
+            {/* Authentication Method Selector */}
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+              <label className="block text-sm font-medium text-white mb-3">
+                Authentication Method
+              </label>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setAuthMethod('firebase')}
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    authMethod === 'firebase'
+                      ? 'bg-blue-500/20 text-blue-200 border border-blue-400/30'
+                      : 'bg-white/10 text-white/70 border border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  🔥 Firebase
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthMethod('express')}
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    authMethod === 'express'
+                      ? 'bg-green-500/20 text-green-200 border border-green-400/30'
+                      : 'bg-white/10 text-white/70 border border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  ⚡ Express JWT
+                </button>
+              </div>
+              <p className="text-xs text-white/60 mt-2">
+                {authMethod === 'firebase' 
+                  ? 'Using Firebase Authentication with Firestore'
+                  : 'Using Express JWT with in-memory storage'
+                }
+              </p>
+            </div>
             
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -178,8 +217,7 @@ const Register: React.FC = () => {
               </p>
             </div>
           </GlassForm>
-        </div>
-      </CarVideoBackground>
+      </div>
     </div>
   );
 };

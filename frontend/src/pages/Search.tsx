@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import SEO from '../components/SEO';
-import CarVideoBackground from '../components/CarVideoBackground';
 import Glassmorphism from '../components/Glassmorphism';
 import GlassInput from '../components/GlassInput';
 import GlassButton from '../components/GlassButton';
+import LazyImage from '../components/LazyImage';
 
 interface Vehicle {
   id: string;
@@ -118,17 +118,11 @@ const Search: React.FC = () => {
         keywords="vehicle search South Africa, car rental search, bakkie rental, SUV rental, vehicle booking, car rental Cape Town, Johannesburg, Durban"
         url="https://rideshare-sa.co.za/search"
       />
-      <CarVideoBackground 
-        variant="minimal" 
-        overlay={true} 
-        overlayOpacity={0.3}
-        className="min-h-screen"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Search Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-4">
-              Find Your Perfect Ride in South Africa 🇿🇦
+              Find Your Perfect Ride in South Africa
             </h1>
             <p className="text-white/80">
               {vehicles.length} vehicles available across South Africa
@@ -330,10 +324,11 @@ const Search: React.FC = () => {
                         key={vehicle.id}
                         className="block bg-white/10 backdrop-blur-md rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 border border-white/20"
                       >
-                        <img
+                        <LazyImage
                           src={vehicle.imageUrl}
                           alt={`${vehicle.make} ${vehicle.model}`}
                           className="w-full h-48 object-cover"
+                          placeholder="https://via.placeholder.com/400x300/1f2937/ffffff?text=Vehicle+Image"
                         />
                         <div className="p-4">
                           <h3 className="text-xl font-semibold text-white mb-1">
@@ -360,8 +355,7 @@ const Search: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
-      </CarVideoBackground>
+      </div>
     </div>
   );
 };

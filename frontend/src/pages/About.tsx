@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import CarVideoBackground from '../components/CarVideoBackground';
 import { apiClient } from '../api/client';
 
 interface PlatformStats {
@@ -58,23 +57,8 @@ const About: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Single Full-Page Experience with Video Background */}
-      <CarVideoBackground 
-        variant="hero" 
-        overlay={true} 
-        overlayOpacity={0.4}
-        className="min-h-screen"
-      >
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-20 h-20 bg-white bg-opacity-10 rounded-full animate-pulse"></div>
-          <div className="absolute bottom-40 right-20 w-24 h-24 bg-white bg-opacity-10 rounded-full animate-bounce"></div>
-          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white bg-opacity-10 rounded-full animate-spin-slow"></div>
-          <div className="absolute top-1/3 right-1/3 w-12 h-12 bg-white bg-opacity-5 rounded-full animate-pulse"></div>
-        </div>
-
-        {/* Main Content Container */}
-        <div className="relative z-10 min-h-screen flex flex-col">
+      {/* Main Content Container */}
+      <div className="min-h-screen flex flex-col">
           {/* Hero Section */}
           <div className="flex-1 flex flex-col items-center justify-center text-center text-white px-4 py-20">
             <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 drop-shadow-lg">
@@ -284,8 +268,7 @@ const About: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-      </CarVideoBackground>
+      </div>
     </div>
   );
 };

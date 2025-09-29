@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import CarVideoBackground from '../components/CarVideoBackground';
 import GlassForm from '../components/GlassForm';
 import GlassInput from '../components/GlassInput';
 import GlassButton from '../components/GlassButton';
@@ -14,7 +13,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, authMethod, setAuthMethod } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -31,9 +30,15 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // Redirect based on role will be handled by the AuthContext
-      // The user will be redirected to the appropriate dashboard
-      navigate('/dashboard');
+      // Get user role from localStorage and redirect accordingly
+      const userRole = localStorage.getItem('userRole');
+      if (userRole === 'admin') {
+        navigate('/dashboard/admin');
+      } else if (userRole === 'host') {
+        navigate('/dashboard/host');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error && 'response' in error 
         ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
@@ -46,13 +51,7 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <CarVideoBackground 
-        variant="subtle" 
-        overlay={true} 
-        overlayOpacity={0.7}
-        className="min-h-screen"
-      >
-        <div className="max-w-md w-full space-y-8 relative z-10">
+      <div className="max-w-md w-full space-y-8">
           <GlassForm
             title="Welcome Back"
             subtitle="Sign in to your RideShare SA account"
@@ -64,6 +63,43 @@ const Login: React.FC = () => {
                 <p className="text-sm text-red-200">{error}</p>
               </div>
             )}
+
+            {/* Authentication Method Selector */}
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+              <label className="block text-sm font-medium text-white mb-3">
+                Authentication Method
+              </label>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setAuthMethod('firebase')}
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    authMethod === 'firebase'
+                      ? 'bg-blue-500/20 text-blue-200 border border-blue-400/30'
+                      : 'bg-white/10 text-white/70 border border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  🔥 Firebase
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthMethod('express')}
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    authMethod === 'express'
+                      ? 'bg-green-500/20 text-green-200 border border-green-400/30'
+                      : 'bg-white/10 text-white/70 border border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  ⚡ Express JWT
+                </button>
+              </div>
+              <p className="text-xs text-white/60 mt-2">
+                {authMethod === 'firebase' 
+                  ? 'Using Firebase Authentication with Firestore'
+                  : 'Using Express JWT with in-memory storage'
+                }
+              </p>
+            </div>
             
             <div className="space-y-6">
               <GlassInput
@@ -131,8 +167,7 @@ const Login: React.FC = () => {
               </p>
             </div>
           </GlassForm>
-        </div>
-      </CarVideoBackground>
+      </div>
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import CarVideoBackground from '../components/CarVideoBackground';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -71,21 +70,14 @@ const Contact: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with Car Video Background */}
+      {/* Hero Section */}
       <section className="relative py-20">
-        <CarVideoBackground 
-          variant="hero" 
-          overlay={true} 
-          overlayOpacity={0.6}
-          className="min-h-screen"
-        >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">Contact Us</h1>
           <p className="text-xl text-white text-opacity-90 max-w-3xl mx-auto">
             Have questions? We're here to help! Get in touch with our team for support, partnerships, or just to say hello.
           </p>
         </div>
-        </CarVideoBackground>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">

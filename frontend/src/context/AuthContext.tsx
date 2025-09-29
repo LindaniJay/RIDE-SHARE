@@ -1,8 +1,10 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import { apiClient } from '../api/client';
+import { FirebaseAuthService } from '../services/firebaseAuth';
 
 interface User {
-  id: number;
+  id?: number;
+  uid?: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -21,6 +23,8 @@ interface AuthContextType {
   isHost: () => boolean;
   isRenter: () => boolean;
   hasRole: (role: string) => boolean;
+  authMethod: 'firebase' | 'express';
+  setAuthMethod: (method: 'firebase' | 'express') => void;
 }
 
 interface RegisterData {
@@ -37,38 +41,125 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authMethod, setAuthMethod] = useState<'firebase' | 'express'>(
+    localStorage.getItem('authMethod') as 'firebase' | 'express' || 'firebase'
+  );
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [authMethod]);
 
   const checkAuth = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get('/api/auth/me');
-      setUser(response.data.user);
+      if (authMethod === 'firebase') {
+        // Firebase auth state is handled by the listener
+        return;
+      } else {
+        // Express JWT auth
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          setUser(null);
+          return;
+        }
+        
+        const response = await apiClient.get('/auth/me');
+        setUser(response.data.user);
+        localStorage.setItem('userRole', response.data.user.role);
+      }
     } catch (error) {
       setUser(null);
+      if (authMethod === 'express') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('userRole');
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // Firebase auth state listener
+  useEffect(() => {
+    if (authMethod === 'firebase') {
+      const unsubscribe = FirebaseAuthService.onAuthStateChanged((firebaseUser) => {
+        if (firebaseUser) {
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            firstName: firebaseUser.firstName,
+            lastName: firebaseUser.lastName,
+            role: firebaseUser.role,
+            phone: firebaseUser.phone,
+            isEmailVerified: firebaseUser.isEmailVerified
+          });
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
+
+      return () => unsubscribe();
+    }
+  }, [authMethod]);
+
   const login = async (email: string, password: string) => {
-    const response = await axios.post('/api/auth/login', { email, password });
-    setUser(response.data.user);
-    localStorage.setItem('accessToken', response.data.accessToken);
+    if (authMethod === 'firebase') {
+      const firebaseUser = await FirebaseAuthService.signIn(email, password);
+      const userData = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        firstName: firebaseUser.firstName,
+        lastName: firebaseUser.lastName,
+        role: firebaseUser.role,
+        phone: firebaseUser.phone,
+        isEmailVerified: firebaseUser.isEmailVerified
+      };
+      setUser(userData);
+      localStorage.setItem('userRole', firebaseUser.role);
+    } else {
+      const response = await apiClient.post('/auth/login', { email, password });
+      setUser(response.data.user);
+      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('userRole', response.data.user.role);
+    }
   };
 
   const register = async (userData: RegisterData) => {
-    const response = await axios.post('/api/auth/register', userData);
-    setUser(response.data.user);
-    localStorage.setItem('accessToken', response.data.accessToken);
+    if (authMethod === 'firebase') {
+      const firebaseUser = await FirebaseAuthService.register(
+        userData.email,
+        userData.password,
+        userData.firstName,
+        userData.lastName,
+        userData.role,
+        userData.phone
+      );
+      setUser({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        firstName: firebaseUser.firstName,
+        lastName: firebaseUser.lastName,
+        role: firebaseUser.role,
+        phone: firebaseUser.phone,
+        isEmailVerified: firebaseUser.isEmailVerified
+      });
+    } else {
+      const response = await apiClient.post('/auth/register', userData);
+      setUser(response.data.user);
+      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('userRole', response.data.user.role);
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('accessToken');
-    axios.post('/api/auth/logout');
+  const logout = async () => {
+    if (authMethod === 'firebase') {
+      await FirebaseAuthService.signOut();
+    } else {
+      setUser(null);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('userRole');
+      apiClient.post('/auth/logout');
+    }
   };
 
   // Role-based helper functions
@@ -87,6 +178,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     isHost,
     isRenter,
     hasRole,
+    authMethod,
+    setAuthMethod: (method: 'firebase' | 'express') => {
+      setAuthMethod(method);
+      localStorage.setItem('authMethod', method);
+    },
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
