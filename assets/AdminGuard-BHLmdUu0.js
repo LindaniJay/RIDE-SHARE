@@ -1,0 +1,1 @@
+import{j as r}from"./query-CSyQ0w5Y.js";import{u as s}from"./index-pzKCZDpe.js";import{N as t}from"./router-BWB2dKYR.js";import"./vendor-CBH9K-97.js";import"./ui-qr7cu0yN.js";const d=({children:e})=>{const{user:o,isAdmin:i}=s();return o?i()?r.jsx(r.Fragment,{children:e}):r.jsx(t,{to:"/unauthorized",replace:!0}):r.jsx(t,{to:"/admin-login",replace:!0})};export{d as default};
