@@ -30,9 +30,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen">
       {/* Header with Logo and Navbar */}
-      <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-4">
-        <div className="flex items-center justify-between">
-          {/* Logo - Left side, same height as navbar */}
+      <header className="fixed top-4 left-0 right-0 z-50 w-full px-4">
+        <div className="flex items-center max-w-6xl mx-auto">
+          {/* Logo - Left corner */}
           <Link 
             to="/" 
             className="flex items-center hover:opacity-80 transition-all duration-300"
@@ -40,21 +40,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <img 
               src="/logo.png" 
               alt="RideShare SA Logo" 
-              className="h-[60px] w-auto drop-shadow-lg"
+              className="h-[40px] w-auto drop-shadow-lg"
             />
           </Link>
 
-          {/* Navbar - Right side with enhanced glassmorphism */}
-          <nav className="flex items-center">
-            <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-full shadow-xl px-6 py-3">
-              <div className="flex items-center justify-center h-[60px] px-6">
+          {/* Navbar - Centered on screen */}
+          <nav className="flex items-center absolute left-1/2 transform -translate-x-1/2">
+            <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-full shadow-xl px-4 py-2">
+              <div className="flex items-center justify-center h-[40px] px-4">
                 {/* Desktop Navigation */}
-                <div className="hidden md:flex items-center space-x-2">
+                <div className="hidden md:flex items-center space-x-1">
                   {navItems.map((item) => (
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                      className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                         isActive(item.path)
                           ? 'glass-button-primary text-white'
                           : 'glass-button text-white/80 hover:text-white'
@@ -67,21 +67,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
                 
                 {/* Right side actions */}
-                <div className="flex items-center space-x-2 ml-4">
+                <div className="flex items-center space-x-1 ml-3">
               {/* Theme toggle */}
               <button
                 onClick={toggleTheme}
-                className="glass-button p-2 text-white/80 hover:text-white transition-all duration-300"
+                className="glass-button p-1.5 text-white/80 hover:text-white transition-all duration-300"
                 title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 <Icon name={isDark ? 'Sun' : 'Moon'} size="sm" />
               </button>
               
               {user ? (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
                   <Link
                     to="/dashboard"
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                       isActive('/dashboard') || location.pathname.startsWith('/dashboard')
                         ? 'glass-button-primary text-white'
                         : 'glass-button text-white/80 hover:text-white'
@@ -92,17 +92,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </Link>
                   <button
                     onClick={logout}
-                    className="glass-button flex items-center space-x-2 px-3 py-2 text-white/80 hover:text-white transition-all duration-300"
+                    className="glass-button flex items-center space-x-1 px-2.5 py-1.5 text-white/80 hover:text-white transition-all duration-300"
                   >
                     <Icon name="Logout" size="sm" />
                     <span className="hidden sm:block">Logout</span>
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
                   <Link
                     to="/login"
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                       isActive('/login')
                         ? 'glass-button-primary text-white'
                         : 'glass-button text-white/80 hover:text-white'
@@ -113,7 +113,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </Link>
                   <Link
                     to="/register"
-                    className="btn-primary flex items-center space-x-2 px-4 py-2"
+                    className="btn-primary flex items-center space-x-1 px-3 py-1.5"
                   >
                     <Icon name="Plus" size="sm" />
                     <span className="hidden sm:block">Sign Up</span>
@@ -124,7 +124,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Mobile menu button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden glass-button p-2 text-white/80 hover:text-white transition-all duration-300"
+                className="md:hidden glass-button p-1.5 text-white/80 hover:text-white transition-all duration-300"
               >
                 <Icon name="Menu" size="sm" />
               </button>
@@ -208,7 +208,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </header>
       
       {/* Main content with top padding to account for fixed header */}
-      <main className="pt-20">{children}</main>
+      <main className="pt-16">{children}</main>
       
       {/* Compact Footer */}
       <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-6">
