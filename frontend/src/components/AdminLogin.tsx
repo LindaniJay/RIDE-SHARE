@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './Card';
 import { Input } from './Input';
 import { Form, FormField, FormSubmit } from './Form';
 import { useToastHelpers } from './Toast';
-import { firebaseAuthService } from '../services/firebaseAuthService';
+import { useAuth } from '../hooks/useAuth';
 
 interface AdminLoginProps {
   onSuccess?: () => void;
@@ -15,18 +15,16 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, className }) 
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { error: showError, success: showSuccess } = useToastHelpers();
+  const { adminLogin } = useAuth();
 
   const handleAdminLogin = async (values: Record<string, any>) => {
     setIsLoading(true);
     
     try {
-      const user = await firebaseAuthService.adminLogin(values.email, values.password);
-      
-      if (user) {
-        showSuccess('Admin login successful', 'Welcome to the admin dashboard');
-        onSuccess?.();
-        navigate('/dashboard');
-      }
+      await adminLogin(values.email, values.password);
+      showSuccess('Admin login successful', 'Welcome to the admin dashboard');
+      onSuccess?.();
+      navigate('/dashboard');
     } catch (error: any) {
       showError('Admin login failed', error.message || 'Invalid admin credentials');
     } finally {

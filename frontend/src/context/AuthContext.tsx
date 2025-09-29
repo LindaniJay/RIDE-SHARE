@@ -154,10 +154,77 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const adminLogin = async (email: string, password: string) => {
     try {
-      const response = await apiClient.post('/auth/admin-login', { email, password });
-      setUser(response.data.user);
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('userRole', response.data.user.role);
+      // Mock admin users for demo purposes
+      const adminUsers = [
+        {
+          id: 'admin-1',
+          email: 'Jonase@rideshare.co.za',
+          password: 'password123',
+          firstName: 'Jonase',
+          lastName: 'Admin',
+          role: 'admin' as const,
+          isEmailVerified: true,
+          isAdmin: true
+        },
+        {
+          id: 'admin-2',
+          email: 'Toni@rideshare.co.za',
+          password: 'password123',
+          firstName: 'Toni',
+          lastName: 'Admin',
+          role: 'admin' as const,
+          isEmailVerified: true,
+          isAdmin: true
+        },
+        {
+          id: 'admin-3',
+          email: 'soso@rideshare.co.za',
+          password: 'password123',
+          firstName: 'Soso',
+          lastName: 'Admin',
+          role: 'admin' as const,
+          isEmailVerified: true,
+          isAdmin: true
+        },
+        {
+          id: 'admin-4',
+          email: 'Anitha@rideshare.co.za',
+          password: 'password123',
+          firstName: 'Anitha',
+          lastName: 'Admin',
+          role: 'admin' as const,
+          isEmailVerified: true,
+          isAdmin: true
+        }
+      ];
+
+      // Find admin user
+      const adminUser = adminUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+      
+      if (!adminUser) {
+        throw new Error('Admin access denied');
+      }
+      
+      if (password !== adminUser.password) {
+        throw new Error('Invalid admin credentials');
+      }
+
+      // Create mock token
+      const mockToken = 'mock-admin-token-' + Date.now();
+      
+      // Set user data
+      const userData = {
+        id: parseInt(adminUser.id.replace('admin-', '')),
+        email: adminUser.email,
+        firstName: adminUser.firstName,
+        lastName: adminUser.lastName,
+        role: adminUser.role,
+        isEmailVerified: adminUser.isEmailVerified
+      };
+      
+      setUser(userData);
+      localStorage.setItem('accessToken', mockToken);
+      localStorage.setItem('userRole', adminUser.role);
     } catch (error) {
       console.error('Admin login error:', error);
       throw error;
