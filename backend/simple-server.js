@@ -247,7 +247,7 @@ app.post('/api/auth/admin-login', async (req, res) => {
 // Firebase authentication verification route
 app.post('/api/auth/verify-firebase-token', async (req, res) => {
   try {
-    const { idToken } = req.body;
+    const { idToken, email } = req.body;
     
     if (!idToken) {
       return res.status(401).json({ error: 'Firebase token required' });
@@ -257,21 +257,21 @@ app.post('/api/auth/verify-firebase-token', async (req, res) => {
     // In production, you would verify with Firebase Admin SDK
     const mockUser = {
       uid: 'firebase-user-' + Math.random().toString(36).substr(2, 9),
-      email: 'user@rideshare.co.za',
+      email: email || 'user@rideshare.co.za',
       email_verified: true,
       name: 'Firebase User'
     };
     
     // Check if this is an admin user by email
     const adminEmails = [
-      'Jonase@rideshare.co.za',
-      'Toni@rideshare.co.za', 
+      'jonase@rideshare.co.za',
+      'toni@rideshare.co.za', 
       'soso@rideshare.co.za',
-      'Anitha@rideshare.co.za'
+      'anitha@rideshare.co.za'
     ];
     
-    // For demo, we'll check the email from the token (in real app, decode the Firebase token)
-    const isAdmin = adminEmails.includes(req.body.email || 'user@rideshare.co.za');
+    // Check if the email is in the admin list
+    const isAdmin = adminEmails.includes(email?.toLowerCase() || 'user@rideshare.co.za');
     const userRole = isAdmin ? 'admin' : 'renter';
     
     const token = jwt.sign(
@@ -286,6 +286,7 @@ app.post('/api/auth/verify-firebase-token', async (req, res) => {
     );
     
     res.json({
+      success: true,
       message: 'Firebase authentication successful',
       accessToken: token,
       user: {

@@ -116,3 +116,4 @@ If you're still having issues:
 ---
 
 **✅ Once you complete these steps, the Firebase admin authentication will work perfectly!**
+

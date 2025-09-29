@@ -77,3 +77,4 @@ console.log('');
 console.log('🎯 The Firebase configuration is correct!');
 console.log('💡 You just need to create the admin users manually.');
 console.log('🚀 Follow the steps above to complete the setup!');
+

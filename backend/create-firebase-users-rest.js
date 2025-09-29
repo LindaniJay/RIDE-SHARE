@@ -86,3 +86,4 @@ adminUsers.forEach(admin => {
 console.log('================================');
 console.log('');
 console.log('✅ Follow the manual creation steps above to create these users in Firebase!');
+
