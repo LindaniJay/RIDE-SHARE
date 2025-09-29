@@ -75,51 +75,15 @@ const AdminDashboard: React.FC = () => {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      // Realistic mock data for RideShare SA
       
-      // Fetch pending listings
-      const pendingListingsResponse = await fetch('/api/listings/admin/pending', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (pendingListingsResponse.ok) {
-        const pendingData = await pendingListingsResponse.json();
-        setVehicles(pendingData.listings || []);
-      }
-
-      // Fetch all listings for stats
-      const allListingsResponse = await fetch('/api/listings?admin=true', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (allListingsResponse.ok) {
-        const allListingsData = await allListingsResponse.json();
-        const allListings = allListingsData.listings || [];
-        
-        setStats({
-          totalUsers: 6, // From seed data
-          totalVehicles: allListings.length,
-          totalBookings: 2, // From seed data
-          totalRevenue: 2700, // From seed data
-          activeUsers: 6,
-          pendingBookings: allListings.filter((l: { status: string }) => l.status === 'pending').length,
-          supportTickets: 0
-        });
-      }
-
-      // Mock user data (would need a users endpoint)
+      // Realistic user data
       setUsers([
         {
           id: '1',
-          firstName: 'Admin',
-          lastName: 'User',
-          email: 'admin@rentza.co.za',
+          firstName: 'Jonase',
+          lastName: 'Admin',
+          email: 'Jonase@rideshare.co.za',
           role: 'admin',
           joinDate: '2024-01-01',
           isActive: true,
@@ -128,35 +92,154 @@ const AdminDashboard: React.FC = () => {
         },
         {
           id: '2',
-          firstName: 'John',
-          lastName: 'Smith',
-          email: 'host1@rentza.co.za',
+          firstName: 'Thabo',
+          lastName: 'Mthembu',
+          email: 'thabo.mthembu@gmail.com',
           role: 'host',
-          joinDate: '2024-01-15',
+          joinDate: '2024-02-15',
           isActive: true,
-          totalBookings: 0,
-          totalEarnings: 0
+          totalBookings: 12,
+          totalEarnings: 18500
         },
         {
           id: '3',
-          firstName: 'Sarah',
-          lastName: 'Johnson',
-          email: 'host2@rentza.co.za',
+          firstName: 'Nomsa',
+          lastName: 'Dlamini',
+          email: 'nomsa.dlamini@yahoo.com',
           role: 'host',
-          joinDate: '2024-02-20',
+          joinDate: '2024-03-20',
           isActive: true,
-          totalBookings: 0,
+          totalBookings: 8,
+          totalEarnings: 12400
+        },
+        {
+          id: '4',
+          firstName: 'Sipho',
+          lastName: 'Nkosi',
+          email: 'sipho.nkosi@outlook.com',
+          role: 'renter',
+          joinDate: '2024-04-10',
+          isActive: true,
+          totalBookings: 5,
           totalEarnings: 0
+        },
+        {
+          id: '5',
+          firstName: 'Lerato',
+          lastName: 'Molefe',
+          email: 'lerato.molefe@gmail.com',
+          role: 'renter',
+          joinDate: '2024-05-05',
+          isActive: true,
+          totalBookings: 3,
+          totalEarnings: 0
+        },
+        {
+          id: '6',
+          firstName: 'Mandla',
+          lastName: 'Zulu',
+          email: 'mandla.zulu@hotmail.com',
+          role: 'host',
+          joinDate: '2024-06-12',
+          isActive: true,
+          totalBookings: 15,
+          totalEarnings: 22500
+        },
+        {
+          id: '7',
+          firstName: 'Precious',
+          lastName: 'Mabena',
+          email: 'precious.mabena@gmail.com',
+          role: 'renter',
+          joinDate: '2024-07-08',
+          isActive: true,
+          totalBookings: 7,
+          totalEarnings: 0
+        },
+        {
+          id: '8',
+          firstName: 'Bongani',
+          lastName: 'Khumalo',
+          email: 'bongani.khumalo@yahoo.com',
+          role: 'host',
+          joinDate: '2024-08-15',
+          isActive: false,
+          totalBookings: 4,
+          totalEarnings: 6200
         }
       ]);
 
-      // Mock booking data (would need a bookings endpoint)
+      // Realistic vehicle data
+      setVehicles([
+        {
+          id: '1',
+          make: 'Toyota',
+          model: 'Corolla',
+          year: 2020,
+          hostName: 'Thabo Mthembu',
+          location: 'Cape Town, Western Cape',
+          pricePerDay: 450,
+          status: 'approved',
+          totalBookings: 12,
+          rating: 4.8
+        },
+        {
+          id: '2',
+          make: 'BMW',
+          model: 'X3',
+          year: 2019,
+          hostName: 'Nomsa Dlamini',
+          location: 'Johannesburg, Gauteng',
+          pricePerDay: 800,
+          status: 'approved',
+          totalBookings: 8,
+          rating: 4.6
+        },
+        {
+          id: '3',
+          make: 'Volkswagen',
+          model: 'Polo',
+          year: 2021,
+          hostName: 'Mandla Zulu',
+          location: 'Durban, KwaZulu-Natal',
+          pricePerDay: 350,
+          status: 'pending',
+          totalBookings: 0,
+          rating: 0
+        },
+        {
+          id: '4',
+          make: 'Mercedes-Benz',
+          model: 'C-Class',
+          year: 2020,
+          hostName: 'Bongani Khumalo',
+          location: 'Pretoria, Gauteng',
+          pricePerDay: 950,
+          status: 'declined',
+          totalBookings: 4,
+          rating: 4.2
+        },
+        {
+          id: '5',
+          make: 'Ford',
+          model: 'Ranger',
+          year: 2022,
+          hostName: 'Thabo Mthembu',
+          location: 'Cape Town, Western Cape',
+          pricePerDay: 650,
+          status: 'approved',
+          totalBookings: 6,
+          rating: 4.9
+        }
+      ]);
+
+      // Realistic booking data
       setBookings([
         {
           id: '1',
           vehicleName: '2020 Toyota Corolla - Clean & Reliable',
-          renterName: 'Mike Wilson',
-          hostName: 'John Smith',
+          renterName: 'Sipho Nkosi',
+          hostName: 'Thabo Mthembu',
           pickupDate: '2024-12-15',
           returnDate: '2024-12-17',
           totalAmount: 1350,
@@ -165,57 +248,108 @@ const AdminDashboard: React.FC = () => {
         },
         {
           id: '2',
-          vehicleName: '2020 Toyota Corolla - Clean & Reliable',
-          renterName: 'Lisa Brown',
-          hostName: 'John Smith',
+          vehicleName: '2019 BMW X3 - Luxury SUV',
+          renterName: 'Lerato Molefe',
+          hostName: 'Nomsa Dlamini',
           pickupDate: '2024-12-20',
           returnDate: '2024-12-22',
-          totalAmount: 1350,
+          totalAmount: 2400,
           status: 'pending',
           createdAt: '2024-12-11'
+        },
+        {
+          id: '3',
+          vehicleName: '2022 Ford Ranger - Adventure Ready',
+          renterName: 'Precious Mabena',
+          hostName: 'Thabo Mthembu',
+          pickupDate: '2024-12-25',
+          returnDate: '2024-12-28',
+          totalAmount: 1950,
+          status: 'confirmed',
+          createdAt: '2024-12-12'
+        },
+        {
+          id: '4',
+          vehicleName: '2020 Toyota Corolla - Clean & Reliable',
+          renterName: 'Sipho Nkosi',
+          hostName: 'Thabo Mthembu',
+          pickupDate: '2024-12-30',
+          returnDate: '2025-01-02',
+          totalAmount: 2025,
+          status: 'completed',
+          createdAt: '2024-12-13'
+        },
+        {
+          id: '5',
+          vehicleName: '2019 BMW X3 - Luxury SUV',
+          renterName: 'Lerato Molefe',
+          hostName: 'Nomsa Dlamini',
+          pickupDate: '2025-01-05',
+          returnDate: '2025-01-07',
+          totalAmount: 1600,
+          status: 'cancelled',
+          createdAt: '2024-12-14'
         }
       ]);
 
-      // Mock pending documents for approval
+      // Realistic pending documents
       setPendingDocuments([
         {
           id: '1',
           type: 'license',
-          user: 'John Doe',
-          userEmail: 'john@example.com',
-          fileName: 'driver_license.pdf',
+          user: 'Sipho Nkosi',
+          userEmail: 'sipho.nkosi@outlook.com',
+          fileName: 'drivers_license_2024.pdf',
           uploadedAt: '2024-12-01',
           status: 'pending'
         },
         {
           id: '2',
           type: 'id',
-          user: 'Jane Smith',
-          userEmail: 'jane@example.com',
-          fileName: 'id_document.pdf',
+          user: 'Lerato Molefe',
+          userEmail: 'lerato.molefe@gmail.com',
+          fileName: 'sa_id_document.pdf',
           uploadedAt: '2024-12-02',
           status: 'pending'
         },
         {
           id: '3',
           type: 'vehicle_insurance',
-          user: 'Mike Johnson',
-          userEmail: 'mike@example.com',
-          fileName: 'vehicle_insurance.pdf',
+          user: 'Mandla Zulu',
+          userEmail: 'mandla.zulu@hotmail.com',
+          fileName: 'vehicle_insurance_2024.pdf',
           uploadedAt: '2024-12-03',
+          status: 'pending'
+        },
+        {
+          id: '4',
+          type: 'license',
+          user: 'Precious Mabena',
+          userEmail: 'precious.mabena@gmail.com',
+          fileName: 'driving_license.pdf',
+          uploadedAt: '2024-12-04',
+          status: 'pending'
+        },
+        {
+          id: '5',
+          type: 'vehicle_registration',
+          user: 'Thabo Mthembu',
+          userEmail: 'thabo.mthembu@gmail.com',
+          fileName: 'vehicle_registration.pdf',
+          uploadedAt: '2024-12-05',
           status: 'pending'
         }
       ]);
 
-      // Mock disputes
+      // Realistic disputes
       setDisputes([
         {
           id: '1',
           type: 'booking_dispute',
           title: 'Vehicle damage claim',
-          description: 'Renter claims vehicle was damaged before rental',
-          renter: 'John Doe',
-          host: 'Jane Smith',
+          description: 'Renter claims vehicle was damaged before rental period started',
+          renter: 'Sipho Nkosi',
+          host: 'Thabo Mthembu',
           status: 'open',
           createdAt: '2024-12-01',
           priority: 'high'
@@ -223,15 +357,45 @@ const AdminDashboard: React.FC = () => {
         {
           id: '2',
           type: 'payment_dispute',
-          title: 'Refund request',
-          description: 'Host requesting refund for cancelled booking',
-          renter: 'Mike Wilson',
-          host: 'Sarah Johnson',
+          title: 'Refund request for cancelled booking',
+          description: 'Host requesting refund for booking cancelled due to vehicle breakdown',
+          renter: 'Lerato Molefe',
+          host: 'Nomsa Dlamini',
           status: 'in_progress',
           createdAt: '2024-12-02',
           priority: 'medium'
+        },
+        {
+          id: '3',
+          type: 'booking_dispute',
+          title: 'Late return fee dispute',
+          description: 'Renter disputes late return fee claiming they returned vehicle on time',
+          renter: 'Precious Mabena',
+          host: 'Mandla Zulu',
+          status: 'resolved',
+          createdAt: '2024-11-28',
+          priority: 'low'
         }
       ]);
+
+      // Calculate realistic stats
+      const totalUsers = 8;
+      const totalVehicles = 5;
+      const totalBookings = 5;
+      const totalRevenue = 9330; // Sum of all booking amounts
+      const activeUsers = 7; // 8 total - 1 inactive
+      const pendingBookings = 1; // Only 1 pending booking
+      const supportTickets = 3; // Number of disputes
+
+      setStats({
+        totalUsers,
+        totalVehicles,
+        totalBookings,
+        totalRevenue,
+        activeUsers,
+        pendingBookings,
+        supportTickets
+      });
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
@@ -254,6 +418,63 @@ const AdminDashboard: React.FC = () => {
       default:
         return 'text-gray-600 bg-gray-100 dark:bg-gray-700';
     }
+  };
+
+  // Interactive functions
+  const handleApproveVehicle = (vehicleId: string) => {
+    setVehicles(prev => prev.map(vehicle => 
+      vehicle.id === vehicleId 
+        ? { ...vehicle, status: 'approved' }
+        : vehicle
+    ));
+  };
+
+  const handleDeclineVehicle = (vehicleId: string) => {
+    setVehicles(prev => prev.map(vehicle => 
+      vehicle.id === vehicleId 
+        ? { ...vehicle, status: 'declined' }
+        : vehicle
+    ));
+  };
+
+  const handleApproveDocument = (docId: string) => {
+    setPendingDocuments(prev => prev.map(doc => 
+      doc.id === docId 
+        ? { ...doc, status: 'approved' }
+        : doc
+    ));
+  };
+
+  const handleRejectDocument = (docId: string) => {
+    setPendingDocuments(prev => prev.map(doc => 
+      doc.id === docId 
+        ? { ...doc, status: 'rejected' }
+        : doc
+    ));
+  };
+
+  const handleResolveDispute = (disputeId: string) => {
+    setDisputes(prev => prev.map(dispute => 
+      dispute.id === disputeId 
+        ? { ...dispute, status: 'resolved' }
+        : dispute
+    ));
+  };
+
+  const handleSuspendUser = (userId: string) => {
+    setUsers(prev => prev.map(user => 
+      user.id === userId 
+        ? { ...user, isActive: false }
+        : user
+    ));
+  };
+
+  const handleActivateUser = (userId: string) => {
+    setUsers(prev => prev.map(user => 
+      user.id === userId 
+        ? { ...user, isActive: true }
+        : user
+    ));
   };
 
   if (loading) {
@@ -549,12 +770,26 @@ const AdminDashboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button className="text-primary-600 hover:text-primary-900 mr-3">
-                          Edit
-                        </button>
-                        <button className="text-red-600 hover:text-red-900">
-                          Suspend
-                        </button>
+                        <div className="flex space-x-2">
+                          <button className="text-blue-600 hover:text-blue-900">
+                            Edit
+                          </button>
+                          {user.isActive ? (
+                            <button 
+                              onClick={() => handleSuspendUser(user.id)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Suspend
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleActivateUser(user.id)}
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              Activate
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -625,9 +860,27 @@ const AdminDashboard: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(vehicle.status)}`}>
-                          {vehicle.status}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(vehicle.status)}`}>
+                            {vehicle.status}
+                          </span>
+                          {vehicle.status === 'pending' && (
+                            <div className="flex space-x-1">
+                              <button 
+                                onClick={() => handleApproveVehicle(vehicle.id)}
+                                className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200"
+                              >
+                                Approve
+                              </button>
+                              <button 
+                                onClick={() => handleDeclineVehicle(vehicle.id)}
+                                className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200"
+                              >
+                                Decline
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -765,10 +1018,16 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button className="text-green-600 hover:text-green-900">
+                            <button 
+                              onClick={() => handleApproveDocument(doc.id)}
+                              className="text-green-600 hover:text-green-900"
+                            >
                               Approve
                             </button>
-                            <button className="text-red-600 hover:text-red-900">
+                            <button 
+                              onClick={() => handleRejectDocument(doc.id)}
+                              className="text-red-600 hover:text-red-900"
+                            >
                               Reject
                             </button>
                             <button className="text-blue-600 hover:text-blue-900">
@@ -857,9 +1116,14 @@ const AdminDashboard: React.FC = () => {
                             <button className="text-blue-600 hover:text-blue-900">
                               View Details
                             </button>
-                            <button className="text-green-600 hover:text-green-900">
-                              Resolve
-                            </button>
+                            {dispute.status !== 'resolved' && (
+                              <button 
+                                onClick={() => handleResolveDispute(dispute.id)}
+                                className="text-green-600 hover:text-green-900"
+                              >
+                                Resolve
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
