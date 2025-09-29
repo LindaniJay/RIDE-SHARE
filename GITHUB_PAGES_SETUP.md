@@ -11,8 +11,16 @@ The 404 error you're experiencing is likely due to GitHub Pages configuration. H
 3. Scroll down to **Pages** section
 4. Under **Source**, select:
    - **Source**: `Deploy from a branch`
-   - **Branch**: `gh-pages` (if available) OR `main`
-   - **Folder**: `/ (root)` OR `/frontend/dist`
+   - **Branch**: `main`
+   - **Folder**: `/ (root)`
+
+### 2. **Fix GitHub Actions (If Using Actions)**
+
+If you're using GitHub Actions and getting errors:
+1. Go to **Settings** → **Pages**
+2. Under **Source**, select: **Deploy from a branch**
+3. Choose **Branch**: `main` and **Folder**: `/ (root)`
+4. This bypasses the Actions workflow issues
 
 ### 2. **Enable GitHub Actions (Recommended)**
 
