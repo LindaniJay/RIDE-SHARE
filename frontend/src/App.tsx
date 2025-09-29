@@ -18,6 +18,7 @@ const Contact = lazy(() => import('./pages/Contact'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const FAQ = lazy(() => import('./pages/FAQ'));
 const SetupAdmin = lazy(() => import('./pages/SetupAdmin'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
@@ -61,6 +62,7 @@ function App() {
                       } />
                       <Route path="/login" element={<Layout><Login /></Layout>} />
                       <Route path="/register" element={<Layout><Register /></Layout>} />
+                      <Route path="/admin-login" element={<AdminLogin />} />
                       <Route path="/setup-admin" element={<SetupAdmin />} />
                       <Route path="/unauthorized" element={<Layout><Unauthorized /></Layout>} />
                       <Route path="*" element={<Layout><NotFound /></Layout>} />

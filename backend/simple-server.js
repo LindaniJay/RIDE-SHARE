@@ -23,43 +23,77 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Simple in-memory user storage for demo
-const users = [
+// Admin accounts for RideShare SA
+const adminUsers = [
   {
-    id: 1,
-    email: 'admin@rentza.co.za',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
-    firstName: 'Admin',
-    lastName: 'User',
-    role: 'admin',
-    isEmailVerified: true
-  },
-  {
-    id: 2,
-    email: 'superadmin@rentza.co.za',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
-    firstName: 'Super',
+    id: 'admin-1',
+    email: 'Jonase@rideshare.co.za',
+    password: 'password123',
+    firstName: 'Jonase',
     lastName: 'Admin',
     role: 'admin',
-    isEmailVerified: true
+    isEmailVerified: true,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    lastLoginAt: null
   },
   {
-    id: 3,
-    email: 'host1@rentza.co.za',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
+    id: 'admin-2',
+    email: 'Toni@rideshare.co.za',
+    password: 'password123',
+    firstName: 'Toni',
+    lastName: 'Admin',
+    role: 'admin',
+    isEmailVerified: true,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    lastLoginAt: null
+  },
+  {
+    id: 'admin-3',
+    email: 'soso@rideshare.co.za',
+    password: 'password123',
+    firstName: 'Soso',
+    lastName: 'Admin',
+    role: 'admin',
+    isEmailVerified: true,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    lastLoginAt: null
+  },
+  {
+    id: 'admin-4',
+    email: 'Anitha@rideshare.co.za',
+    password: 'password123',
+    firstName: 'Anitha',
+    lastName: 'Admin',
+    role: 'admin',
+    isEmailVerified: true,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    lastLoginAt: null
+  }
+];
+
+// Demo users for testing (will be replaced by Firebase users)
+const demoUsers = [
+  {
+    id: 'demo-host-1',
+    email: 'host1@rideshare.co.za',
     firstName: 'John',
     lastName: 'Smith',
     role: 'host',
-    isEmailVerified: true
+    isEmailVerified: true,
+    isActive: true
   },
   {
-    id: 4,
-    email: 'renter1@rentza.co.za',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
+    id: 'demo-renter-1',
+    email: 'renter1@rideshare.co.za',
     firstName: 'Mike',
     lastName: 'Wilson',
     role: 'renter',
-    isEmailVerified: true
+    isEmailVerified: true,
+    isActive: true
   }
 ];
 
@@ -160,43 +194,100 @@ const authenticate = (req, res, next) => {
   });
 };
 
-// Auth routes
-app.post('/api/auth/login', async (req, res) => {
+// Admin login route (bypasses Firebase for admin access)
+app.post('/api/auth/admin-login', async (req, res) => {
   try {
-    console.log('Login attempt:', req.body);
+    console.log('Admin login attempt:', req.body);
     const { email, password } = req.body;
     
-    const user = users.find(u => u.email === email);
-    console.log('User found:', user ? 'Yes' : 'No');
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    // Check if it's an admin user
+    const adminUser = adminUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!adminUser) {
+      return res.status(401).json({ error: 'Admin access denied' });
     }
     
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    // Simple password check for admin (no hashing for demo)
+    if (password !== adminUser.password) {
+      return res.status(401).json({ error: 'Invalid admin credentials' });
     }
+    
+    // Update last login
+    adminUser.lastLoginAt = new Date().toISOString();
     
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
+      { 
+        userId: adminUser.id, 
+        email: adminUser.email, 
+        role: adminUser.role,
+        isAdmin: true 
+      },
       'your-secret-key',
       { expiresIn: '24h' }
     );
     
     res.json({
-      message: 'Login successful',
+      message: 'Admin login successful',
       accessToken: token,
       user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        isEmailVerified: user.isEmailVerified
+        id: adminUser.id,
+        email: adminUser.email,
+        firstName: adminUser.firstName,
+        lastName: adminUser.lastName,
+        role: adminUser.role,
+        isEmailVerified: adminUser.isEmailVerified,
+        isAdmin: true
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Admin login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Firebase authentication verification route
+app.post('/api/auth/verify-firebase-token', async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    
+    if (!idToken) {
+      return res.status(401).json({ error: 'Firebase token required' });
+    }
+    
+    // For demo purposes, we'll accept any Firebase token
+    // In production, you would verify with Firebase Admin SDK
+    const mockUser = {
+      uid: 'firebase-user-' + Math.random().toString(36).substr(2, 9),
+      email: 'user@rideshare.co.za',
+      email_verified: true,
+      name: 'Firebase User'
+    };
+    
+    const token = jwt.sign(
+      { 
+        userId: mockUser.uid, 
+        email: mockUser.email, 
+        role: 'renter',
+        isFirebase: true 
+      },
+      'your-secret-key',
+      { expiresIn: '24h' }
+    );
+    
+    res.json({
+      message: 'Firebase authentication successful',
+      accessToken: token,
+      user: {
+        id: mockUser.uid,
+        email: mockUser.email,
+        firstName: mockUser.name.split(' ')[0],
+        lastName: mockUser.name.split(' ')[1] || '',
+        role: 'renter',
+        isEmailVerified: mockUser.email_verified,
+        isFirebase: true
+      }
+    });
+  } catch (error) {
+    console.error('Firebase verification error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -303,10 +394,12 @@ app.get('/api/vehicles', (req, res) => {
 // Stats route
 app.get('/api/stats', (req, res) => {
   res.json({
-    totalUsers: users.length,
+    totalUsers: adminUsers.length + demoUsers.length,
     totalVehicles: vehicles.length,
     totalBookings: 0,
-    totalRevenue: 0
+    totalRevenue: 0,
+    activeBookings: 0,
+    pendingApprovals: 0
   });
 });
 

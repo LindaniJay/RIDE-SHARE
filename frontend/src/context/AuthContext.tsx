@@ -17,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
+  adminLogin: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
   isAdmin: () => boolean;
@@ -151,6 +152,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const adminLogin = async (email: string, password: string) => {
+    try {
+      const response = await apiClient.post('/auth/admin-login', { email, password });
+      setUser(response.data.user);
+      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('userRole', response.data.user.role);
+    } catch (error) {
+      console.error('Admin login error:', error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     if (authMethod === 'firebase') {
       await FirebaseAuthService.signOut();
@@ -172,6 +185,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     user,
     login,
     register,
+    adminLogin,
     logout,
     loading,
     isAdmin,
