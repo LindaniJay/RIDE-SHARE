@@ -274,9 +274,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 © 2024 RideShare SA. All rights reserved. | Cape Town, South Africa
               </p>
               <div className="flex items-center space-x-3 text-xs text-gray-400">
-                <span>🔒 Secure Payments</span>
-                <span>🛡️ Insured Rentals</span>
-                <span>⭐ Trusted Platform</span>
+                <span>Secure Payments</span>
+                <span>Insured Rentals</span>
+                <span>Trusted Platform</span>
               </div>
             </div>
           </div>

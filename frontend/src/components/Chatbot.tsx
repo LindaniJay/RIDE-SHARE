@@ -35,51 +35,51 @@ const Chatbot: React.FC = () => {
     
     // Greeting responses
     if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
-      return 'Hello! 👋 Welcome to RideShare SA! I\'m here to help you with bookings, listings, and any questions you might have. What can I assist you with today?';
+      return 'Hello! Welcome to RideShare SA! I\'m here to help you with bookings, listings, and any questions you might have. What can I assist you with today?';
     }
     
     // Booking related
     if (message.includes('book') || message.includes('rent') || message.includes('reserve')) {
-      return 'Great! To book a vehicle: 🚗\n\n1. Go to "Browse Rentals" in the menu\n2. Search by location and dates\n3. Filter by vehicle type and features\n4. Click "Book Now" on your chosen vehicle\n5. Complete the booking process\n\nNeed help with any of these steps?';
+      return 'Great! To book a vehicle:\n\n1. Go to "Browse Rentals" in the menu\n2. Search by location and dates\n3. Filter by vehicle type and features\n4. Click "Book Now" on your chosen vehicle\n5. Complete the booking process\n\nNeed help with any of these steps?';
     }
     
     // Listing related
     if (message.includes('list') || message.includes('host') || message.includes('earn')) {
-      return 'Perfect! To list your vehicle and start earning: 💰\n\n1. Click "List Your Vehicle" in the menu\n2. Create a host account (if you haven\'t already)\n3. Add vehicle details, photos, and description\n4. Set your availability and pricing\n5. Submit for approval\n\nOur hosts typically earn R200-800 per day!';
+      return 'Perfect! To list your vehicle and start earning:\n\n1. Click "List Your Vehicle" in the menu\n2. Create a host account (if you haven\'t already)\n3. Add vehicle details, photos, and description\n4. Set your availability and pricing\n5. Submit for approval\n\nOur hosts typically earn R200-800 per day!';
     }
     
     // Pricing questions
     if (message.includes('price') || message.includes('cost') || message.includes('expensive')) {
-      return 'Our pricing is competitive and varies by vehicle: 💵\n\n• Economy cars: R150-300/day\n• SUVs: R300-500/day\n• Luxury vehicles: R500+/day\n• Bakkies: R200-400/day\n\nAll prices include basic insurance. You can see exact pricing when browsing vehicles!';
+      return 'Our pricing is competitive and varies by vehicle:\n\n• Economy cars: R150-300/day\n• SUVs: R300-500/day\n• Luxury vehicles: R500+/day\n• Bakkies: R200-400/day\n\nAll prices include basic insurance. You can see exact pricing when browsing vehicles!';
     }
     
     // Safety questions
     if (message.includes('safe') || message.includes('insurance') || message.includes('secure')) {
-      return 'Safety is our #1 priority! 🛡️\n\n✅ All vehicles are fully insured\n✅ Hosts are verified and background checked\n✅ 24/7 support team\n✅ Secure payment processing\n✅ Vehicle condition checks\n\nYou can read reviews and safety guidelines before booking.';
+      return 'Safety is our #1 priority!\n\n✅ All vehicles are fully insured\n✅ Hosts are verified and background checked\n✅ 24/7 support team\n✅ Secure payment processing\n✅ Vehicle condition checks\n\nYou can read reviews and safety guidelines before booking.';
     }
     
     // Payment questions
     if (message.includes('pay') || message.includes('payment') || message.includes('eft') || message.includes('card')) {
-      return 'We accept multiple payment methods: 💳\n\n• Credit/Debit cards\n• EFT transfers\n• Payfast (South African)\n• Bank transfers\n\nPayment is 100% secure and processed when you confirm your booking. No hidden fees!';
+      return 'We accept multiple payment methods:\n\n• Credit/Debit cards\n• EFT transfers\n• Payfast (South African)\n• Bank transfers\n\nPayment is 100% secure and processed when you confirm your booking. No hidden fees!';
     }
     
     // Location questions
     if (message.includes('where') || message.includes('location') || message.includes('city')) {
-      return 'We operate across South Africa! 🇿🇦\n\nMajor cities:\n• Cape Town\n• Johannesburg\n• Durban\n• Pretoria\n• Port Elizabeth\n• Bloemfontein\n\nUse the location filter to find vehicles near you!';
+      return 'We operate across South Africa!\n\nMajor cities:\n• Cape Town\n• Johannesburg\n• Durban\n• Pretoria\n• Port Elizabeth\n• Bloemfontein\n\nUse the location filter to find vehicles near you!';
     }
     
     // Support questions
     if (message.includes('help') || message.includes('support') || message.includes('problem')) {
-      return 'I\'m here to help! 🤝\n\nFor additional support:\n• FAQ page: /faq\n• Email: support@rideshare-sa.co.za\n• Phone: +27 21 123 4567\n• Live chat: Right here!\n\nWhat specific issue can I help you with?';
+      return 'I\'m here to help!\n\nFor additional support:\n• FAQ page: /faq\n• Email: support@rideshare-sa.co.za\n• Phone: +27 21 123 4567\n• Live chat: Right here!\n\nWhat specific issue can I help you with?';
     }
     
     // Contact support
     if (message.includes('contact support') || message.includes('contact')) {
-      return 'Here\'s how to reach our support team: 📞\n\n• Email: support@rideshare-sa.co.za\n• Phone: +27 21 123 4567\n• Live chat: Available 24/7 (that\'s me!)\n• FAQ: Visit /faq for common questions\n\nIs there something specific I can help you with right now?';
+      return 'Here\'s how to reach our support team:\n\n• Email: support@rideshare-sa.co.za\n• Phone: +27 21 123 4567\n• Live chat: Available 24/7 (that\'s me!)\n• FAQ: Visit /faq for common questions\n\nIs there something specific I can help you with right now?';
     }
     
     // Default response
-    return `I understand you're asking about: "${userMessage}" 🤔\n\nI can help with:\n• Booking vehicles\n• Listing your car\n• Pricing information\n• Safety & insurance\n• Payment methods\n• Locations\n• General support\n\nWhat would you like to know more about?`;
+    return `I understand you're asking about: "${userMessage}"\n\nI can help with:\n• Booking vehicles\n• Listing your car\n• Pricing information\n• Safety & insurance\n• Payment methods\n• Locations\n• General support\n\nWhat would you like to know more about?`;
   };
 
   const handleSendMessage = async (messageText?: string) => {

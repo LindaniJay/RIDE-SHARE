@@ -255,7 +255,7 @@ const Search: React.FC = () => {
                     </div>
                   </div>
 
-                  <GlassButton onClick={applyFilters} className="w-full" gradient={true} icon="🔍">
+                  <GlassButton onClick={applyFilters} className="w-full" gradient={true}>
                     Apply Filters
                   </GlassButton>
                   {Object.values(filters).some(
@@ -338,7 +338,7 @@ const Search: React.FC = () => {
                             {vehicle.location} • {vehicle.year}
                           </p>
                           <div className="flex items-center mb-2">
-                            <span className="text-yellow-400 text-lg">⭐</span>
+                            <span className="text-yellow-400 text-lg">★</span>
                             <span className="text-white ml-1">
                               {vehicle.rating} ({vehicle.reviews})
                             </span>
