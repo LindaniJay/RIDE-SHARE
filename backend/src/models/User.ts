@@ -12,6 +12,9 @@ export interface UserAttributes {
   role: 'renter' | 'host' | 'admin';
   phoneNumber?: string;
   isEmailVerified?: boolean;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  documentStatus?: 'pending' | 'verified' | 'rejected';
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -76,6 +79,20 @@ User.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+    },
+    approvalStatus: {
+      type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+      allowNull: false,
+      defaultValue: 'pending',
+    },
+    rejectionReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    documentStatus: {
+      type: DataTypes.ENUM('pending', 'verified', 'rejected'),
+      allowNull: false,
+      defaultValue: 'pending',
     },
   },
   {

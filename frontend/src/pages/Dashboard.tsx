@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import AdminDashboard from './AdminDashboard';
+import RealTimeAdminDashboard from './RealTimeAdminDashboard';
 import GlassCard from '../components/GlassCard';
 import DocumentUpload from '../components/DocumentUpload';
 import StatusBadge from '../components/StatusBadge';
@@ -1284,7 +1284,7 @@ const Dashboard: React.FC = () => {
               <Route path="/" element={<RenterDashboard />} />
               <Route path="/renter" element={<RenterDashboard />} />
               <Route path="/host" element={<HostDashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin" element={<RealTimeAdminDashboard />} />
             </Routes>
           </div>
         </div>

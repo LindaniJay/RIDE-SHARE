@@ -33,7 +33,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, className }) 
 
       showSuccess('Admin login successful', 'Welcome to the admin dashboard');
       onSuccess?.();
-      navigate('/dashboard/admin');
+      navigate('/admin-dashboard');
     } catch (error: any) {
       showError('Admin login failed', error.message || 'Invalid admin credentials or insufficient permissions');
     } finally {

@@ -14,6 +14,7 @@ import reviewRoutes from './routes/reviews';
 import paymentRoutes from './routes/payments';
 import dashboardRoutes from './routes/dashboard';
 import statsRoutes from './routes/stats';
+import adminRoutes from './routes/admin';
 import { errorHandler } from './middlewares/errorHandler';
 
 dotenv.config();
@@ -57,6 +58,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

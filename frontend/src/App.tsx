@@ -17,6 +17,7 @@ const VehicleDetail = lazy(() => import('./pages/VehicleDetail'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const RealTimeAdminDashboard = lazy(() => import('./pages/RealTimeAdminDashboard'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
@@ -91,6 +92,11 @@ function App() {
                           <ProtectedRoute allowedRoles={['host', 'admin']}>
                             <Layout><Dashboard /></Layout>
                           </ProtectedRoute>
+                        } />
+                        <Route path="/admin-dashboard" element={
+                          <AdminGuard>
+                            <RealTimeAdminDashboard />
+                          </AdminGuard>
                         } />
                         <Route path="/login" element={<Layout><Login /></Layout>} />
                         <Route path="/register" element={<Layout><Register /></Layout>} />
