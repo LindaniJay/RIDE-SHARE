@@ -13,19 +13,29 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/logo.png" as="image" type="image/png" />
+    <link rel="preload" href="/background-rideshare.png" as="image" type="image/png" />
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//api.rideshare-sa.com" />
+    
     <!-- Favicon and Icons - Temporarily disabled to prevent 404 errors -->
     <!-- <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" /> -->
-    <script type="module" crossorigin src="/RIDE-SHARE/assets/index-pzKCZDpe.js"></script>
-    <link rel="modulepreload" crossorigin href="/RIDE-SHARE/assets/vendor-CBH9K-97.js">
-    <link rel="modulepreload" crossorigin href="/RIDE-SHARE/assets/query-CSyQ0w5Y.js">
-    <link rel="modulepreload" crossorigin href="/RIDE-SHARE/assets/router-BWB2dKYR.js">
-    <link rel="modulepreload" crossorigin href="/RIDE-SHARE/assets/ui-qr7cu0yN.js">
-    <link rel="stylesheet" crossorigin href="/RIDE-SHARE/assets/index-C7Z_rHIt.css">
-  <link rel="manifest" href="/RIDE-SHARE/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/RIDE-SHARE/registerSW.js"></script></head>
+    <script type="module" crossorigin src="/assets/index-BNdQzmVh.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-eiHq4GmM.js">
+    <link rel="modulepreload" crossorigin href="/assets/react-vendor-DFf_48ct.js">
+    <link rel="modulepreload" crossorigin href="/assets/firebase-B6ibEfTD.js">
+    <link rel="modulepreload" crossorigin href="/assets/utils-Bi8vyz5k.js">
+    <link rel="modulepreload" crossorigin href="/assets/admin-pages-DaMQ-yF4.js">
+    <link rel="modulepreload" crossorigin href="/assets/dashboard-pages-DoCgdW_t.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CaVZnHS7.css">
+  <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
   </body>
