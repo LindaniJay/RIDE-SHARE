@@ -3,10 +3,12 @@ import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense, lazy, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
+import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/Toast';
 import Layout from './layouts/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 import { FullPageLoading } from './components/Loading';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -21,6 +23,7 @@ const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const RealTimeAdminDashboard = lazy(() => import('./pages/RealTimeAdminDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const FAQ = lazy(() => import('./pages/FAQ'));
+const Login = lazy(() => import('./pages/Login'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -86,7 +89,12 @@ function App() {
                         <Route path="/about" element={<Layout><About /></Layout>} />
                         <Route path="/contact" element={<Layout><Contact /></Layout>} />
                         <Route path="/faq" element={<Layout><FAQ /></Layout>} />
-                        <Route path="/admin-login" element={<AdminLogin />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/admin-login" element={
+                          <AdminAuthProvider>
+                            <AdminLogin />
+                          </AdminAuthProvider>
+                        } />
                         <Route path="/unauthorized" element={<Unauthorized />} />
                         <Route path="/dashboard/*" element={
                           <ProtectedRoute>
@@ -98,7 +106,13 @@ function App() {
                             <Layout><UserDashboard /></Layout>
                           </ProtectedRoute>
                         } />
-                        <Route path="/admin-dashboard/*" element={<AdminDashboard />} />
+                        <Route path="/admin-dashboard/*" element={
+                          <AdminAuthProvider>
+                            <AdminProtectedRoute>
+                              <AdminDashboard />
+                            </AdminProtectedRoute>
+                          </AdminAuthProvider>
+                        } />
                         <Route path="/legacy-admin-dashboard" element={<RealTimeAdminDashboard />} />
                         <Route path="*" element={<Layout><NotFound /></Layout>} />
                       </Routes>

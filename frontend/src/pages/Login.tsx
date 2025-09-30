@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
@@ -7,6 +7,7 @@ import GlassButton from '../components/GlassButton';
 
 const Login: React.FC = () => {
   const { login, loading } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -41,6 +42,17 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        {/* Back Button */}
+        <div className="flex justify-start">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors"
+          >
+            <Icon name="ArrowLeft" size="sm" />
+            <span>Back</span>
+          </button>
+        </div>
+
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">

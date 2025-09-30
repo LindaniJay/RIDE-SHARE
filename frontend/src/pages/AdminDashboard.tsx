@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
 import { AdminService, AdminStats } from '../services/adminService';
@@ -16,18 +16,24 @@ import SystemAdminPanel from '../components/admin/SystemAdminPanel';
 import DocumentManagementPanel from '../components/admin/DocumentManagementPanel';
 
 const AdminDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { admin, logout } = useAdminAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
+    // Check if admin is authenticated
+    if (!admin) {
+      navigate('/admin-login');
+      return;
+    }
+
     fetchStats();
     // Set up polling for real-time updates
     const interval = setInterval(fetchStats, 30000); // Update every 30 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [admin, navigate]);
 
   const fetchStats = async () => {
     try {
@@ -65,7 +71,8 @@ const AdminDashboard: React.FC = () => {
     { id: 'documents', label: 'Document Management', icon: 'file-text', path: '/admin-dashboard/documents' },
   ];
 
-  if (loading) {
+  // Show loading while checking authentication or fetching data
+  if (loading || !admin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -134,7 +141,7 @@ const AdminDashboard: React.FC = () => {
                     {adminTabs.find(tab => tab.id === activeTab)?.label || 'Admin Dashboard'}
                   </h2>
                   <p className="text-gray-300">
-                    Welcome back, {user?.firstName} {user?.lastName}
+                    Welcome back, {admin?.firstName} {admin?.lastName}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">

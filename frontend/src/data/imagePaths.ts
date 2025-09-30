@@ -69,3 +69,4 @@ export const getCategoryImage = (type: string): string => {
   
   return categoryMap[type.toLowerCase()] || IMAGE_PATHS.DEFAULTS.CATEGORY;
 };
+

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { firebaseAuthService, User } from '../services/firebaseAuth';
 
 interface AuthContextType {
@@ -28,6 +28,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Listen to auth state changes
@@ -35,14 +36,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(user);
       setLoading(false);
       
-      // Navigate to dashboard after successful login
-      if (user) {
+      // Only navigate to dashboard if we're not on admin routes
+      // Admin routes should be handled by AdminAuthProvider
+      if (user && !location.pathname.startsWith('/admin') && !location.pathname.includes('admin')) {
+        console.log('AuthContext: Navigating regular user to dashboard');
         navigate('/dashboard');
+      } else if (user && location.pathname.startsWith('/admin')) {
+        console.log('AuthContext: Admin route detected, not redirecting');
       }
     });
 
     return unsubscribe;
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const signup = async (email: string, password: string, firstName: string, lastName: string, phone: string, role: 'Renter' | 'Host') => {
     setLoading(true);

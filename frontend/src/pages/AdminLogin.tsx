@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
 import GlassButton from '../components/GlassButton';
+import AdminDebugInfo from '../components/AdminDebugInfo';
 
 const AdminLogin: React.FC = () => {
-  const { login, loading } = useAuth();
+  const { login, loading } = useAdminAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -31,8 +32,7 @@ const AdminLogin: React.FC = () => {
 
     try {
       await login(formData.email, formData.password);
-      // Navigation will be handled by the AuthProvider based on user role
-      navigate('/admin-dashboard');
+      // Navigation will be handled by the AdminAuthContext
     } catch (error: any) {
       setError(error.message || 'Login failed. Please check your credentials.');
     } finally {
@@ -43,6 +43,17 @@ const AdminLogin: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        {/* Back Button */}
+        <div className="flex justify-start">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors"
+          >
+            <Icon name="ArrowLeft" size="sm" />
+            <span>Back</span>
+          </button>
+        </div>
+
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-gradient-to-r from-purple-600/90 to-pink-600/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl border border-white/30">
@@ -184,6 +195,9 @@ const AdminLogin: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Debug Info - Remove in production */}
+      <AdminDebugInfo />
     </div>
   );
 };

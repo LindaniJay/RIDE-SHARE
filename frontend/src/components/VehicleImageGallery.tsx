@@ -168,3 +168,4 @@ const VehicleImageGallery: React.FC<VehicleImageGalleryProps> = ({
 };
 
 export default VehicleImageGallery;
+

@@ -48,11 +48,8 @@ export class AdminService {
 
   static async getStats(): Promise<AdminStats> {
     try {
-      const response = await fetch(`${this.baseUrl}/stats`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
+      // For now, the backend uses mock authentication, so we don't need to send a token
+      const response = await fetch(`${this.baseUrl}/stats`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch admin stats');
@@ -75,11 +72,7 @@ export class AdminService {
         ...(role && { role })
       });
 
-      const response = await fetch(`${this.baseUrl}/users?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
+      const response = await fetch(`${this.baseUrl}/users?${params}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch users');
@@ -97,8 +90,7 @@ export class AdminService {
       const response = await fetch(`${this.baseUrl}/users/${userId}/approve`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           status,
@@ -127,7 +119,6 @@ export class AdminService {
 
       const response = await fetch(`${this.baseUrl}/vehicles?${params}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
       });
 
@@ -148,7 +139,6 @@ export class AdminService {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         },
         body: JSON.stringify({
           status,
@@ -177,7 +167,6 @@ export class AdminService {
 
       const response = await fetch(`${this.baseUrl}/bookings?${params}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
       });
 
@@ -201,7 +190,6 @@ export class AdminService {
 
       const response = await fetch(`${this.baseUrl}/reviews?${params}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
       });
 
@@ -226,7 +214,6 @@ export class AdminService {
 
       const response = await fetch(`${this.baseUrl}/documents?${params}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
       });
 
@@ -251,7 +238,6 @@ export class AdminService {
 
       const response = await fetch(`${this.baseUrl}/disputes?${params}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
       });
 
