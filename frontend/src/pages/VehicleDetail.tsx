@@ -127,7 +127,7 @@ const VehicleDetail: React.FC = () => {
 
   const handleBooking = async () => {
     if (!user) {
-      navigate('/login');
+      navigate('/');
       return;
     }
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
@@ -8,10 +8,20 @@ import GlassButton from '../components/GlassButton';
 const Login: React.FC = () => {
   const { login, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [selectedRole, setSelectedRole] = useState<string>('');
+
+  // Handle role from URL parameters
+  useEffect(() => {
+    const roleParam = searchParams.get('role');
+    if (roleParam) {
+      setSelectedRole(roleParam);
+    }
+  }, [searchParams]);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -64,6 +74,13 @@ const Login: React.FC = () => {
           <p className="mt-2 text-sm text-gray-300">
             Sign in to your RideShare SA account
           </p>
+          {selectedRole && (
+            <div className="mt-4 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+              <p className="text-blue-200 text-sm">
+                Signing in as: <span className="font-semibold capitalize">{selectedRole}</span>
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Login Form */}

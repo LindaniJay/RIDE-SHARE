@@ -52,14 +52,14 @@ const HostSignupModal: React.FC<HostSignupModalProps> = ({ isOpen, onClose, onSw
     }
 
     try {
-      await signup({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        phoneNumber: formData.phoneNumber,
-        role: 'host'
-      });
+      await signup(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName,
+        formData.phoneNumber,
+        'Host'
+      );
       onClose(); // Close modal on successful signup
     } catch (error: any) {
       setError(error.message || 'Signup failed. Please try again.');

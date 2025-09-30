@@ -49,13 +49,14 @@ const AdminSignup: React.FC = () => {
     }
 
     try {
-      await signup({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        role: 'admin'
-      });
+      await signup(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName,
+        '', // phone is optional for admin
+        'Host' // Use Host role for now, admin role should be handled separately
+      );
       navigate('/admin-dashboard');
     } catch (error: any) {
       setError(error.message || 'Signup failed. Please try again.');

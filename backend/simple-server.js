@@ -32,18 +32,24 @@ app.use((req, res, next) => {
 });
 
 
-// Mock data
+// Mock data with realistic South African pricing
 const vehicles = [
   {
     id: '1',
     make: 'Toyota',
     model: 'Corolla',
     year: 2020,
-    type: 'car',
-    pricePerDay: 350,
+    type: 'economy',
+    category: 'economy',
+    pricePerDay: 450,
+    pricePerWeek: 2500,
+    pricePerMonth: 6500,
     location: 'Cape Town',
     images: ['/images/toyota-corolla.jpg'],
-    status: 'approved'
+    status: 'approved',
+    features: ['Fuel efficient', 'Easy parking', 'City friendly'],
+    description: 'Perfect for city driving and daily commutes',
+    hostName: 'John Smith'
   },
   {
     id: '2',
@@ -51,10 +57,84 @@ const vehicles = [
     model: 'Ranger',
     year: 2021,
     type: 'bakkie',
-    pricePerDay: 450,
+    category: 'bakkie',
+    pricePerDay: 750,
+    pricePerWeek: 4200,
+    pricePerMonth: 12000,
     location: 'Johannesburg',
     images: ['/images/ford-ranger.jpg'],
-    status: 'approved'
+    status: 'approved',
+    features: ['Cargo capacity', 'Work ready', 'Durable'],
+    description: 'Work vehicle perfect for construction and outdoor activities',
+    hostName: 'Mike Wilson'
+  },
+  {
+    id: '3',
+    make: 'BMW',
+    model: 'X3',
+    year: 2022,
+    type: 'suv',
+    category: 'compact-suv',
+    pricePerDay: 1200,
+    pricePerWeek: 6500,
+    pricePerMonth: 15000,
+    location: 'Durban',
+    images: ['/images/bmw-x3.jpg'],
+    status: 'approved',
+    features: ['Higher ground clearance', 'Versatile', 'All-weather'],
+    description: 'Versatile SUV for city and light off-road use',
+    hostName: 'Sarah Johnson'
+  },
+  {
+    id: '4',
+    make: 'Mercedes-Benz',
+    model: 'E-Class',
+    year: 2021,
+    type: 'sedan',
+    category: 'executive',
+    pricePerDay: 1400,
+    pricePerWeek: 8000,
+    pricePerMonth: 18000,
+    location: 'Cape Town',
+    images: ['/images/mercedes-e-class.jpg'],
+    status: 'approved',
+    features: ['Premium comfort', 'Business class', 'Luxury features'],
+    description: 'Premium vehicle for business and luxury travel',
+    hostName: 'David Brown'
+  },
+  {
+    id: '5',
+    make: 'Toyota',
+    model: 'Hilux',
+    year: 2023,
+    type: 'bakkie',
+    category: 'bakkie',
+    pricePerDay: 850,
+    pricePerWeek: 4800,
+    pricePerMonth: 14000,
+    location: 'Pretoria',
+    images: ['/images/toyota-hilux.jpg'],
+    status: 'approved',
+    features: ['4x4 capability', 'Off-road ready', 'Durable'],
+    description: 'Legendary South African bakkie for farm work and outdoor adventures',
+    hostName: 'Peter van der Merwe'
+  },
+  {
+    id: '6',
+    make: 'Volkswagen',
+    model: 'Polo',
+    year: 2022,
+    type: 'economy',
+    category: 'economy',
+    pricePerDay: 380,
+    pricePerWeek: 2200,
+    pricePerMonth: 5800,
+    location: 'Port Elizabeth',
+    images: ['/images/vw-polo.jpg'],
+    status: 'approved',
+    features: ['Fuel efficient', 'Easy parking', 'Budget friendly'],
+    description: 'Compact and efficient city car',
+    hostName: 'Lisa Anderson'
   }
 ];
 
@@ -288,6 +368,33 @@ app.get('/api/admin/stats', (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Payments route
+app.get('/api/payments', (req, res) => {
+  try {
+    // Mock payments data
+    const payments = [
+      {
+        id: '1',
+        bookingId: '1',
+        amount: 700,
+        status: 'completed',
+        paymentMethod: 'payfast',
+        transactionId: 'PF123456789',
+        createdAt: '2024-01-10T10:00:00Z',
+        completedAt: '2024-01-10T10:05:00Z'
+      }
+    ];
+    
+    res.json({
+      success: true,
+      data: payments
+    });
+  } catch (error) {
+    console.error('Error fetching payments:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -36,13 +36,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(user);
       setLoading(false);
       
-      // Only navigate to dashboard if we're not on admin routes
-      // Admin routes should be handled by AdminAuthProvider
-      if (user && !location.pathname.startsWith('/admin') && !location.pathname.includes('admin')) {
-        console.log('AuthContext: Navigating regular user to dashboard');
-        navigate('/dashboard');
-      } else if (user && location.pathname.startsWith('/admin')) {
-        console.log('AuthContext: Admin route detected, not redirecting');
+      if (user) {
+        // User is logged in - navigate to dashboard if not on admin routes
+        if (!location.pathname.startsWith('/admin') && !location.pathname.includes('admin')) {
+          console.log('AuthContext: Navigating regular user to dashboard');
+          navigate('/dashboard');
+        } else if (location.pathname.startsWith('/admin')) {
+          console.log('AuthContext: Admin route detected, not redirecting');
+        }
+      } else {
+        // User is logged out - navigate to home page
+        console.log('AuthContext: User logged out, navigating to home');
+        navigate('/', { replace: true });
       }
     });
 
@@ -74,6 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
     try {
       await firebaseAuthService.logoutUser();
+      // Navigation will be handled by the auth state change listener
     } catch (error) {
       setLoading(false);
       throw error;

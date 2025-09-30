@@ -25,7 +25,7 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     // Check if admin is authenticated
     if (!admin) {
-      navigate('/admin-login');
+      navigate('/');
       return;
     }
 
@@ -53,7 +53,7 @@ const AdminDashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/');
+      // Navigation will be handled by the AdminAuthContext
     } catch (error) {
       console.error('Error logging out:', error);
     }

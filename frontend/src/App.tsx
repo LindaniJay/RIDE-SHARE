@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import { FullPageLoading } from './components/Loading';
 import ErrorBoundary from './components/ErrorBoundary';
+import PerformanceMonitor from './components/PerformanceMonitor';
 
 // Lazy load pages for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -23,21 +24,28 @@ const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const RealTimeAdminDashboard = lazy(() => import('./pages/RealTimeAdminDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const FAQ = lazy(() => import('./pages/FAQ'));
+const Pricing = lazy(() => import('./pages/Pricing'));
 const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 import './index.css';
 
-// Create a client
+// Create a client with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
-      retry: 3,
+      staleTime: 10 * 60 * 1000, // 10 minutes - increased for better caching
+      gcTime: 30 * 60 * 1000, // 30 minutes - increased for better caching
+      retry: 1, // Reduced retries for faster failure handling
       refetchOnWindowFocus: false,
+      refetchOnMount: false, // Prevent unnecessary refetches
+      refetchOnReconnect: false, // Prevent refetch on reconnect
+    },
+    mutations: {
+      retry: 1, // Reduced retries for mutations
     },
   },
 });
@@ -81,6 +89,7 @@ function App() {
               <AuthProvider>
                 <ThemeProvider>
                   <div className="App">
+                    <PerformanceMonitor />
                     <Suspense fallback={<FullPageLoading text="Loading RideShare SA..." />}>
                       <Routes>
                         <Route path="/" element={<Layout><Home /></Layout>} />
@@ -89,7 +98,10 @@ function App() {
                         <Route path="/about" element={<Layout><About /></Layout>} />
                         <Route path="/contact" element={<Layout><Contact /></Layout>} />
                         <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+                        <Route path="/pricing" element={<Layout><Pricing /></Layout>} />
                         <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route path="/register" element={<Signup />} />
                         <Route path="/admin-login" element={
                           <AdminAuthProvider>
                             <AdminLogin />

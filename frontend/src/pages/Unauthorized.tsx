@@ -63,7 +63,7 @@ const Unauthorized: React.FC = () => {
                   </Link>
                 </>
               ) : (
-                <Link to="/login" className="flex-1">
+                <Link to="/" className="flex-1">
                   <GlassButton className="w-full flex justify-center items-center space-x-2">
                     <Icon name="Login" size="sm" />
                     <span>Sign In</span>

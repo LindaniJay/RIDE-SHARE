@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
@@ -7,6 +7,7 @@ import GlassButton from '../components/GlassButton';
 
 const Signup: React.FC = () => {
   const { signup, loading } = useAuth();
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -16,6 +17,17 @@ const Signup: React.FC = () => {
     phone: '',
     role: 'Renter' as 'Renter' | 'Host'
   });
+
+  // Handle role from URL parameters
+  useEffect(() => {
+    const roleParam = searchParams.get('role');
+    if (roleParam === 'renter' || roleParam === 'host') {
+      setFormData(prev => ({
+        ...prev,
+        role: roleParam === 'renter' ? 'Renter' : 'Host'
+      }));
+    }
+  }, [searchParams]);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 

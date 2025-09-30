@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Chatbot from '../components/Chatbot';
+import { AdminAuthProvider } from '../context/AdminAuthContext';
 import Icon from '../components/Icon';
+
+// Lazy load heavy components
+const Chatbot = lazy(() => import('../components/Chatbot'));
+const AuthModal = lazy(() => import('../components/AuthModal'));
+const AdminLoginModal = lazy(() => import('../components/AdminLoginModal'));
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,15 +16,36 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAdminLoginModalOpen, setIsAdminLoginModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const location = useLocation();
 
   const isActive = (path: string) => {
     return location.pathname === path;
   };
 
+  const handleAuthModalOpen = (mode: 'login' | 'signup') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
+
+  const handleAuthModalClose = () => {
+    setIsAuthModalOpen(false);
+  };
+
+  const handleAdminLoginModalOpen = () => {
+    setIsAdminLoginModalOpen(true);
+  };
+
+  const handleAdminLoginModalClose = () => {
+    setIsAdminLoginModalOpen(false);
+  };
+
   const navItems = [
     { name: 'Home', path: '/', icon: 'Home' },
     { name: 'Browse', path: '/search', icon: 'Search' },
+    { name: 'Pricing', path: '/pricing', icon: 'DollarSign' },
     { name: 'Host', path: '/dashboard/host', icon: 'Car' },
     { name: 'About', path: '/about', icon: 'Info' },
     { name: 'Contact', path: '/contact', icon: 'Phone' },
@@ -35,14 +61,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             to="/" 
             className="flex items-center hover:opacity-80 transition-all duration-300 h-full z-10 absolute left-0"
           >
-            <div className="flex items-center bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-sm rounded-lg h-full px-6 shadow-xl border border-white/30 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center bg-white/20 backdrop-blur-md rounded-lg h-full px-3 sm:px-4 lg:px-6 shadow-xl border border-white/40 hover:bg-white/30 hover:shadow-2xl transition-all duration-300">
               <img 
                 src="/logo.png" 
                 alt="RideShare SA Logo" 
-                className="h-12 w-auto object-contain filter brightness-110"
+                className="h-8 sm:h-10 lg:h-12 w-auto object-contain filter brightness-110 transition-all duration-300"
+                loading="eager"
+                decoding="async"
               />
-              <div className="ml-3 hidden lg:block">
-                <div className="text-white font-bold text-lg">RideShare</div>
+              <div className="ml-2 sm:ml-3 hidden lg:block">
+                <div className="text-white font-bold text-sm lg:text-lg transition-all duration-300">RideShare</div>
                 <div className="text-white/80 text-xs font-medium">South Africa</div>
               </div>
             </div>
@@ -95,24 +123,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                   ) : (
                     <div className="flex items-center space-x-1">
-                      <Link
-                        to="/login"
-                        className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                          isActive('/login')
-                            ? 'glass-button-primary text-white'
-                            : 'glass-button text-white/80 hover:text-white'
-                        }`}
-                      >
-                        <Icon name="Login" size="sm" />
-                        <span className="hidden sm:block">Login</span>
-                      </Link>
-                      <Link
-                        to="/signup"
+                      <button
+                        onClick={() => handleAuthModalOpen('signup')}
                         className="glass-button-primary flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300"
                       >
                         <Icon name="Plus" size="sm" />
                         <span className="hidden sm:block">Sign Up</span>
-                      </Link>
+                      </button>
                     </div>
                   )}
               
@@ -204,26 +221,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         </div>
                       ) : (
                         <div className="space-y-1">
-                          <Link
-                            to="/login"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 w-full ${
-                              isActive('/login')
-                                ? 'glass-button-primary text-white'
-                                : 'glass-button text-white/80 hover:text-white'
-                            }`}
+                          <button
+                            onClick={() => {
+                              handleAuthModalOpen('login');
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="glass-button flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 w-full text-white/80 hover:text-white"
                           >
                             <Icon name="Login" size="sm" />
                             <span>Login</span>
-                          </Link>
-                          <Link
-                            to="/signup"
-                            onClick={() => setIsMobileMenuOpen(false)}
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleAuthModalOpen('signup');
+                              setIsMobileMenuOpen(false);
+                            }}
                             className="glass-button-primary flex items-center space-x-3 px-4 py-3 w-full"
                           >
                             <Icon name="Plus" size="sm" />
                             <span>Sign Up</span>
-                          </Link>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -250,7 +267,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
             {/* Left: Logo and Copyright */}
             <div className="flex items-center space-x-4">
-              <div className="logo-footer bg-gradient-to-r from-blue-600/80 to-purple-600/80 rounded-lg p-2 shadow-lg border border-white/20">
+              <div className="logo-footer bg-white/20 backdrop-blur-md rounded-lg p-2 shadow-lg border border-white/40">
                 <img 
                   src="/logo.png" 
                   alt="RideShare SA Logo" 
@@ -258,7 +275,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 />
               </div>
               <p className="text-gray-400 text-xs">
-                © 2024 RideShare SA. Cape Town, South Africa
+                © 2025 RideShare SA. Cape Town, South Africa
               </p>
             </div>
             
@@ -287,21 +304,42 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                 </svg>
               </a>
-              <Link 
-                to="/admin-dashboard" 
+              <button
+                onClick={handleAdminLoginModalOpen}
                 className="text-gray-400 hover:text-white transition-colors text-xs flex items-center space-x-1"
-                title="Admin Dashboard"
+                title="Admin Login"
               >
-                <Icon name="User" size="sm" />
-                <span>Admin</span>
-              </Link>
+                <Icon name="Settings" size="sm" />
+                <span>Admin Login</span>
+              </button>
             </div>
           </div>
         </div>
       </footer>
       
       {/* Chatbot */}
-      <Chatbot />
+      <Suspense fallback={null}>
+        <Chatbot />
+      </Suspense>
+      
+      {/* Auth Modal */}
+      <Suspense fallback={null}>
+        <AuthModal 
+          isOpen={isAuthModalOpen}
+          onClose={handleAuthModalClose}
+          initialMode={authModalMode}
+        />
+      </Suspense>
+      
+      {/* Admin Login Modal */}
+      <AdminAuthProvider>
+        <Suspense fallback={null}>
+          <AdminLoginModal 
+            isOpen={isAdminLoginModalOpen}
+            onClose={handleAdminLoginModalClose}
+          />
+        </Suspense>
+      </AdminAuthProvider>
     </div>
   );
 };

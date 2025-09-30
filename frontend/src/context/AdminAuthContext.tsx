@@ -35,11 +35,14 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
       setAdmin(admin);
       setLoading(false);
       
-      // Navigate to admin dashboard after successful login
       if (admin) {
+        // Navigate to admin dashboard after successful login
         console.log('AdminAuthContext: Navigating to admin dashboard');
-        // Use replace to avoid back button issues
         navigate('/admin-dashboard', { replace: true });
+      } else {
+        // Admin is logged out - navigate to home page
+        console.log('AdminAuthContext: Admin logged out, navigating to home');
+        navigate('/', { replace: true });
       }
     });
 
@@ -64,7 +67,7 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
     setLoading(true);
     try {
       await adminAuthService.logoutAdmin();
-      navigate('/admin-login');
+      // Navigation will be handled by the auth state change listener
     } catch (error) {
       setLoading(false);
       throw error;

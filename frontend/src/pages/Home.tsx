@@ -37,6 +37,12 @@ const Home: React.FC = () => {
               Browse Rentals
             </Link>
             <Link 
+              to="/pricing" 
+              className="bg-white/10 backdrop-blur-md text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/20 transform hover:scale-105 transition-all duration-300 border border-white/20"
+            >
+              View Pricing
+            </Link>
+            <Link 
               to="/register" 
               className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300"
             >
@@ -123,9 +129,15 @@ const Home: React.FC = () => {
               {/* Toyota Hilux - Popular SA Bakkie */}
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/20 hover:bg-white/20 transition-all duration-300">
                 <div className="aspect-w-16 aspect-h-9 mb-4">
-                  <div className="w-full h-48 bg-gradient-to-br from-blue-600 to-purple-700 rounded-xl flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">🚛</div>
+                  <div className="w-full h-48 bg-gradient-to-br from-blue-600 to-purple-700 rounded-xl flex items-center justify-center relative overflow-hidden">
+                    <img 
+                      src="https://images.unsplash.com/photo-1558618047-7c0a4c4a3b4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                      alt="Toyota Hilux Bakkie" 
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl"></div>
+                    <div className="absolute bottom-4 left-4 text-center">
+                      <div className="text-2xl mb-1">🚛</div>
                       <p className="text-white text-sm font-medium">Toyota Hilux</p>
                     </div>
                   </div>
@@ -143,9 +155,15 @@ const Home: React.FC = () => {
               {/* Isuzu Truck - Commercial Vehicle */}
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/20 hover:bg-white/20 transition-all duration-300">
                 <div className="aspect-w-16 aspect-h-9 mb-4">
-                  <div className="w-full h-48 bg-gradient-to-br from-orange-600 to-red-700 rounded-xl flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">🚚</div>
+                  <div className="w-full h-48 bg-gradient-to-br from-orange-600 to-red-700 rounded-xl flex items-center justify-center relative overflow-hidden">
+                    <img 
+                      src="https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                      alt="Isuzu NPR 400 Truck" 
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl"></div>
+                    <div className="absolute bottom-4 left-4 text-center">
+                      <div className="text-2xl mb-1">🚚</div>
                       <p className="text-white text-sm font-medium">Isuzu NPR 400</p>
                     </div>
                   </div>
@@ -163,9 +181,15 @@ const Home: React.FC = () => {
               {/* Toyota Quantum Minibus */}
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/20 hover:bg-white/20 transition-all duration-300">
                 <div className="aspect-w-16 aspect-h-9 mb-4">
-                  <div className="w-full h-48 bg-gradient-to-br from-green-600 to-teal-700 rounded-xl flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">🚌</div>
+                  <div className="w-full h-48 bg-gradient-to-br from-green-600 to-teal-700 rounded-xl flex items-center justify-center relative overflow-hidden">
+                    <img 
+                      src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                      alt="Toyota Quantum Minibus" 
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl"></div>
+                    <div className="absolute bottom-4 left-4 text-center">
+                      <div className="text-2xl mb-1">🚌</div>
                       <p className="text-white text-sm font-medium">Toyota Quantum</p>
                     </div>
                   </div>
