@@ -114,6 +114,53 @@ const About: React.FC = () => {
             </div>
           </div>
 
+          {/* CEO Message Section */}
+          <div className="py-20 px-4">
+            <div className="max-w-7xl mx-auto">
+              <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-md p-12 rounded-3xl shadow-2xl border border-white/20">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
+                  <div className="lg:col-span-1 text-center lg:text-left">
+                    <div className="w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto lg:mx-0 mb-6">
+                      <span className="text-4xl">👨‍💼</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-2">Piwe Toni</h3>
+                    <p className="text-white/80 mb-4">Founder & CEO</p>
+                    <div className="flex justify-center lg:justify-start space-x-4">
+                      <a href="https://linkedin.com/in/piwe-toni" className="text-white/60 hover:text-white transition-colors">
+                        <Icon name="Linkedin" size="sm" />
+                      </a>
+                      <a href="https://twitter.com/piwetoniceo" className="text-white/60 hover:text-white transition-colors">
+                        <Icon name="Twitter" size="sm" />
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <div className="lg:col-span-2">
+                    <div className="relative">
+                      <div className="absolute -top-4 -left-4 text-6xl text-white/20">"</div>
+                      <blockquote className="text-xl text-white leading-relaxed mb-6 italic">
+                        "Growing up in Cape Town, I witnessed firsthand how transportation challenges limited opportunities for my community. 
+                        The idea for RideShare SA came from a simple belief: every South African deserves access to reliable, affordable transportation, 
+                        and every vehicle owner should have the opportunity to generate income from their assets."
+                      </blockquote>
+                      <blockquote className="text-lg text-white/90 leading-relaxed mb-6">
+                        "We're not just building a platform – we're creating economic opportunities, connecting communities, and making South Africa 
+                        more accessible for everyone. From the bustling streets of Cape Town to the scenic routes of KwaZulu-Natal, 
+                        RideShare SA is about empowering South Africans to share, connect, and thrive together."
+                      </blockquote>
+                      <blockquote className="text-lg text-white/90 leading-relaxed">
+                        "Our vision extends beyond just car sharing. We're building a sustainable future where shared mobility reduces our carbon footprint, 
+                        creates jobs, and strengthens local economies. Every booking on our platform represents a step toward a more connected, 
+                        prosperous South Africa."
+                      </blockquote>
+                      <div className="absolute -bottom-4 -right-4 text-6xl text-white/20">"</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Dynamic Stats Section */}
           <div className="py-20 px-4">
             <div className="max-w-7xl mx-auto">
