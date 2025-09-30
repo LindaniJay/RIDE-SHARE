@@ -22,9 +22,6 @@ export const useOptimizedFetch = <T = any>(
   options: FetchOptions = {}
 ) => {
   const {
-    cache = true,
-    cacheKey = url,
-    cacheTtl = 5 * 60 * 1000, // 5 minutes
     retry = 3,
     retryDelay = 1000,
     timeout = 10000
@@ -160,8 +157,7 @@ export const useCachedFetch = <T = any>(
 
 // Hook for batch API calls
 export const useBatchFetch = <T = any>(
-  urls: string[],
-  options: FetchOptions = {}
+  urls: string[]
 ) => {
   const [state, setState] = useState<{
     data: T[];

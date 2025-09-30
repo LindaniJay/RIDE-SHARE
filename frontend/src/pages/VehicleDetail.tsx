@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Icon from '../components/Icon';
-import { vehiclesAPI, bookingsAPI } from '../api';
+import { vehiclesAPI } from '../api';
 import { bookingService, CreateBookingData } from '../services/bookingService';
 import PaymentModal from '../components/PaymentModal';
 
