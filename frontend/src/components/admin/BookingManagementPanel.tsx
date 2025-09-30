@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { bookingService } from '../../services/bookingService';
 import GlassCard from '../GlassCard';
 import Icon from '../Icon';
 
@@ -22,13 +21,101 @@ const BookingManagementPanel: React.FC = () => {
     fetchBookings();
   }, [filters, pagination.page]);
 
+  // Listen for storage changes to refresh bookings when new ones are added
+  useEffect(() => {
+    const handleStorageChange = () => {
+      fetchBookings();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events for same-tab updates
+    window.addEventListener('bookingCreated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('bookingCreated', handleStorageChange);
+    };
+  }, []);
+
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      // For now, use mock data
-      const mockBookings = BookingService.getMockBookings();
-      setBookings(mockBookings);
-      setPagination(prev => ({ ...prev, total: mockBookings.length }));
+      
+      // Try to fetch from API first
+      try {
+        const response = await fetch('/api/admin/bookings', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setBookings(data.bookings || []);
+          setPagination(prev => ({ ...prev, total: data.bookings?.length || 0 }));
+          return;
+        }
+      } catch (apiError) {
+        console.log('API not available, using localStorage bookings');
+      }
+
+      // Fallback to localStorage mock bookings
+      const storedBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
+      
+      // Add some default mock bookings if none exist
+      const defaultBookings = [
+        {
+          id: '1',
+          vehicle: {
+            make: 'Toyota',
+            model: 'Corolla',
+            location: 'Cape Town',
+            images: ['/images/toyota-corolla.jpg']
+          },
+          renter: {
+            name: 'John Doe',
+            email: 'john@example.com'
+          },
+          host: {
+            name: 'Jane Smith',
+            email: 'jane@example.com',
+            avatar: '/images/avatar.jpg'
+          },
+          startDate: '2024-01-15',
+          totalDays: 3,
+          totalPrice: 1050,
+          status: 'pending',
+          paymentStatus: 'pending'
+        },
+        {
+          id: '2',
+          vehicle: {
+            make: 'Ford',
+            model: 'Ranger',
+            location: 'Johannesburg',
+            images: ['/images/ford-ranger.jpg']
+          },
+          renter: {
+            name: 'Mike Wilson',
+            email: 'mike@example.com'
+          },
+          host: {
+            name: 'Bob Johnson',
+            email: 'bob@example.com',
+            avatar: '/images/avatar2.jpg'
+          },
+          startDate: '2024-01-20',
+          totalDays: 5,
+          totalPrice: 2250,
+          status: 'confirmed',
+          paymentStatus: 'paid'
+        }
+      ];
+
+      const allBookings = [...storedBookings, ...defaultBookings];
+      setBookings(allBookings);
+      setPagination(prev => ({ ...prev, total: allBookings.length }));
     } catch (error) {
       console.error('Error fetching bookings:', error);
     } finally {

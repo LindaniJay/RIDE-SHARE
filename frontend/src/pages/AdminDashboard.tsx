@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
 import { AdminService, AdminStats } from '../services/adminService';
@@ -159,14 +159,14 @@ const AdminDashboard: React.FC = () => {
             {/* Routes */}
             <Routes>
               <Route path="/" element={<OverviewTab stats={stats} />} />
-              <Route path="/users" element={<UserManagementPanel />} />
-              <Route path="/vehicles" element={<VehicleManagementPanel />} />
-              <Route path="/bookings" element={<BookingManagementPanel />} />
-              <Route path="/financial" element={<FinancialDashboard />} />
-              <Route path="/content" element={<ContentModerationPanel />} />
-              <Route path="/analytics" element={<AnalyticsDashboard />} />
-              <Route path="/system" element={<SystemAdminPanel />} />
-              <Route path="/documents" element={<DocumentManagementPanel />} />
+              <Route path="/users" element={<UserManagementPanel onRefresh={handleRefresh} />} />
+              <Route path="/vehicles" element={<VehicleManagementPanel onRefresh={handleRefresh} />} />
+              <Route path="/bookings" element={<BookingManagementPanel onRefresh={handleRefresh} />} />
+              <Route path="/financial" element={<FinancialDashboard onRefresh={handleRefresh} />} />
+              <Route path="/content" element={<ContentModerationPanel onRefresh={handleRefresh} />} />
+              <Route path="/analytics" element={<AnalyticsDashboard onRefresh={handleRefresh} />} />
+              <Route path="/system" element={<SystemAdminPanel onRefresh={handleRefresh} />} />
+              <Route path="/documents" element={<DocumentManagementPanel onRefresh={handleRefresh} />} />
             </Routes>
           </div>
         </div>

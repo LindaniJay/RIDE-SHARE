@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { firebaseAuthService, User } from '../services/firebaseAuth';
 
 interface AuthContextType {
@@ -26,16 +27,22 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Listen to auth state changes
     const unsubscribe = firebaseAuthService.onAuthStateChange((user) => {
       setUser(user);
       setLoading(false);
+      
+      // Navigate to dashboard after successful login
+      if (user) {
+        navigate('/dashboard');
+      }
     });
 
     return unsubscribe;
-  }, []);
+  }, [navigate]);
 
   const signup = async (email: string, password: string, firstName: string, lastName: string, phone: string, role: 'Renter' | 'Host') => {
     setLoading(true);
@@ -51,6 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
     try {
       await firebaseAuthService.loginUser({ email, password });
+      // Navigation will be handled by the auth state change listener
     } catch (error) {
       setLoading(false);
       throw error;

@@ -43,10 +43,33 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
         endDate: bookingData.endDate,
         notes: bookingData.notes,
         pickupLocation: bookingData.pickupLocation,
-        returnLocation: bookingData.returnLocation
+        returnLocation: bookingData.returnLocation,
+        totalPrice: calculateTotal(),
+        totalDays: Math.ceil((new Date(bookingData.endDate).getTime() - new Date(bookingData.startDate).getTime()) / (1000 * 60 * 60 * 24))
       };
 
-      // For now, we'll simulate the booking creation
+      // Try to create booking via API first
+      try {
+        const response = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          },
+          body: JSON.stringify(requestData)
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          onBookingSuccess(result.booking);
+          onClose();
+          return;
+        }
+      } catch (apiError) {
+        console.log('API not available, using mock booking');
+      }
+
+      // Fallback to mock booking for development
       const mockBooking = {
         id: `booking_${Date.now()}`,
         vehicleId: car.id,
@@ -81,6 +104,14 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
         pickupLocation: bookingData.pickupLocation,
         returnLocation: bookingData.returnLocation
       };
+
+      // Store mock booking in localStorage for admin dashboard to pick up
+      const existingBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
+      existingBookings.push(mockBooking);
+      localStorage.setItem('mockBookings', JSON.stringify(existingBookings));
+
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('bookingCreated', { detail: mockBooking }));
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));

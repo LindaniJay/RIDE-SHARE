@@ -1,8 +1,17 @@
 
 const express = require('express');
 const cors = require('cors');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:3000', 'http://localhost:5173'],
+    credentials: true
+  }
+});
 const PORT = 5001;
 
 
@@ -251,6 +260,32 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
-app.listen(PORT, () => {
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+  
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+  
+  socket.on('join_room', (room) => {
+    socket.join(room);
+    console.log(`Client ${socket.id} joined room: ${room}`);
+  });
+  
+  socket.on('leave_room', (room) => {
+    socket.leave(room);
+    console.log(`Client ${socket.id} left room: ${room}`);
+  });
+  
+  socket.on('message', (data) => {
+    console.log('Message received:', data);
+    // Broadcast to all clients in the same room
+    socket.to(data.room || 'default').emit('message', data);
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`Simple server running on port ${PORT}`);
+  console.log(`WebSocket server available at ws://localhost:${PORT}`);
 });

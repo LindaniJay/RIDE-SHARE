@@ -71,8 +71,8 @@ RideShare SA provides multiple ways to login and signup based on user roles. Her
 - **Auth Hub:** `/auth` → Select "Admin"
 
 #### **Signup Options:**
-- **Admin Signup:** `/admin-signup`
-- **Auth Hub:** `/auth` → Select "Admin" → Sign Up
+- **Admin Signup:** Not available - Admin accounts are pre-configured
+- **Access:** Admin access is by invitation only
 
 #### **Features:**
 - User management
@@ -107,7 +107,7 @@ RideShare SA provides multiple ways to login and signup based on user roles. Her
 ### **New Users:**
 1. Visit `/auth`
 2. Choose role (Renter/Host/Admin)
-3. Click "Sign Up"
+3. Click "Sign Up" (Admin signup not available)
 4. Fill registration form
 5. Get redirected to appropriate dashboard
 
@@ -132,10 +132,11 @@ RideShare SA provides multiple ways to login and signup based on user roles. Her
 - Secure hashing
 
 ### **Admin Security:**
-- Admin code required for signup
-- Role verification
+- Pre-configured accounts in Firebase
+- Role verification required
 - Multi-factor authentication ready
 - Access logging
+- No self-registration allowed
 
 ### **Session Management:**
 - Automatic token refresh

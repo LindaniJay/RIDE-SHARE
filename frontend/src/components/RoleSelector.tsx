@@ -1,13 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import GlassCard from './GlassCard';
 import Icon from './Icon';
+import HostAuthModal from './HostAuthModal';
 
 interface RoleSelectorProps {
   className?: string;
 }
 
 const RoleSelector: React.FC<RoleSelectorProps> = ({ className = '' }) => {
+  const [hostModalOpen, setHostModalOpen] = useState(false);
+  const [hostModalMode, setHostModalMode] = useState<'login' | 'signup'>('login');
+
+  const handleHostLogin = () => {
+    setHostModalMode('login');
+    setHostModalOpen(true);
+  };
+
+  const handleHostSignup = () => {
+    setHostModalMode('signup');
+    setHostModalOpen(true);
+  };
+
   const roles = [
     {
       id: 'renter',
@@ -36,8 +50,8 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ className = '' }) => {
         'Manage bookings',
         'Earn passive income'
       ],
-      loginPath: '/login?role=host',
-      signupPath: '/register?role=host'
+      loginPath: null,
+      signupPath: null
     },
     {
       id: 'admin',
@@ -52,7 +66,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ className = '' }) => {
         'Support tickets'
       ],
       loginPath: '/admin-login',
-      signupPath: '/admin-signup'
+      signupPath: null
     }
   ];
 
@@ -87,18 +101,49 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ className = '' }) => {
             </div>
             
             <div className="space-y-3">
-              <Link
-                to={role.loginPath}
-                className={`block w-full py-3 px-6 rounded-lg bg-gradient-to-r ${role.color} text-white font-semibold hover:shadow-lg transition-all duration-300`}
-              >
-                Sign In
-              </Link>
-              <Link
-                to={role.signupPath}
-                className="block w-full py-3 px-6 rounded-lg glass-button text-white font-semibold hover:bg-white/20 transition-all duration-300"
-              >
-                Sign Up
-              </Link>
+              {role.id === 'host' ? (
+                <>
+                  <button
+                    onClick={handleHostLogin}
+                    className={`block w-full py-3 px-6 rounded-lg bg-gradient-to-r ${role.color} text-white font-semibold hover:shadow-lg transition-all duration-300`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={handleHostSignup}
+                    className="block w-full py-3 px-6 rounded-lg glass-button text-white font-semibold hover:bg-white/20 transition-all duration-300"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              ) : role.id === 'admin' ? (
+                <>
+                  <Link
+                    to={role.loginPath!}
+                    className={`block w-full py-3 px-6 rounded-lg bg-gradient-to-r ${role.color} text-white font-semibold hover:shadow-lg transition-all duration-300`}
+                  >
+                    Sign In
+                  </Link>
+                  <div className="text-center py-3 px-6 rounded-lg bg-white/5 text-white/60 text-sm">
+                    Admin access by invitation only
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to={role.loginPath!}
+                    className={`block w-full py-3 px-6 rounded-lg bg-gradient-to-r ${role.color} text-white font-semibold hover:shadow-lg transition-all duration-300`}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to={role.signupPath!}
+                    className="block w-full py-3 px-6 rounded-lg glass-button text-white font-semibold hover:bg-white/20 transition-all duration-300"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </GlassCard>
         ))}
@@ -112,6 +157,13 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ className = '' }) => {
           </Link>
         </p>
       </div>
+
+      {/* Host Authentication Modal */}
+      <HostAuthModal
+        isOpen={hostModalOpen}
+        onClose={() => setHostModalOpen(false)}
+        initialMode={hostModalMode}
+      />
     </div>
   );
 };

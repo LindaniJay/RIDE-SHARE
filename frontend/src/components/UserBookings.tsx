@@ -19,8 +19,39 @@ const UserBookings: React.FC<UserBookingsProps> = ({ userId, role }) => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      // For now, use mock data
-      const mockBookings = [
+      
+      // Try to fetch from API first
+      try {
+        const response = await fetch('/api/bookings/my-bookings', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setBookings(data.bookings || []);
+          return;
+        }
+      } catch (apiError) {
+        console.log('API not available, using localStorage bookings');
+      }
+
+      // Fallback to localStorage mock bookings
+      const storedBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
+      
+      // Filter bookings based on user role
+      const userBookings = storedBookings.filter((booking: any) => {
+        if (role === 'renter') {
+          return booking.renterId === userId || booking.renter?.id === userId;
+        } else if (role === 'host') {
+          return booking.hostId === userId || booking.host?.id === userId;
+        }
+        return false;
+      });
+
+      // Add some default mock bookings if none exist for this user
+      const defaultBookings = [
         {
           id: '1',
           vehicleId: '1',
@@ -32,11 +63,23 @@ const UserBookings: React.FC<UserBookingsProps> = ({ userId, role }) => {
           vehicle: {
             make: 'Toyota',
             model: 'Hilux',
-            year: 2022
+            year: 2022,
+            images: ['/images/toyota-hilux.jpg']
+          },
+          host: {
+            name: 'Jane Smith',
+            email: 'jane@example.com',
+            avatar: '/images/avatar.jpg'
+          },
+          renter: {
+            name: 'Current User',
+            email: 'user@example.com'
           }
         }
       ];
-      setBookings(mockBookings);
+
+      const allBookings = [...userBookings, ...defaultBookings];
+      setBookings(allBookings);
     } catch (error) {
       console.error('Error fetching bookings:', error);
     } finally {

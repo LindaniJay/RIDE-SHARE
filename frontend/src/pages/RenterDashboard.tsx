@@ -438,7 +438,7 @@ const RenterDashboard: React.FC = () => {
 
         {/* Saved Vehicles Tab */}
         {activeTab === 'saved' && (
-          <SavedVehicles />
+          <SavedVehicles userId={user?.id || '0'} />
         )}
 
         {/* Calculator Tab */}
@@ -458,8 +458,12 @@ const RenterDashboard: React.FC = () => {
         {/* Documents Tab */}
         {activeTab === 'documents' && (
           <div className="space-y-6">
-            <DocumentUpload />
-            <DocumentExpiryReminder />
+            <DocumentUpload 
+              label="Upload Document"
+              name="document"
+              onChange={() => {}}
+            />
+            <DocumentExpiryReminder userId={user?.id || '0'} />
             
             {/* Document Verification Request */}
             <GlassCard title="Document Verification" icon="FileText">
@@ -481,7 +485,7 @@ const RenterDashboard: React.FC = () => {
 
         {/* Promotions Tab */}
         {activeTab === 'promotions' && (
-          <Promotions />
+          <Promotions userId={user?.id || '0'} />
         )}
 
         {/* Approval Requests Tab */}
@@ -514,7 +518,7 @@ const RenterDashboard: React.FC = () => {
           <div className="w-full max-w-md">
             <ApprovalRequestForm
               requestType={approvalFormType}
-              entityId={user?.id || 0}
+              entityId={parseInt(user?.id || '0')}
               submittedBy="renter"
               onSuccess={handleApprovalSuccess}
               onCancel={() => {

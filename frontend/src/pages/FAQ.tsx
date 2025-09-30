@@ -142,7 +142,7 @@ const FAQ: React.FC = () => {
   };
 
   return (
-    <div className="page-background-light">
+    <div className="page-background">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -160,8 +160,8 @@ const FAQ: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Categories Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 sticky top-24">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg p-6 sticky top-24">
+              <h3 className="text-lg font-semibold text-white mb-4">
                 Categories
               </h3>
               <div className="space-y-2">
@@ -171,8 +171,8 @@ const FAQ: React.FC = () => {
                     onClick={() => setActiveCategory(category.id)}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       activeCategory === category.id
-                        ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
+                        : 'text-white/80 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     <span className="mr-2">{category.icon}</span>
@@ -185,24 +185,24 @@ const FAQ: React.FC = () => {
 
           {/* FAQ Content */}
           <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg">
+              <div className="px-6 py-4 border-b border-white/20">
+                <h2 className="text-xl font-semibold text-white">
                   {categories.find(c => c.id === activeCategory)?.name} Questions
                 </h2>
-                <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
+                <p className="text-white/70 text-sm mt-1">
                   {filteredFAQs.length} questions in this category
                 </p>
               </div>
 
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="divide-y divide-white/20">
                 {filteredFAQs.map((faq) => (
                   <div key={faq.id} className="p-6">
                     <button
                       onClick={() => toggleItem(faq.id)}
                       className="w-full text-left flex justify-between items-center"
                     >
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white pr-4">
+                      <h3 className="text-lg font-medium text-white pr-4">
                         {faq.question}
                       </h3>
                       <span className={`text-2xl transition-transform ${
@@ -213,7 +213,7 @@ const FAQ: React.FC = () => {
                     </button>
                     
                     {openItems.has(faq.id) && (
-                      <div className="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+                      <div className="mt-4 text-white/80 leading-relaxed">
                         {faq.answer}
                       </div>
                     )}

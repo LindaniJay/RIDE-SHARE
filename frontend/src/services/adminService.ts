@@ -31,8 +31,16 @@ export interface AdminVehicle {
   model: string;
   year: number;
   status: string;
-  hostName: string;
+  location: string;
+  pricePerDay: number;
+  images?: string[];
+  owner?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   createdAt: string;
+  declineReason?: string;
 }
 
 export class AdminService {

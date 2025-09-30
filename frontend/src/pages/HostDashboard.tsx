@@ -292,8 +292,11 @@ const HostDashboard: React.FC = () => {
         {/* Vehicle Management Tab */}
         {activeTab === 'vehicles' && (
           <div className="space-y-6">
-            <VehicleListingForm />
-            <FleetManagement />
+            <VehicleListingForm 
+              onSubmit={() => {}}
+              onCancel={() => {}}
+            />
+            <FleetManagement hostId={user?.id || '0'} />
             <GlassCard title="Your Vehicles" icon="Car">
               <div className="space-y-4">
                 {vehicles.length === 0 ? (
@@ -444,7 +447,12 @@ const HostDashboard: React.FC = () => {
         {/* Financial Management Tab */}
         {activeTab === 'financial' && (
           <div className="space-y-6">
-            <PaymentIntegration />
+            <PaymentIntegration 
+              bookingId={0}
+              amount={0}
+              onPaymentSuccess={() => {}}
+              onPaymentError={() => {}}
+            />
             <GlassCard title="Earnings Overview" icon="DollarSign">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">
@@ -500,12 +508,16 @@ const HostDashboard: React.FC = () => {
 
         {/* Fleet Tools Tab */}
         {activeTab === 'fleet' && (
-          <FleetManagement />
+          <FleetManagement hostId={user?.id || '0'} />
         )}
 
         {/* Dynamic Pricing Tab */}
         {activeTab === 'pricing' && (
-          <DynamicPricing />
+          <DynamicPricing 
+            vehicleId=""
+            basePrice={0}
+            onPriceUpdate={() => {}}
+          />
         )}
 
         {/* Approval Requests Tab */}
@@ -554,7 +566,7 @@ const HostDashboard: React.FC = () => {
           <div className="w-full max-w-md">
             <ApprovalRequestForm
               requestType={approvalFormType}
-              entityId={selectedVehicleId || user?.id || 0}
+              entityId={parseInt(selectedVehicleId?.toString() || user?.id || '0')}
               submittedBy="host"
               onSuccess={handleApprovalSuccess}
               onCancel={() => {

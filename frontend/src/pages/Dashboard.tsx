@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import RealTimeAdminDashboard from './RealTimeAdminDashboard';
 import RenterDashboard from './RenterDashboard';
 import HostDashboard from './HostDashboard';
 import AdminQuickActions from '../components/admin/AdminQuickActions';
 
 const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [activeRole, setActiveRole] = useState<'renter' | 'host' | 'admin'>('renter');
+
+  // Determine user's actual role
+  const userRole = user?.role?.toLowerCase() as 'renter' | 'host' | 'admin';
+  const isAdmin = userRole === 'admin';
 
   // Admin can switch between different role views
   const handleRoleSwitch = (role: 'renter' | 'host' | 'admin') => {
@@ -19,50 +25,63 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
           <p className="text-gray-300">Welcome to your dashboard!</p>
           
-          {/* Role Switcher */}
-          <div className="mt-4 flex space-x-2">
-            <button
-              onClick={() => handleRoleSwitch('renter')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeRole === 'renter'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20'
-              }`}
-            >
-              Renter View
-            </button>
-            <button
-              onClick={() => handleRoleSwitch('host')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeRole === 'host'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20'
-              }`}
-            >
-              Host View
-            </button>
-            <button
-              onClick={() => handleRoleSwitch('admin')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeRole === 'admin'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20'
-              }`}
-            >
-              Admin Panel
-            </button>
-          </div>
+          {/* Role Switcher - Only for Admin users */}
+          {isAdmin && (
+            <div className="mt-4 flex space-x-2">
+              <button
+                onClick={() => handleRoleSwitch('renter')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeRole === 'renter'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                Renter View
+              </button>
+              <button
+                onClick={() => handleRoleSwitch('host')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeRole === 'host'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                Host View
+              </button>
+              <button
+                onClick={() => handleRoleSwitch('admin')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeRole === 'admin'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                Admin Panel
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Main Content */}
         <div className="space-y-6">
-          {activeRole === 'renter' && <RenterDashboard />}
-          {activeRole === 'host' && <HostDashboard />}
-          {activeRole === 'admin' && (
-            <div className="space-y-6">
-              <AdminQuickActions />
-              <RealTimeAdminDashboard />
-            </div>
+          {isAdmin ? (
+            // Admin users can switch between views
+            <>
+              {activeRole === 'renter' && <RenterDashboard />}
+              {activeRole === 'host' && <HostDashboard />}
+              {activeRole === 'admin' && (
+                <div className="space-y-6">
+                  <AdminQuickActions />
+                  <RealTimeAdminDashboard />
+                </div>
+              )}
+            </>
+          ) : (
+            // Regular users see only their role-specific dashboard
+            <>
+              {userRole === 'renter' && <RenterDashboard />}
+              {userRole === 'host' && <HostDashboard />}
+            </>
           )}
         </div>
       </div>

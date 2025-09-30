@@ -21,8 +21,7 @@ const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const RealTimeAdminDashboard = lazy(() => import('./pages/RealTimeAdminDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const FAQ = lazy(() => import('./pages/FAQ'));
-const Login = lazy(() => import('./pages/Login'));
-const Signup = lazy(() => import('./pages/Signup'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -87,8 +86,7 @@ function App() {
                         <Route path="/about" element={<Layout><About /></Layout>} />
                         <Route path="/contact" element={<Layout><Contact /></Layout>} />
                         <Route path="/faq" element={<Layout><FAQ /></Layout>} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<Signup />} />
+                        <Route path="/admin-login" element={<AdminLogin />} />
                         <Route path="/unauthorized" element={<Unauthorized />} />
                         <Route path="/dashboard/*" element={
                           <ProtectedRoute>

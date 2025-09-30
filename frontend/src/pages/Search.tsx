@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { apiClient } from '../api/client';
 import SEO from '../components/SEO';
 import Glassmorphism from '../components/Glassmorphism';
 import GlassInput from '../components/GlassInput';
@@ -8,27 +7,8 @@ import GlassDropdown from '../components/GlassDropdown';
 import GlassButton from '../components/GlassButton';
 import LazyImage from '../components/LazyImage';
 import BookingModal from '../components/BookingModal';
-import { getMockCars, searchMockCars, MockCar } from '../data/mockCars';
-import { BookingService } from '../services/bookingService';
+import { searchMockCars, MockCar } from '../data/mockCars';
 
-interface Vehicle {
-  id: string;
-  make: string;
-  model: string;
-  year: number;
-  location: string;
-  pricePerDay: number;
-  imageUrl: string;
-  type: string;
-  features: string[];
-  rating: number;
-  reviews: number;
-  host: {
-    id: string;
-    name: string;
-    avatar: string;
-  };
-}
 
 const Search: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -90,7 +70,10 @@ const Search: React.FC = () => {
 
   const handleBookingSuccess = (booking: any) => {
     console.log('Booking created:', booking);
-    // You can add a toast notification here
+    
+    // Show success message
+    alert(`Booking created successfully! Booking ID: ${booking.id}\n\nThis booking will now appear on the admin dashboard.`);
+    
     setShowBookingModal(false);
     setSelectedCar(null);
   };

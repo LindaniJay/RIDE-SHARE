@@ -1,111 +1,59 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { MessagingService, Message, Conversation } from '../services/messagingService';
+import websocketService from '../services/websocketService';
+import GlassCard from './GlassCard';
 import Icon from './Icon';
 
-interface Message {
-  id: number;
-  senderId: number;
-  recipientId: number;
-  message: string;
-  type: 'text' | 'image' | 'file';
-  timestamp: string;
-  read: boolean;
-  sender?: {
-    firstName: string;
-    lastName: string;
-  };
+interface RealTimeMessagingProps {
+  conversationId?: string;
+  onConversationSelect?: (conversationId: string) => void;
 }
 
-interface Conversation {
-  id: string;
-  participants: number[];
-  lastMessage: Message;
-  otherParticipant: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  unreadCount: number;
-}
-
-const RealTimeMessaging: React.FC = () => {
+const RealTimeMessaging: React.FC<RealTimeMessagingProps> = ({ conversationId, onConversationSelect }) => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const [socket, setSocket] = useState<any>(null);
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchConversations();
-    setupSocket();
     
-    return () => {
-      if (socket) {
-        socket.disconnect();
+    // Subscribe to real-time message updates
+    websocketService.subscribeToNotifications((notification) => {
+      if (notification.type === 'message') {
+        // Refresh conversations and messages
+        fetchConversations();
+        if (activeConversation) {
+          fetchMessages(activeConversation.id);
+        }
       }
-    };
+    });
   }, []);
 
   useEffect(() => {
-    if (activeConversation) {
-      fetchMessages(activeConversation);
+    if (conversationId) {
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        setActiveConversation(conversation);
+        fetchMessages(conversationId);
+      }
     }
-  }, [activeConversation]);
+  }, [conversationId, conversations]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const setupSocket = () => {
-    // In a real implementation, you would use Socket.IO client
-    // For now, we'll simulate the socket connection
-    const mockSocket = {
-      on: (event: string, callback: Function) => {
-        console.log(`Socket event: ${event}`);
-        // Simulate receiving messages
-        if (event === 'new_message') {
-          setTimeout(() => {
-            callback({
-              message: {
-                id: Date.now(),
-                senderId: 2,
-                recipientId: user?.id,
-                message: 'Hello! How can I help you?',
-                type: 'text',
-                timestamp: new Date().toISOString(),
-                read: false
-              }
-            });
-          }, 3000);
-        }
-      },
-      emit: (event: string, data: any) => {
-        console.log(`Socket emit: ${event}`, data);
-      },
-      disconnect: () => {
-        console.log('Socket disconnected');
-      }
-    };
-    
-    setSocket(mockSocket);
-  };
-
   const fetchConversations = async () => {
     try {
-      const response = await fetch('/api/messages/conversations', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setConversations(data.conversations || []);
-      }
+      setLoading(true);
+      const data = await MessagingService.getConversations();
+      setConversations(data);
     } catch (error) {
       console.error('Error fetching conversations:', error);
     } finally {
@@ -113,50 +61,30 @@ const RealTimeMessaging: React.FC = () => {
     }
   };
 
-  const fetchMessages = async (conversationId: string) => {
+  const fetchMessages = async (convId: string) => {
     try {
-      const response = await fetch(`/api/messages/conversations/${conversationId}/messages`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages || []);
-      }
+      const data = await MessagingService.getMessages(convId);
+      setMessages(data);
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !activeConversation) return;
+    if (!newMessage.trim() || !activeConversation || sending) return;
 
     try {
-      const otherParticipant = conversations.find(c => c.id === activeConversation)?.otherParticipant;
-      if (!otherParticipant) return;
-
-      const response = await fetch('/api/messages/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        body: JSON.stringify({
-          recipientId: otherParticipant.id,
-          message: newMessage,
-          type: 'text'
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(prev => [...prev, data.message]);
-        setNewMessage('');
-      }
+      setSending(true);
+      const message = await MessagingService.sendMessage(activeConversation.id, newMessage.trim());
+      setMessages(prev => [...prev, message]);
+      setNewMessage('');
+      
+      // Update conversation list
+      await fetchConversations();
     } catch (error) {
       console.error('Error sending message:', error);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -164,50 +92,56 @@ const RealTimeMessaging: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const selectConversation = (conversation: Conversation) => {
+    setActiveConversation(conversation);
+    fetchMessages(conversation.id);
+    if (onConversationSelect) {
+      onConversationSelect(conversation.id);
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 h-[600px] flex">
-      {/* Conversations Sidebar */}
-      <div className="w-1/3 border-r border-white/20 p-4">
-        <div className="flex items-center justify-between mb-4">
+    <div className="flex h-96 bg-white/5 rounded-xl overflow-hidden">
+      {/* Conversations List */}
+      <div className="w-1/3 border-r border-white/10">
+        <div className="p-4 border-b border-white/10">
           <h3 className="text-lg font-semibold text-white">Messages</h3>
-          <button className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
-            <Icon name="Plus" size="sm" className="text-white" />
-          </button>
         </div>
-        
-        <div className="space-y-2">
+        <div className="overflow-y-auto">
           {conversations.map((conversation) => (
-            <button
+            <div
               key={conversation.id}
-              onClick={() => setActiveConversation(conversation.id)}
-              className={`w-full p-3 rounded-lg text-left transition-all ${
-                activeConversation === conversation.id
-                  ? 'bg-white/20'
-                  : 'bg-white/5 hover:bg-white/10'
+              onClick={() => selectConversation(conversation)}
+              className={`p-4 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors ${
+                activeConversation?.id === conversation.id ? 'bg-white/10' : ''
               }`}
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">
-                    {conversation.otherParticipant.firstName[0]}
-                  </span>
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <Icon name="User" size="sm" className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-white font-medium truncate">
-                      {conversation.otherParticipant.firstName} {conversation.otherParticipant.lastName}
+                      {conversation.participants
+                        .filter(p => p.id !== user?.id)
+                        .map(p => p.name)
+                        .join(', ')}
                     </p>
                     {conversation.unreadCount > 0 && (
                       <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1">
@@ -215,15 +149,14 @@ const RealTimeMessaging: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <p className="text-white/70 text-sm truncate">
-                    {conversation.lastMessage.message}
-                  </p>
-                  <p className="text-white/50 text-xs">
-                    {formatTime(conversation.lastMessage.timestamp)}
-                  </p>
+                  {conversation.lastMessage && (
+                    <p className="text-gray-400 text-sm truncate">
+                      {conversation.lastMessage.content}
+                    </p>
+                  )}
                 </div>
               </div>
-            </button>
+            </div>
           ))}
         </div>
       </div>
@@ -233,42 +166,47 @@ const RealTimeMessaging: React.FC = () => {
         {activeConversation ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-white/20">
+            <div className="p-4 border-b border-white/10">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">
-                    {conversations.find(c => c.id === activeConversation)?.otherParticipant.firstName[0]}
-                  </span>
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <Icon name="User" size="sm" className="text-white" />
                 </div>
                 <div>
-                  <h4 className="text-white font-semibold">
-                    {conversations.find(c => c.id === activeConversation)?.otherParticipant.firstName} {' '}
-                    {conversations.find(c => c.id === activeConversation)?.otherParticipant.lastName}
+                  <h4 className="text-white font-medium">
+                    {activeConversation.participants
+                      .filter(p => p.id !== user?.id)
+                      .map(p => p.name)
+                      .join(', ')}
                   </h4>
-                  <p className="text-white/70 text-sm">Online</p>
+                  <p className="text-gray-400 text-sm">
+                    {activeConversation.participants
+                      .filter(p => p.id !== user?.id)
+                      .map(p => p.role)
+                      .join(', ')}
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.senderId === Number(user?.id) ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
                     className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.senderId === Number(user?.id)
+                      message.senderId === user?.id
                         ? 'bg-blue-500 text-white'
                         : 'bg-white/10 text-white'
                     }`}
                   >
-                    <p className="text-sm">{message.message}</p>
+                    <p className="text-sm">{message.content}</p>
                     <p className={`text-xs mt-1 ${
-                      message.senderId === Number(user?.id) ? 'text-blue-100' : 'text-white/70'
+                      message.senderId === user?.id ? 'text-blue-100' : 'text-gray-400'
                     }`}>
-                      {formatTime(message.timestamp)}
+                      {new Date(message.timestamp).toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
@@ -277,22 +215,27 @@ const RealTimeMessaging: React.FC = () => {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-white/20">
+            <div className="p-4 border-t border-white/10">
               <div className="flex space-x-2">
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  onKeyPress={handleKeyPress}
                   placeholder="Type a message..."
-                  className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={sending}
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!newMessage.trim()}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!newMessage.trim() || sending}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                 >
-                  <Icon name="Send" size="sm" />
+                  {sending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Icon name="Send" size="sm" />
+                  )}
                 </button>
               </div>
             </div>
