@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  base: process.env.VITE_BASE_PATH || '/',
+  base: process.env.VITE_BASE_PATH || '/RIDE-SHARE/',
   plugins: [
     react(),
     VitePWA({
@@ -17,8 +17,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        scope: './',
+        start_url: './',
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -169,7 +169,7 @@ export default defineConfig({
   // Performance optimizations
   experimental: {
     renderBuiltUrl(filename: string) {
-      return `/${filename}`;
+      return `./${filename}`;
     }
   }
 });
