@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 // Mock data
 const vehicles = [
   {
-    id: 1,
+    id: '1',
     make: 'Toyota',
     model: 'Corolla',
     year: 2020,
@@ -46,7 +46,7 @@ const vehicles = [
     status: 'approved'
   },
   {
-    id: 2,
+    id: '2',
     make: 'Ford',
     model: 'Ranger',
     year: 2021,
@@ -61,7 +61,7 @@ const vehicles = [
 // Mock bookings data
 const bookings = [
   {
-    id: 1,
+    id: '1',
     vehicleName: 'Toyota Corolla',
     renterName: 'Mike Wilson',
     hostName: 'John Smith',
@@ -90,6 +90,29 @@ app.get('/api/stats', (req, res) => {
     activeBookings: 0,
     pendingApprovals: 0
   });
+});
+
+// Bookings route for frontend
+app.get('/api/bookings', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: bookings.map(booking => ({
+        id: booking.id,
+        vehicleName: booking.vehicleName,
+        renterName: booking.renterName,
+        hostName: booking.hostName,
+        pickupDate: booking.pickupDate,
+        returnDate: booking.returnDate,
+        totalAmount: booking.totalAmount,
+        status: booking.status,
+        createdAt: booking.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Admin API endpoints
@@ -132,18 +155,32 @@ app.get('/api/admin/vehicles', (req, res) => {
 
 app.get('/api/admin/bookings', (req, res) => {
   try {
-    // Return all bookings
+    // Return all bookings with enhanced data structure
     res.json({
       success: true,
       bookings: bookings.map(booking => ({
         id: booking.id,
-        vehicleName: booking.vehicleName,
-        renterName: booking.renterName,
-        hostName: booking.hostName,
-        pickupDate: booking.pickupDate,
-        returnDate: booking.returnDate,
-        totalAmount: booking.totalAmount,
+        vehicle: {
+          make: booking.vehicleName?.split(' ')[0] || 'Unknown',
+          model: booking.vehicleName?.split(' ').slice(1).join(' ') || 'Unknown',
+          location: 'Cape Town',
+          images: ['/images/vehicle.jpg']
+        },
+        renter: {
+          name: booking.renterName,
+          email: 'renter@example.com'
+        },
+        host: {
+          name: booking.hostName,
+          email: 'host@example.com',
+          avatar: '/images/avatar.jpg'
+        },
+        startDate: booking.pickupDate,
+        endDate: booking.returnDate,
+        totalDays: Math.ceil((new Date(booking.returnDate) - new Date(booking.pickupDate)) / (1000 * 60 * 60 * 24)),
+        totalPrice: booking.totalAmount,
         status: booking.status,
+        paymentStatus: booking.status === 'completed' ? 'paid' : 'pending',
         createdAt: booking.createdAt
       }))
     });

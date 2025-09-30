@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
 import { AdminService, AdminStats } from '../services/adminService';

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:netlify": "npm run build && node deploy-netlify.js",
     "build:vercel": "cross-env VITE_BASE_PATH=/ npm run build",
     "build:github": "cross-env VITE_BASE_PATH=/RIDE-SHARE/ npm run build",
     "preview": "vite preview",

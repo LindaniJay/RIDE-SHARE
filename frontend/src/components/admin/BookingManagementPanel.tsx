@@ -267,7 +267,7 @@ const BookingManagementPanel: React.FC = () => {
               {filteredBookings.map((booking) => (
                 <tr key={booking.id} className="hover:bg-white/5">
                   <td className="px-6 py-4 text-sm text-white">
-                    #{booking.id.slice(-8)}
+                    #{String(booking.id || '').slice(-8)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
@@ -336,13 +336,13 @@ const BookingManagementPanel: React.FC = () => {
                       {booking.status === 'pending' && (
                         <>
                           <button
-                            onClick={() => handleStatusUpdate(booking.id, 'confirmed')}
+                            onClick={() => handleStatusUpdate(String(booking.id), 'confirmed')}
                             className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-all"
                           >
                             Confirm
                           </button>
                           <button
-                            onClick={() => handleStatusUpdate(booking.id, 'cancelled')}
+                            onClick={() => handleStatusUpdate(String(booking.id), 'cancelled')}
                             className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-all"
                           >
                             Cancel
