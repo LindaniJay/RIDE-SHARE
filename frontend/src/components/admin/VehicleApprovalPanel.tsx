@@ -26,7 +26,7 @@ interface Vehicle {
 }
 
 const VehicleApprovalPanel: React.FC = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'declined'>('pending');

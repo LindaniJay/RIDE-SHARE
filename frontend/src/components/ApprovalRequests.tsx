@@ -83,19 +83,13 @@ const ApprovalRequests: React.FC<ApprovalRequestsProps> = ({
       
       if (response.data.success) {
         // Show success notification
-        notificationService.success(
-          'Request Approved',
-          'The approval request has been approved successfully.'
-        );
+        notificationService.success('Request Approved - The approval request has been approved successfully.');
         // Refresh the requests
         fetchRequests();
       }
     } catch (err) {
       console.error('Error approving request:', err);
-      notificationService.error(
-        'Approval Failed',
-        'Failed to approve the request. Please try again.'
-      );
+      notificationService.error('Approval Failed - Failed to approve the request. Please try again.');
     }
   };
 
@@ -108,19 +102,13 @@ const ApprovalRequests: React.FC<ApprovalRequestsProps> = ({
       
       if (response.data.success) {
         // Show success notification
-        notificationService.success(
-          'Request Declined',
-          'The approval request has been declined.'
-        );
+        notificationService.success('Request Declined - The approval request has been declined.');
         // Refresh the requests
         fetchRequests();
       }
     } catch (err) {
       console.error('Error declining request:', err);
-      notificationService.error(
-        'Decline Failed',
-        'Failed to decline the request. Please try again.'
-      );
+      notificationService.error('Decline Failed - Failed to decline the request. Please try again.');
     }
   };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { notificationService, Notification } from '../services/notificationService';
 import Icon from './Icon';
-import GlassCard from './GlassCard';
+// import GlassCard from './GlassCard';
 
 interface NotificationCenterProps {
   className?: string;
@@ -114,7 +114,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ className = '' 
                       <h4 className="text-white font-medium text-sm">{notification.title}</h4>
                       <p className="text-white/70 text-sm mt-1">{notification.message}</p>
                       <p className="text-white/50 text-xs mt-1">
-                        {notification.timestamp.toLocaleTimeString()}
+                        {notification.timestamp ? new Date(notification.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString()}
                       </p>
                     </div>
                     <div className="flex flex-col space-y-1">

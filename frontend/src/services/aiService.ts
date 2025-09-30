@@ -181,13 +181,13 @@ class AIService {
   ): Promise<DynamicPricingData> {
     try {
       // Get market data
-      const marketData = await this.getMarketData(location, dateRange);
+      const marketData = await this.getMarketData();
       
       // Calculate multipliers
       const demandMultiplier = this.calculateDemandMultiplier(marketData);
       const seasonMultiplier = this.calculateSeasonMultiplier(dateRange.start);
       const eventMultiplier = this.calculateEventMultiplier(location, dateRange);
-      const weatherMultiplier = this.calculateWeatherMultiplier(location, dateRange);
+      const weatherMultiplier = this.calculateWeatherMultiplier();
       const timeOfDayMultiplier = this.calculateTimeOfDayMultiplier();
 
       // Calculate final price
@@ -255,9 +255,9 @@ class AIService {
     return 1.0;
   }
 
-  private calculateEventMultiplier(location: string, dateRange: { start: Date; end: Date }): number {
+  private calculateEventMultiplier(_location: string, _dateRange: { start: Date; end: Date }): number {
     // Check for major events in the area
-    const events = this.getLocalEvents(location, dateRange);
+    const events = this.getLocalEvents();
     
     if (events.length > 0) {
       return 1.3; // 30% increase during events
@@ -290,7 +290,7 @@ class AIService {
       'Durban': ['Durban July', 'Comrades Marathon', 'Durban International Film Festival']
     };
 
-    return events[location] || [];
+    return events[location as unknown as keyof typeof events] || [];
   }
 
   /**

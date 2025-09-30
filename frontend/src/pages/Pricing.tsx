@@ -7,7 +7,7 @@ import { usePageTracking } from '../hooks/useAnalytics';
 import { 
   VEHICLE_CATEGORIES, 
   CHARTER_OPTIONS, 
-  formatPrice, 
+  // formatPrice, 
   getPriceRange,
   getPopularCategories 
 } from '../data/pricing';

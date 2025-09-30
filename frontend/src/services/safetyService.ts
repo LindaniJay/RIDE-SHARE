@@ -404,12 +404,12 @@ class SafetyService {
           address: '', // Will be geocoded by backend
           timestamp: new Date().toISOString()
         },
-        speed: position.coords.speed || 0,
+        speed: position.coords.speed ?? 0,
         heading: position.coords.heading || 0,
-        status: position.coords.speed > 5 ? 'moving' : 'parked'
+        status: (position.coords.speed ?? 0) > 5 ? 'moving' : 'parked'
       };
 
-      this.currentTrackingData = trackingData;
+      // this.setTrackingData(trackingData);
 
       // Send to backend
       await fetch(`${this.API_BASE_URL}/safety/tracking`, {

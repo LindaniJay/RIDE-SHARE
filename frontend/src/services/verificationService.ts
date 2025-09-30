@@ -242,7 +242,7 @@ class VerificationService {
    * Create vehicle inspection
    */
   async createVehicleInspection(
-    vehicleId: string,
+    _vehicleId: string,
     inspectionData: Omit<VehicleInspection, 'id' | 'inspectorId' | 'inspectionDate' | 'status'>
   ): Promise<VehicleInspection> {
     try {

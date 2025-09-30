@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Icon from '../components/Icon';
 import { vehiclesAPI, bookingsAPI } from '../api';
+import { bookingService, CreateBookingData } from '../services/bookingService';
 import PaymentModal from '../components/PaymentModal';
 
 interface Vehicle {
@@ -145,85 +146,29 @@ const VehicleDetail: React.FC = () => {
 
     setBookingLoading(true);
     try {
-      const bookingData = {
+      // Create booking using the new booking service
+      const bookingData: CreateBookingData = {
         vehicleId: vehicle.id,
         startDate: bookingForm.pickupDate,
         endDate: bookingForm.returnDate,
         totalDays: bookingForm.totalDays,
         totalPrice: bookingForm.totalPrice,
         specialRequests: bookingForm.specialRequests,
-        status: 'pending' as const
+        renterId: user.id,
+        renterName: `${user.firstName} ${user.lastName}`,
+        hostId: vehicle.host?.id || 'host-1',
+        hostName: vehicle.host?.name || 'Vehicle Host',
+        vehicleTitle: `${vehicle.make} ${vehicle.model}`,
+        vehicleImage: vehicle.images[0] || '/images/default-vehicle.jpg',
+        vehicleMake: vehicle.make,
+        vehicleModel: vehicle.model
       };
 
-      // Try API first, fallback to localStorage
-      try {
-        const response = await bookingsAPI.create(bookingData);
-        
-        // Store booking data for payment
-        setCurrentBooking({
-          id: (response.data as any).id || 'temp-id',
-          totalAmount: bookingForm.totalPrice * 1.1, // Include service fee
-          vehicleName: `${vehicle.make} ${vehicle.model}`,
-          pickupDate: bookingForm.pickupDate,
-          returnDate: bookingForm.returnDate
-        });
-        
-        setShowBookingModal(false);
-        setShowPaymentModal(true);
-        return;
-      } catch (apiError) {
-        console.log('API not available, using localStorage booking');
-      }
-
-      // Fallback to localStorage booking
-      const mockBooking = {
-        id: `booking_${Date.now()}`,
-        vehicleId: vehicle.id,
-        renterId: 'current_user',
-        hostId: vehicle.host?.id || 'host_1',
-        startDate: bookingForm.pickupDate,
-        endDate: bookingForm.returnDate,
-        totalDays: bookingForm.totalDays,
-        totalPrice: bookingForm.totalPrice,
-        status: 'pending',
-        paymentStatus: 'pending',
-        vehicle: {
-          id: vehicle.id,
-          make: vehicle.make,
-          model: vehicle.model,
-          year: vehicle.year,
-          type: vehicle.type,
-          images: vehicle.images,
-          location: vehicle.location
-        },
-        host: vehicle.host || {
-          id: 'host_1',
-          name: 'Vehicle Host',
-          email: 'host@example.com',
-          avatar: '/images/avatar.jpg'
-        },
-        renter: {
-          id: 'current_user',
-          name: 'Current User',
-          email: 'user@example.com',
-          phone: '+27 82 123 4567'
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        notes: bookingForm.specialRequests
-      };
-
-      // Store mock booking in localStorage
-      const existingBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
-      existingBookings.push(mockBooking);
-      localStorage.setItem('mockBookings', JSON.stringify(existingBookings));
-
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('bookingCreated', { detail: mockBooking }));
+      const newBooking = await bookingService.createBooking(bookingData);
 
       // Store booking data for payment
       setCurrentBooking({
-        id: mockBooking.id,
+        id: newBooking.id,
         totalAmount: bookingForm.totalPrice * 1.1, // Include service fee
         vehicleName: `${vehicle.make} ${vehicle.model}`,
         pickupDate: bookingForm.pickupDate,
@@ -240,9 +185,20 @@ const VehicleDetail: React.FC = () => {
     }
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     setShowPaymentModal(false);
-    alert('Payment successful! Your booking is confirmed.');
+    
+    // Update booking payment status
+    if (currentBooking) {
+      try {
+        await bookingService.updatePaymentStatus(currentBooking.id, 'paid');
+        alert('Payment successful! Your booking is confirmed and will appear on your dashboard.');
+      } catch (error) {
+        console.error('Error updating booking status:', error);
+        alert('Payment successful! Your booking is confirmed.');
+      }
+    }
+    
     navigate('/dashboard');
   };
 

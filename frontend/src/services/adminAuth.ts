@@ -72,14 +72,14 @@ class AdminAuthService {
         throw new Error('User is not an admin. Current role: ' + userData.role);
       }
 
-      const adminData = {
+      const adminData: AdminUser = {
         uid: uid,
         id: uid,
         email: userData.email,
         firstName: userData.firstName || 'Admin',
         lastName: userData.lastName || 'User',
         role: 'admin' as const,
-        isAdmin: true,
+        isAdmin: true as const,
         createdAt: userData.createdAt?.toDate() || new Date()
       };
       

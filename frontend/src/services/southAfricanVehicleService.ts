@@ -115,7 +115,7 @@ class SouthAfricanVehicleService {
       return data.recommendations || [];
     } catch (error) {
       console.error('Error getting South African vehicle recommendations:', error);
-      return this.getDefaultRecommendations(location, purpose, groupSize);
+      return this.getDefaultRecommendations();
     }
   }
 
@@ -497,7 +497,7 @@ class SouthAfricanVehicleService {
         type: 'economy',
         dailyRate: 250,
         currency: 'ZAR',
-        location,
+        location: String(location),
         province: 'Western Cape',
         features: ['air_conditioning', 'bluetooth', 'cruise_control'],
         suitability: {

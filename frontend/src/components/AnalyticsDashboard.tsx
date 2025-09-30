@@ -28,7 +28,7 @@ interface AnalyticsData {
 }
 
 const AnalyticsDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');

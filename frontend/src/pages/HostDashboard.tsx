@@ -12,6 +12,7 @@ import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import ProfileSettings from '../components/ProfileSettings';
 import ApprovalRequests from '../components/ApprovalRequests';
 import ApprovalRequestForm from '../components/ApprovalRequestForm';
+import { mockHostStats, mockVehicles, mockBookings, mockHostAnalytics, mockHostFinancial } from '../data/mockData';
 
 interface Vehicle {
   id: string;
@@ -63,6 +64,8 @@ const HostDashboard: React.FC = () => {
     pendingPayouts: 0,
     completedBookings: 0
   });
+  const [analytics] = useState(mockHostAnalytics);
+  const [financial] = useState(mockHostFinancial);
   const [loading, setLoading] = useState(true);
   const [showApprovalForm, setShowApprovalForm] = useState(false);
   const [approvalFormType, setApprovalFormType] = useState<'VehicleListing' | 'InsuranceVerification' | 'VehicleApproval' | null>(null);
@@ -74,40 +77,29 @@ const HostDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch vehicles
-      const vehiclesResponse = await fetch('/api/vehicles/host', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
+      // Use mock data for development
+      setVehicles(mockVehicles.filter(v => v.hostId === user?.id) as any);
+      setBookings(mockBookings.filter(b => b.hostId === user?.id) as any);
+      setEarnings({
+        totalEarnings: mockHostStats.totalEarnings,
+        monthlyEarnings: mockHostStats.monthlyEarnings,
+        pendingPayouts: mockHostStats.pendingPayouts,
+        completedBookings: mockHostStats.completedBookings
       });
-      if (vehiclesResponse.ok) {
-        const vehiclesData = await vehiclesResponse.json();
-        setVehicles(vehiclesData.data || []);
-      }
-
-      // Fetch bookings
-      const bookingsResponse = await fetch('/api/bookings/host', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-      if (bookingsResponse.ok) {
-        const bookingsData = await bookingsResponse.json();
-        setBookings(bookingsData.data || []);
-      }
-
-      // Fetch earnings
-      const earningsResponse = await fetch('/api/earnings', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-      if (earningsResponse.ok) {
-        const earningsData = await earningsResponse.json();
-        setEarnings(earningsData.data || earnings);
-      }
+      
+      // Uncomment below for real API calls
+      // const vehiclesResponse = await fetch('/api/vehicles/host', {
+      //   headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+      // });
+      // if (vehiclesResponse.ok) {
+      //   const vehiclesData = await vehiclesResponse.json();
+      //   setVehicles(vehiclesData.data || []);
+      // }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      // Fallback to mock data on error
+      setVehicles(mockVehicles.filter(v => v.hostId === user?.id) as any);
+      setBookings(mockBookings.filter(b => b.hostId === user?.id) as any);
     } finally {
       setLoading(false);
     }
@@ -233,7 +225,7 @@ const HostDashboard: React.FC = () => {
               </GlassCard>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <GlassCard title="Recent Bookings" icon="Calendar">
                 <div className="space-y-3">
                   {bookings.slice(0, 3).map((booking) => (
@@ -250,6 +242,29 @@ const HostDashboard: React.FC = () => {
                         <StatusBadge status={booking.status} />
                         <p className="text-white font-semibold mt-1">R{booking.totalPrice}</p>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </GlassCard>
+
+              <GlassCard title="Recent Reviews" icon="Star">
+                <div className="space-y-3">
+                  {analytics.customerFeedback.recentReviews.slice(0, 3).map((review, index) => (
+                    <div key={index} className="p-3 bg-white/5 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Icon 
+                              key={i} 
+                              name="Star" 
+                              size="sm" 
+                              className={i < review.rating ? "text-yellow-400" : "text-gray-400"} 
+                            />
+                          ))}
+                        </div>
+                        <span className="text-white/70 text-sm">{review.date}</span>
+                      </div>
+                      <p className="text-white/80 text-sm">{review.comment}</p>
                     </div>
                   ))}
                 </div>
@@ -458,15 +473,41 @@ const HostDashboard: React.FC = () => {
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white mb-1">R{earnings.totalEarnings.toLocaleString()}</div>
                   <div className="text-white/70 text-sm">Total Earnings</div>
+                  <div className="text-green-400 text-sm mt-1">+12% from last month</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white mb-1">R{earnings.monthlyEarnings.toLocaleString()}</div>
                   <div className="text-white/70 text-sm">This Month</div>
+                  <div className="text-blue-400 text-sm mt-1">Next payout: {financial.upcomingPayouts[0]?.date}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white mb-1">R{earnings.pendingPayouts.toLocaleString()}</div>
                   <div className="text-white/70 text-sm">Pending Payouts</div>
+                  <div className="text-yellow-400 text-sm mt-1">Available for withdrawal</div>
                 </div>
+              </div>
+            </GlassCard>
+
+            <GlassCard title="Transaction History" icon="CreditCard">
+              <div className="space-y-3">
+                {financial.transactionHistory.slice(0, 5).map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-2 h-2 rounded-full ${
+                        transaction.status === 'completed' ? 'bg-green-400' : 
+                        transaction.status === 'pending' ? 'bg-yellow-400' : 'bg-red-400'
+                      }`}></div>
+                      <div>
+                        <p className="text-white font-medium capitalize">{transaction.type}</p>
+                        <p className="text-white/70 text-sm">{transaction.date}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white font-semibold">R{transaction.amount.toLocaleString()}</p>
+                      <p className="text-white/70 text-sm capitalize">{transaction.status}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </GlassCard>
 

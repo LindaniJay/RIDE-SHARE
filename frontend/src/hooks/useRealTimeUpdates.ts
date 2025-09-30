@@ -47,7 +47,7 @@ export const useRealTimeUpdates = () => {
     });
 
     // Subscribe to role-specific updates
-    if (user.role === 'admin') {
+    if (user.role === 'admin' as any) {
       websocketService.subscribeToAdminUpdates((update: RealTimeUpdate) => {
         setUpdates(prev => [update, ...prev]);
       });

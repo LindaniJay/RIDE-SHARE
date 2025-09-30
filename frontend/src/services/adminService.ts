@@ -21,6 +21,9 @@ export interface AdminUser {
   email: string;
   role: string;
   status: string;
+  approvalStatus: 'pending' | 'approved' | 'rejected';
+  documentStatus: 'pending' | 'approved' | 'rejected';
+  phoneNumber?: string;
   createdAt: string;
 }
 

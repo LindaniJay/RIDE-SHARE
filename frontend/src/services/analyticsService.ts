@@ -142,4 +142,5 @@ class AnalyticsService {
   }
 }
 
+export { AnalyticsService };
 export default AnalyticsService;

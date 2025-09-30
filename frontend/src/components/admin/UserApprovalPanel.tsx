@@ -18,7 +18,7 @@ interface User {
 }
 
 const UserApprovalPanel: React.FC = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');

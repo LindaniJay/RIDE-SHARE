@@ -89,15 +89,15 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           <div className="flex-1 bg-white/10 rounded-full h-1">
             <div 
               className={`h-1 rounded-full transition-all duration-300 ${
-                strength?.score <= 2 ? 'bg-red-400' :
-                strength?.score <= 3 ? 'bg-yellow-400' :
-                strength?.score <= 4 ? 'bg-blue-400' : 'bg-green-400'
+                (strength?.score || 0) <= 2 ? 'bg-red-400' :
+                (strength?.score || 0) <= 3 ? 'bg-yellow-400' :
+                (strength?.score || 0) <= 4 ? 'bg-blue-400' : 'bg-green-400'
               }`}
               style={{ width: `${(strength?.score || 0) * 20}%` }}
             />
           </div>
-          <span className={`text-xs font-medium ${strength?.color}`}>
-            {strength?.label}
+          <span className={`text-xs font-medium ${strength?.color || ''}`}>
+            {strength?.label || ''}
           </span>
         </div>
       )}

@@ -282,7 +282,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ onRefresh }) 
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <StatusBadge 
-                      status={user.documentStatus === 'verified' ? 'approved' : 
+                      status={user.documentStatus === 'approved' ? 'approved' : 
                               user.documentStatus === 'rejected' ? 'rejected' : 'pending'} 
                     />
                   </td>

@@ -11,7 +11,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import { FullPageLoading } from './components/Loading';
 import ErrorBoundary from './components/ErrorBoundary';
-import PerformanceMonitor from './components/PerformanceMonitor';
 
 // Lazy load pages for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -88,9 +87,8 @@ function App() {
             <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <AuthProvider>
                 <ThemeProvider>
-                  <div className="App">
-                    <PerformanceMonitor />
-                    <Suspense fallback={<FullPageLoading text="Loading RideShare SA..." />}>
+              <div className="App">
+                <Suspense fallback={<FullPageLoading text="Loading RideShare SA..." />}>
                       <Routes>
                         <Route path="/" element={<Layout><Home /></Layout>} />
                         <Route path="/search" element={<Layout><Search /></Layout>} />

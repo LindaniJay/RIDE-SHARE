@@ -11,7 +11,7 @@ interface QuickStats {
 }
 
 const AdminQuickActions: React.FC = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [stats, setStats] = useState<QuickStats>({
     pendingUsers: 0,
     pendingVehicles: 0,

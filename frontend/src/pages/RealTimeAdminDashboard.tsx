@@ -35,9 +35,9 @@ const RealTimeAdminDashboard: React.FC = () => {
     }
   };
 
-  const handleRefresh = () => {
-    fetchStats();
-  };
+  // const handleRefresh = () => {
+  //   fetchStats();
+  // };
 
   const handleLogout = async () => {
     try {

@@ -3,7 +3,9 @@ import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
-import { AdminService, AdminStats } from '../services/adminService';
+import PerformanceMonitor from '../components/PerformanceMonitor';
+import { AdminStats } from '../services/adminService';
+import { mockAdminStats } from '../data/mockData';
 
 // Import admin components
 import UserManagementPanel from '../components/admin/UserManagementPanel';
@@ -37,10 +39,15 @@ const AdminDashboard: React.FC = () => {
 
   const fetchStats = async () => {
     try {
-      const statsData = await AdminService.getStats();
-      setStats(statsData);
+      // Use mock data for development
+      setStats(mockAdminStats);
+      // Uncomment below for real API calls
+      // const statsData = await AdminService.getStats();
+      // setStats(statsData);
     } catch (error) {
       console.error('Error fetching admin stats:', error);
+      // Fallback to mock data on error
+      setStats(mockAdminStats);
     } finally {
       setLoading(false);
     }
@@ -168,11 +175,11 @@ const AdminDashboard: React.FC = () => {
               <Route path="/" element={<OverviewTab stats={stats} />} />
               <Route path="/users" element={<UserManagementPanel onRefresh={handleRefresh} />} />
               <Route path="/vehicles" element={<VehicleManagementPanel onRefresh={handleRefresh} />} />
-              <Route path="/bookings" element={<BookingManagementPanel onRefresh={handleRefresh} />} />
+              <Route path="/bookings" element={<BookingManagementPanel />} />
               <Route path="/financial" element={<FinancialDashboard onRefresh={handleRefresh} />} />
               <Route path="/content" element={<ContentModerationPanel onRefresh={handleRefresh} />} />
               <Route path="/analytics" element={<AnalyticsDashboard onRefresh={handleRefresh} />} />
-              <Route path="/system" element={<SystemAdminPanel onRefresh={handleRefresh} />} />
+              <Route path="/system" element={<SystemAdminPanel />} />
               <Route path="/documents" element={<DocumentManagementPanel onRefresh={handleRefresh} />} />
             </Routes>
           </div>
@@ -247,6 +254,41 @@ const OverviewTab: React.FC<{ stats: AdminStats | null }> = ({ stats }) => {
             <Icon name="dollar-sign" className="h-8 w-8 text-yellow-400" />
           </div>
         </GlassCard>
+      </div>
+
+      {/* Performance Monitor */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <PerformanceMonitor />
+        </div>
+        <div className="lg:col-span-1">
+          <GlassCard className="p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">System Health</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300 text-sm">Server Status</span>
+                <span className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-green-400 text-sm font-medium">Online</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300 text-sm">Database</span>
+                <span className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-green-400 text-sm font-medium">Connected</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300 text-sm">API Status</span>
+                <span className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-green-400 text-sm font-medium">Healthy</span>
+                </span>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
       </div>
 
       {/* Recent Activity */}

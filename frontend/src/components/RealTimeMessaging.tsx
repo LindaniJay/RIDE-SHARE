@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { MessagingService, Message, Conversation } from '../services/messagingService';
 import websocketService from '../services/websocketService';
-import GlassCard from './GlassCard';
+// import GlassCard from './GlassCard';
 import Icon from './Icon';
 
 interface RealTimeMessagingProps {
@@ -139,7 +139,7 @@ const RealTimeMessaging: React.FC<RealTimeMessagingProps> = ({ conversationId, o
                   <div className="flex items-center justify-between">
                     <p className="text-white font-medium truncate">
                       {conversation.participants
-                        .filter(p => p.id !== user?.id)
+                        .filter(p => p.id !== Number(user?.id))
                         .map(p => p.name)
                         .join(', ')}
                     </p>
@@ -174,13 +174,13 @@ const RealTimeMessaging: React.FC<RealTimeMessagingProps> = ({ conversationId, o
                 <div>
                   <h4 className="text-white font-medium">
                     {activeConversation.participants
-                      .filter(p => p.id !== user?.id)
+                      .filter(p => p.id !== Number(user?.id))
                       .map(p => p.name)
                       .join(', ')}
                   </h4>
                   <p className="text-gray-400 text-sm">
                     {activeConversation.participants
-                      .filter(p => p.id !== user?.id)
+                      .filter(p => p.id !== Number(user?.id))
                       .map(p => p.role)
                       .join(', ')}
                   </p>
@@ -193,18 +193,18 @@ const RealTimeMessaging: React.FC<RealTimeMessagingProps> = ({ conversationId, o
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.senderId === Number(user?.id) ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
                     className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.senderId === user?.id
+                      message.senderId === Number(user?.id)
                         ? 'bg-blue-500 text-white'
                         : 'bg-white/10 text-white'
                     }`}
                   >
                     <p className="text-sm">{message.content}</p>
                     <p className={`text-xs mt-1 ${
-                      message.senderId === user?.id ? 'text-blue-100' : 'text-gray-400'
+                      message.senderId === Number(user?.id) ? 'text-blue-100' : 'text-gray-400'
                     }`}>
                       {new Date(message.timestamp).toLocaleTimeString()}
                     </p>

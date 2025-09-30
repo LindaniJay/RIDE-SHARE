@@ -30,7 +30,7 @@ interface AnalyticsData {
   };
 }
 
-const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ onRefresh }) => {
+const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ }) => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('6months');

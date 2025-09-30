@@ -27,6 +27,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,7 +35,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen to auth state changes
     const unsubscribe = firebaseAuthService.onAuthStateChange((user) => {
       setUser(user);
-      setLoading(false);
+      
+      // Only set loading to false after initial load
+      if (initialLoad) {
+        setInitialLoad(false);
+        setLoading(false);
+      } else {
+        // For subsequent auth changes, don't show loading
+        setLoading(false);
+      }
       
       if (user) {
         // User is logged in - navigate to dashboard if not on admin routes
@@ -52,36 +61,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     return unsubscribe;
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, initialLoad]);
 
   const signup = async (email: string, password: string, firstName: string, lastName: string, phone: string, role: 'Renter' | 'Host') => {
-    setLoading(true);
+    // Don't set loading for auth operations to avoid UI flicker
     try {
       await firebaseAuthService.signupUser({ email, password, firstName, lastName, phone, role });
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
+    // Don't set loading for auth operations to avoid UI flicker
     try {
       await firebaseAuthService.loginUser({ email, password });
       // Navigation will be handled by the auth state change listener
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };
 
   const logout = async () => {
-    setLoading(true);
+    // Don't set loading for logout to avoid UI flicker
     try {
       await firebaseAuthService.logoutUser();
       // Navigation will be handled by the auth state change listener
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };

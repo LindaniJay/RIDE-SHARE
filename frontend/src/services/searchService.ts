@@ -246,11 +246,11 @@ class SearchService {
   async searchByRoute(
     startLocation: string,
     endLocation: string,
-    waypoints?: string[]
+    _waypoints?: string[]
   ): Promise<RouteSearchResult> {
     try {
       // Calculate route distance and time
-      const routeInfo = await this.calculateRoute(startLocation, endLocation, waypoints);
+      const routeInfo = await this.calculateRoute();
       
       // Find vehicles along the route
       const vehicles = await this.findVehiclesAlongRoute(startLocation, endLocation, routeInfo);
@@ -323,9 +323,10 @@ class SearchService {
     const filters: SearchFilters = {};
 
     // Analyze search history for patterns
-    const commonTypes = this.analyzeSearchPatterns(searchHistory, 'type');
-    const commonLocations = this.analyzeSearchPatterns(searchHistory, 'location');
-    const commonPriceRanges = this.analyzeSearchPatterns(searchHistory, 'price');
+    // const searchHistory = this.getSearchHistory();
+    const commonTypes = this.analyzeSearchPatterns();
+    const commonLocations = this.analyzeSearchPatterns();
+    const commonPriceRanges = this.analyzeSearchPatterns();
 
     if (commonTypes.length > 0) {
       filters.vehicleType = commonTypes[0];
@@ -349,7 +350,7 @@ class SearchService {
   /**
    * Analyze search patterns
    */
-  private analyzeSearchPatterns(): any[] {
+  private analyzeSearchPatterns(type?: string): any[] {
     // In a real implementation, you would use machine learning
     // For now, return mock patterns
     const patterns: { [key: string]: any[] } = {
@@ -358,7 +359,7 @@ class SearchService {
       price: [{ min: 200, max: 800 }]
     };
 
-    return patterns[type] || [];
+    return patterns[type as keyof typeof patterns] || [];
   }
 
   /**

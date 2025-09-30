@@ -1,36 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
-import DocumentUpload from '../components/DocumentUpload';
 import StatusBadge from '../components/StatusBadge';
-import SavedVehicles from '../components/SavedVehicles';
-import DocumentExpiryReminder from '../components/DocumentExpiryReminder';
-import Promotions from '../components/Promotions';
-import RentalCalculator from '../components/RentalCalculator';
-import PaymentIntegration from '../components/PaymentIntegration';
-import RealTimeMessaging from '../components/RealTimeMessaging';
-import AnalyticsDashboard from '../components/AnalyticsDashboard';
-import ProfileSettings from '../components/ProfileSettings';
-import ApprovalRequests from '../components/ApprovalRequests';
-import ApprovalRequestForm from '../components/ApprovalRequestForm';
+import OptimizedImage from '../components/OptimizedImage';
+import { DashboardSkeleton, CardSkeleton } from '../components/SkeletonLoader';
+import { mockRenterStats, mockBookings, mockTransactions } from '../data/mockData';
+import { bookingService, Booking } from '../services/bookingService';
 
-interface Booking {
-  id: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  vehicle: {
-    id: string;
-    title: string;
-    image: string;
-    make: string;
-    model: string;
-  };
-  startDate: string;
-  endDate: string;
-  totalPrice: number;
-  createdAt: string;
-}
+// Lazy load heavy components
+const DocumentUpload = lazy(() => import('../components/DocumentUpload'));
+const SavedVehicles = lazy(() => import('../components/SavedVehicles'));
+const DocumentExpiryReminder = lazy(() => import('../components/DocumentExpiryReminder'));
+const Promotions = lazy(() => import('../components/Promotions'));
+const RentalCalculator = lazy(() => import('../components/RentalCalculator'));
+const RealTimeMessaging = lazy(() => import('../components/RealTimeMessaging'));
+const AnalyticsDashboard = lazy(() => import('../components/AnalyticsDashboard'));
+const ProfileSettings = lazy(() => import('../components/ProfileSettings'));
+const ApprovalRequests = lazy(() => import('../components/ApprovalRequests'));
+const ApprovalRequestForm = lazy(() => import('../components/ApprovalRequestForm'));
+
+// Booking interface is now imported from bookingService
 
 interface Payment {
   id: string;
@@ -53,33 +44,58 @@ const RenterDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+    
+    // Listen for booking updates
+    const handleBookingCreated = () => {
+      fetchDashboardData();
+    };
+    
+    const handleBookingUpdated = () => {
+      fetchDashboardData();
+    };
+    
+    window.addEventListener('bookingCreated', handleBookingCreated);
+    window.addEventListener('bookingUpdated', handleBookingUpdated);
+    
+    return () => {
+      window.removeEventListener('bookingCreated', handleBookingCreated);
+      window.removeEventListener('bookingUpdated', handleBookingUpdated);
+    };
+  }, [user?.id]);
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch bookings
-      const bookingsResponse = await fetch('/api/bookings', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-      if (bookingsResponse.ok) {
-        const bookingsData = await bookingsResponse.json();
-        setBookings(bookingsData.data || []);
-      }
-
-      // Fetch payments
-      const paymentsResponse = await fetch('/api/payments', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-      if (paymentsResponse.ok) {
-        const paymentsData = await paymentsResponse.json();
-        setPayments(paymentsData.data || []);
+      if (user?.id) {
+        // Get bookings from the booking service
+        const userBookings = await bookingService.getRenterBookings(user.id);
+        setBookings(userBookings);
+        
+        // Convert bookings to payments for display
+        const bookingPayments = userBookings.map(booking => ({
+          id: `payment_${booking.id}`,
+          amount: booking.totalPrice,
+          status: (booking.paymentStatus === 'paid' ? 'completed' : 'pending') as 'pending' | 'completed' | 'failed' | 'refunded',
+          method: 'stripe' as 'stripe' | 'payfast',
+          bookingId: booking.id,
+          createdAt: booking.createdAt
+        }));
+        setPayments(bookingPayments);
+      } else {
+        // Fallback to mock data if no user
+        setBookings(mockBookings.filter(b => b.renterId === user?.id) as any);
+        setPayments(mockTransactions.filter(t => t.type === 'booking').map(t => ({
+          id: t.id,
+          amount: t.amount,
+          status: t.status as 'pending' | 'completed' | 'failed' | 'refunded',
+          method: 'stripe' as 'stripe' | 'payfast',
+          bookingId: t.bookingId || '',
+          createdAt: t.date
+        })));
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      // Fallback to mock data on error
+      setBookings(mockBookings.filter(b => b.renterId === user?.id) as any);
     } finally {
       setLoading(false);
     }
@@ -117,11 +133,7 @@ const RenterDashboard: React.FC = () => {
   ];
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -191,7 +203,7 @@ const RenterDashboard: React.FC = () => {
                 icon="Heart"
                 className="text-center"
               >
-                <div className="text-3xl font-bold text-white mb-2">0</div>
+                <div className="text-3xl font-bold text-white mb-2">{mockRenterStats.savedVehicles}</div>
                 <div className="text-white/70 text-sm">Saved vehicles</div>
               </GlassCard>
             </div>
@@ -201,13 +213,15 @@ const RenterDashboard: React.FC = () => {
                 <div className="space-y-3">
                   {bookings.slice(0, 3).map((booking) => (
                     <div key={booking.id} className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg">
-                      <img 
-                        src={booking.vehicle.image} 
-                        alt={booking.vehicle.title}
+                      <OptimizedImage 
+                        src={booking.vehicleImage} 
+                        alt={booking.vehicleTitle}
+                        width={48}
+                        height={48}
                         className="w-12 h-12 rounded-lg object-cover"
                       />
                       <div className="flex-1">
-                        <h4 className="text-white font-medium">{booking.vehicle.title}</h4>
+                        <h4 className="text-white font-medium">{booking.vehicleTitle}</h4>
                         <p className="text-white/70 text-sm">
                           {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
                         </p>
@@ -249,7 +263,9 @@ const RenterDashboard: React.FC = () => {
 
         {/* Account Tab */}
         {activeTab === 'account' && (
-          <ProfileSettings />
+          <Suspense fallback={<CardSkeleton />}>
+            <ProfileSettings />
+          </Suspense>
         )}
 
         {/* Search & Browse Tab */}
@@ -341,24 +357,32 @@ const RenterDashboard: React.FC = () => {
                       <div key={booking.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-3">
-                            <img 
-                              src={booking.vehicle.image} 
-                              alt={booking.vehicle.title}
+                            <OptimizedImage 
+                              src={booking.vehicleImage} 
+                              alt={booking.vehicleTitle}
+                              width={64}
+                              height={64}
                               className="w-16 h-16 rounded-lg object-cover"
                             />
                             <div>
-                              <h4 className="text-white font-semibold">{booking.vehicle.title}</h4>
+                              <h4 className="text-white font-semibold">{booking.vehicleTitle}</h4>
                               <p className="text-white/70 text-sm">
-                                {booking.vehicle.make} {booking.vehicle.model}
+                                {booking.vehicleMake} {booking.vehicleModel}
                               </p>
                               <p className="text-white/70 text-sm">
                                 {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
+                              </p>
+                              <p className="text-white/60 text-xs">
+                                Host: {booking.hostName}
                               </p>
                             </div>
                           </div>
                           <div className="text-right">
                             <StatusBadge status={booking.status} />
-                            <p className="text-white font-semibold mt-2">R{booking.totalPrice}</p>
+                            <p className="text-white font-semibold mt-2">R{booking.totalPrice.toLocaleString()}</p>
+                            <p className="text-white/60 text-xs mt-1">
+                              Payment: {booking.paymentStatus}
+                            </p>
                             {booking.status === 'confirmed' && (
                               <button className="mt-2 px-3 py-1 bg-red-500/20 text-red-200 rounded-lg text-sm hover:bg-red-500/30 transition-colors">
                                 Cancel
@@ -428,29 +452,37 @@ const RenterDashboard: React.FC = () => {
 
         {/* Communication Tab */}
         {activeTab === 'communication' && (
-          <RealTimeMessaging />
+          <Suspense fallback={<CardSkeleton />}>
+            <RealTimeMessaging />
+          </Suspense>
         )}
 
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
-          <AnalyticsDashboard />
+          <Suspense fallback={<CardSkeleton />}>
+            <AnalyticsDashboard />
+          </Suspense>
         )}
 
         {/* Saved Vehicles Tab */}
         {activeTab === 'saved' && (
-          <SavedVehicles userId={user?.id || '0'} />
+          <Suspense fallback={<CardSkeleton />}>
+            <SavedVehicles userId={user?.id || '0'} />
+          </Suspense>
         )}
 
         {/* Calculator Tab */}
         {activeTab === 'calculator' && (
           <div className="space-y-6">
             <GlassCard title="Rental Cost Calculator" icon="Calculator">
-              <RentalCalculator 
-                basePrice={500}
-                onCalculate={(total, breakdown) => {
-                  console.log('Calculated total:', total, breakdown);
-                }}
-              />
+              <Suspense fallback={<CardSkeleton />}>
+                <RentalCalculator 
+                  basePrice={500}
+                  onCalculate={(total, breakdown) => {
+                    console.log('Calculated total:', total, breakdown);
+                  }}
+                />
+              </Suspense>
             </GlassCard>
           </div>
         )}
@@ -458,12 +490,16 @@ const RenterDashboard: React.FC = () => {
         {/* Documents Tab */}
         {activeTab === 'documents' && (
           <div className="space-y-6">
-            <DocumentUpload 
-              label="Upload Document"
-              name="document"
-              onChange={() => {}}
-            />
-            <DocumentExpiryReminder userId={user?.id || '0'} />
+            <Suspense fallback={<CardSkeleton />}>
+              <DocumentUpload 
+                label="Upload Document"
+                name="document"
+                onChange={() => {}}
+              />
+            </Suspense>
+            <Suspense fallback={<CardSkeleton />}>
+              <DocumentExpiryReminder userId={user?.id || '0'} />
+            </Suspense>
             
             {/* Document Verification Request */}
             <GlassCard title="Document Verification" icon="FileText">
@@ -485,13 +521,17 @@ const RenterDashboard: React.FC = () => {
 
         {/* Promotions Tab */}
         {activeTab === 'promotions' && (
-          <Promotions userId={user?.id || '0'} />
+          <Suspense fallback={<CardSkeleton />}>
+            <Promotions userId={user?.id || '0'} />
+          </Suspense>
         )}
 
         {/* Approval Requests Tab */}
         {activeTab === 'approvals' && (
           <div className="space-y-6">
-            <ApprovalRequests userRole="renter" />
+            <Suspense fallback={<CardSkeleton />}>
+              <ApprovalRequests userRole="renter" />
+            </Suspense>
             
             {/* Profile Verification Request */}
             <GlassCard title="Profile Verification" icon="User">
@@ -516,16 +556,18 @@ const RenterDashboard: React.FC = () => {
       {showApprovalForm && approvalFormType && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md">
-            <ApprovalRequestForm
-              requestType={approvalFormType}
-              entityId={parseInt(user?.id || '0')}
-              submittedBy="renter"
-              onSuccess={handleApprovalSuccess}
-              onCancel={() => {
-                setShowApprovalForm(false);
-                setApprovalFormType(null);
-              }}
-            />
+            <Suspense fallback={<CardSkeleton />}>
+              <ApprovalRequestForm
+                requestType={approvalFormType}
+                entityId={parseInt(user?.id || '0')}
+                submittedBy="renter"
+                onSuccess={handleApprovalSuccess}
+                onCancel={() => {
+                  setShowApprovalForm(false);
+                  setApprovalFormType(null);
+                }}
+              />
+            </Suspense>
           </div>
         </div>
       )}

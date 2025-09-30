@@ -32,20 +32,14 @@ const BulkApprovalActions: React.FC<BulkApprovalActionsProps> = ({
       });
 
       if (response.data.success) {
-        notificationService.success(
-          'Bulk Action Completed',
-          `${response.data.data.updatedCount} requests ${status.toLowerCase()} successfully`
-        );
+        notificationService.success(`Bulk Action Completed - ${response.data.data.updatedCount} requests ${status.toLowerCase()} successfully`);
         onBulkActionComplete();
         setShowModal(false);
         setReviewNotes('');
       }
     } catch (error) {
       console.error('Bulk action failed:', error);
-      notificationService.error(
-        'Bulk Action Failed',
-        'Failed to process bulk action. Please try again.'
-      );
+      notificationService.error('Bulk Action Failed - Failed to process bulk action. Please try again.');
     } finally {
       setLoading(false);
     }

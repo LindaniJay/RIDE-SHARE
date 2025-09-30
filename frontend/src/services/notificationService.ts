@@ -16,6 +16,17 @@ export interface NotificationAction {
   icon?: string;
 }
 
+export interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  read: boolean;
+  createdAt: Date;
+  type?: string;
+  message?: string;
+  timestamp?: string;
+}
+
 class NotificationService {
   private permission: NotificationPermission = 'default';
   private registration: ServiceWorkerRegistration | null = null;
@@ -66,7 +77,7 @@ class NotificationService {
           badge: payload.badge || '/favicon-32x32.png',
           tag: payload.tag,
           data: payload.data,
-          actions: payload.actions,
+          // actions: payload.actions,
           requireInteraction: true,
           silent: false
         });
@@ -82,7 +93,6 @@ class NotificationService {
       console.error('Error showing notification:', error);
       // Fallback to toast notification
       toast(payload.title, {
-        description: payload.body,
         duration: 5000
       });
     }
@@ -183,7 +193,7 @@ class NotificationService {
   // Handle notification clicks
   setupNotificationClickHandler(): void {
     if (this.registration) {
-      this.registration.addEventListener('notificationclick', (event) => {
+      this.registration.addEventListener('notificationclick', (event: any) => {
         event.notification.close();
         
         const data = event.notification.data;
@@ -207,6 +217,35 @@ class NotificationService {
 
   isSupported(): boolean {
     return 'Notification' in window && 'serviceWorker' in navigator;
+  }
+
+  // Additional methods for compatibility
+  async success(message: string): Promise<void> {
+    toast.success(message);
+  }
+
+  async error(message: string): Promise<void> {
+    toast.error(message);
+  }
+
+  async approvalSubmitted(message: string): Promise<void> {
+    toast.success(message);
+  }
+
+  subscribe(_callback: (notification: any) => void): void {
+    // Mock subscription
+  }
+
+  async markAsRead(_notificationId: string): Promise<void> {
+    // Mock implementation
+  }
+
+  async markAllAsRead(): Promise<void> {
+    // Mock implementation
+  }
+
+  async removeNotification(_notificationId: string): Promise<void> {
+    // Mock implementation
   }
 }
 

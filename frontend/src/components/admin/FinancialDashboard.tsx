@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AdminService } from '../../services/adminService';
+// import { AdminService } from '../../services/adminService';
 import GlassCard from '../GlassCard';
 import Icon from '../Icon';
 
@@ -25,7 +25,7 @@ interface FinancialData {
   }>;
 }
 
-const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onRefresh }) => {
+const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ }) => {
   const [financialData, setFinancialData] = useState<FinancialData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('month');

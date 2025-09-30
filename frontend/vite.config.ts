@@ -90,12 +90,42 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          ui: ['framer-motion', 'react-hot-toast'],
-          query: ['@tanstack/react-query'],
-          utils: ['axios', 'clsx', 'tailwind-merge', 'class-variance-authority']
+        manualChunks: (id) => {
+          // Core React chunks
+          if (id.includes('react') || id.includes('react-dom')) {
+            return 'react-vendor';
+          }
+          // Router chunk
+          if (id.includes('react-router')) {
+            return 'router';
+          }
+          // Firebase chunk
+          if (id.includes('firebase')) {
+            return 'firebase';
+          }
+          // UI libraries
+          if (id.includes('framer-motion') || id.includes('react-hot-toast')) {
+            return 'ui-libs';
+          }
+          // Query and state management
+          if (id.includes('@tanstack/react-query')) {
+            return 'query';
+          }
+          // Utility libraries
+          if (id.includes('axios') || id.includes('clsx') || id.includes('tailwind-merge')) {
+            return 'utils';
+          }
+          // Large components (dashboard, admin)
+          if (id.includes('pages/AdminDashboard') || id.includes('pages/RealTimeAdminDashboard')) {
+            return 'admin-pages';
+          }
+          if (id.includes('pages/HostDashboard') || id.includes('pages/RenterDashboard')) {
+            return 'dashboard-pages';
+          }
+          // Default chunk for other modules
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         }
       }
     },
@@ -104,9 +134,17 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+        passes: 2
       },
+      mangle: {
+        safari10: true
+      }
     },
     chunkSizeWarningLimit: 1000,
+    target: 'esnext',
+    cssCodeSplit: true,
+    sourcemap: false
   },
   esbuild: {
     target: 'esnext'
@@ -121,8 +159,16 @@ export default defineConfig({
       'react-router-dom',
       '@tanstack/react-query',
       'framer-motion',
-      'axios'
+      'axios',
+      'clsx',
+      'tailwind-merge'
     ],
     exclude: ['firebase']
+  },
+  // Performance optimizations
+  experimental: {
+    renderBuiltUrl(filename: string) {
+      return `/${filename}`;
+    }
   }
 });

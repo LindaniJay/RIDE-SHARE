@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import UserBookings from '../components/UserBookings';
 import GlassCard from '../components/GlassCard';
 import Icon from '../components/Icon';
+import { mockRenterStats } from '../data/mockData';
 
 const UserDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -57,7 +58,7 @@ const UserDashboard: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">Total Bookings</h3>
-                    <p className="text-2xl font-bold text-blue-400">12</p>
+                    <p className="text-2xl font-bold text-blue-400">{mockRenterStats.totalBookings}</p>
                   </div>
                 </div>
               </GlassCard>
@@ -69,7 +70,7 @@ const UserDashboard: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">Active Bookings</h3>
-                    <p className="text-2xl font-bold text-green-400">3</p>
+                    <p className="text-2xl font-bold text-green-400">{mockRenterStats.activeBookings}</p>
                   </div>
                 </div>
               </GlassCard>
@@ -80,8 +81,8 @@ const UserDashboard: React.FC = () => {
                     <Icon name="Clock" className="h-6 w-6 text-yellow-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">Pending</h3>
-                    <p className="text-2xl font-bold text-yellow-400">1</p>
+                    <h3 className="text-lg font-semibold text-white">Completed</h3>
+                    <p className="text-2xl font-bold text-yellow-400">{mockRenterStats.completedBookings}</p>
                   </div>
                 </div>
               </GlassCard>
@@ -93,7 +94,7 @@ const UserDashboard: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">Total Spent</h3>
-                    <p className="text-2xl font-bold text-purple-400">R8,450</p>
+                    <p className="text-2xl font-bold text-purple-400">R{mockRenterStats.totalSpent.toLocaleString()}</p>
                   </div>
                 </div>
               </GlassCard>
@@ -105,7 +106,7 @@ const UserDashboard: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">Average Rating</h3>
-                    <p className="text-2xl font-bold text-red-400">4.8</p>
+                    <p className="text-2xl font-bold text-red-400">{mockRenterStats.averageRating}</p>
                   </div>
                 </div>
               </GlassCard>
@@ -116,8 +117,8 @@ const UserDashboard: React.FC = () => {
                     <Icon name="TrendingUp" className="h-6 w-6 text-indigo-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">This Month</h3>
-                    <p className="text-2xl font-bold text-indigo-400">5 bookings</p>
+                    <h3 className="text-lg font-semibold text-white">Saved Vehicles</h3>
+                    <p className="text-2xl font-bold text-indigo-400">{mockRenterStats.savedVehicles}</p>
                   </div>
                 </div>
               </GlassCard>

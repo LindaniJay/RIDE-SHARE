@@ -50,7 +50,7 @@ const SupportTicketSystem: React.FC<SupportTicketSystemProps> = ({ userRole }) =
         status: 'open' as const,
         priority: formData.priority,
         category: formData.category,
-        createdBy: user?.id || 0
+        createdBy: Number(user?.id) || 0
       };
 
       await MessagingService.createSupportTicket(ticketData);
