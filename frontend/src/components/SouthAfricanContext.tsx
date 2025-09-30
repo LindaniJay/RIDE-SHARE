@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { southAfricanContextService } from '../services/southAfricanContextService';
 import { localMarketService } from '../services/localMarketService';
+import Icon from './Icon';
 
 interface SouthAfricanContextProps {
   children: React.ReactNode;
@@ -174,7 +175,10 @@ const SouthAfricanContext: React.FC<SouthAfricanContextProps> = ({ children }) =
 
             {/* Quick Links */}
             <div>
-              <h3 className="font-bold text-lg mb-3">🔗 Quick Links</h3>
+              <h3 className="font-bold text-lg mb-3 flex items-center">
+                <Icon name="Link" size="sm" className="mr-2" />
+                Quick Links
+              </h3>
               <div className="space-y-2 text-sm">
                 <a href="#" className="block hover:text-blue-400">Emergency Services: 10111</a>
                 <a href="#" className="block hover:text-blue-400">Tourist Information</a>

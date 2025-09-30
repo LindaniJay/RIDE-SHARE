@@ -33,11 +33,11 @@ const PerformanceMonitor: React.FC = () => {
 
   useEffect(() => {
     // Monitor performance metrics
-    const observer = new PerformanceObserver((list) => {
+      const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       entries.forEach((entry) => {
-        if (entry.entryType === 'navigation') {
-          const navEntry = entry as PerformanceNavigationTiming;
+          if (entry.entryType === 'navigation') {
+            const navEntry = entry as PerformanceNavigationTiming;
           setMetrics(prev => ({
             ...prev,
             loadTime: navEntry.loadEventEnd - navEntry.loadEventStart,
@@ -53,10 +53,10 @@ const PerformanceMonitor: React.FC = () => {
               fcp: paintEntry.startTime
             }));
           }
-        }
+          }
+        });
       });
-    });
-
+      
     observer.observe({ entryTypes: ['navigation', 'paint'] });
 
     // Monitor memory usage

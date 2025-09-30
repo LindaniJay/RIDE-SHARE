@@ -234,7 +234,8 @@ const FAQ: React.FC = () => {
                     href="tel:+27211234567"
                     className="bg-white/20 backdrop-blur-md text-white px-6 py-2 rounded-lg font-semibold hover:bg-white/30 transition-colors"
                   >
-                    📞 Call +27 21 123 4567
+                    <Icon name="Phone" size="sm" className="mr-1" />
+                    Call +27 21 123 4567
                   </a>
                   <a
                     href="mailto:support@rideshare-sa.co.za"

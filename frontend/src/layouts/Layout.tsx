@@ -42,6 +42,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsAdminLoginModalOpen(false);
   };
 
+
   const navItems = [
     { name: 'Home', path: '/', icon: 'Home' },
     { name: 'Browse', path: '/search', icon: 'Search' },
@@ -264,7 +265,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Minimal Footer */}
       <footer className="bg-black/50 backdrop-blur-sm border-t border-white/10 py-4">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
+          <div className="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
             {/* Left: Logo and Copyright */}
             <div className="flex items-center space-x-4">
               <div className="logo-footer bg-white/20 backdrop-blur-md rounded-lg p-2 shadow-lg border border-white/40">
@@ -280,15 +281,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
             
             {/* Center: Quick Links */}
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center flex-wrap gap-2 sm:gap-4 lg:gap-6 justify-center">
               <Link to="/" className="text-gray-400 hover:text-white transition-colors text-xs">Home</Link>
               <Link to="/search" className="text-gray-400 hover:text-white transition-colors text-xs">Browse</Link>
               <Link to="/about" className="text-gray-400 hover:text-white transition-colors text-xs">About</Link>
               <Link to="/contact" className="text-gray-400 hover:text-white transition-colors text-xs">Contact</Link>
+              <Link to="/faq" className="text-gray-400 hover:text-white transition-colors text-xs">
+                FAQ
+              </Link>
             </div>
             
             {/* Right: Social Links */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-wrap gap-2 justify-center lg:justify-end">
               <a href="#" className="text-gray-400 hover:text-white transition-colors" aria-label="Facebook">
                 <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -306,11 +310,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </a>
               <button
                 onClick={handleAdminLoginModalOpen}
-                className="text-gray-400 hover:text-white transition-colors text-xs flex items-center space-x-1"
+                className="text-gray-400 hover:text-white transition-colors text-xs flex items-center space-x-1 whitespace-nowrap"
                 title="Admin Login"
               >
                 <Icon name="Settings" size="sm" />
-                <span>Admin Login</span>
+                <span className="hidden sm:inline">Admin Login</span>
+                <span className="sm:hidden">Admin</span>
               </button>
             </div>
           </div>

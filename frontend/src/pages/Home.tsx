@@ -98,12 +98,16 @@ const Home: React.FC = () => {
                 <div className="text-white font-semibold">From R150/day</div>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 text-center border border-white/20 hover:bg-white/20 transition-all duration-300">
-                <div className="text-4xl mb-4">🚛</div>
+                <div className="mb-4">
+                  <Icon name="Truck" size="lg" className="text-white/50 mx-auto" />
+                </div>
                 <h3 className="text-xl font-bold text-white mb-2">Bakkies</h3>
                 <div className="text-white font-semibold">From R200/day</div>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 text-center border border-white/20 hover:bg-white/20 transition-all duration-300">
-                <div className="text-4xl mb-4">🚙</div>
+                <div className="mb-4">
+                  <Icon name="Car" size="lg" className="text-white/50 mx-auto" />
+                </div>
                 <h3 className="text-xl font-bold text-white mb-2">SUVs</h3>
                 <div className="text-white font-semibold">From R300/day</div>
               </div>
@@ -137,7 +141,7 @@ const Home: React.FC = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl"></div>
                     <div className="absolute bottom-4 left-4 text-center">
-                      <div className="text-2xl mb-1">🚛</div>
+                      <Icon name="Truck" size="md" className="text-white/50 mx-auto mb-1" />
                       <p className="text-white text-sm font-medium">Toyota Hilux</p>
                     </div>
                   </div>
@@ -163,7 +167,7 @@ const Home: React.FC = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl"></div>
                     <div className="absolute bottom-4 left-4 text-center">
-                      <div className="text-2xl mb-1">🚚</div>
+                      <Icon name="Truck" size="md" className="text-white/50 mx-auto mb-1" />
                       <p className="text-white text-sm font-medium">Isuzu NPR 400</p>
                     </div>
                   </div>
@@ -189,7 +193,7 @@ const Home: React.FC = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl"></div>
                     <div className="absolute bottom-4 left-4 text-center">
-                      <div className="text-2xl mb-1">🚌</div>
+                      <Icon name="Bus" size="md" className="text-white/50 mx-auto mb-1" />
                       <p className="text-white text-sm font-medium">Toyota Quantum</p>
                     </div>
                   </div>
@@ -210,27 +214,27 @@ const Home: React.FC = () => {
               <h3 className="text-2xl font-bold text-white text-center mb-8">Explore All Vehicle Types</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 <Link to="/search?type=car" className="bg-white/10 backdrop-blur-md rounded-xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <div className="text-3xl mb-2">🚗</div>
+                  <Icon name="Car" size="lg" className="text-white/50 mx-auto mb-2" />
                   <p className="text-white font-medium">Cars</p>
                 </Link>
                 <Link to="/search?type=bakkie" className="bg-white/10 backdrop-blur-md rounded-xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <div className="text-3xl mb-2">🚛</div>
+                  <Icon name="Truck" size="lg" className="text-white/50 mx-auto mb-2" />
                   <p className="text-white font-medium">Bakkies</p>
                 </Link>
                 <Link to="/search?type=truck" className="bg-white/10 backdrop-blur-md rounded-xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <div className="text-3xl mb-2">🚚</div>
+                  <Icon name="Truck" size="lg" className="text-white/50 mx-auto mb-2" />
                   <p className="text-white font-medium">Trucks</p>
                 </Link>
                 <Link to="/search?type=van" className="bg-white/10 backdrop-blur-md rounded-xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <div className="text-3xl mb-2">🚐</div>
+                  <Icon name="Van" size="lg" className="text-white/50 mx-auto mb-2" />
                   <p className="text-white font-medium">Vans</p>
                 </Link>
                 <Link to="/search?type=minibus" className="bg-white/10 backdrop-blur-md rounded-xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <div className="text-3xl mb-2">🚌</div>
+                  <Icon name="Bus" size="lg" className="text-white/50 mx-auto mb-2" />
                   <p className="text-white font-medium">Minibuses</p>
                 </Link>
                 <Link to="/search?type=motorcycle" className="bg-white/10 backdrop-blur-md rounded-xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <div className="text-3xl mb-2">🏍️</div>
+                  <Icon name="Motorcycle" size="lg" className="text-white/50 mx-auto mb-2" />
                   <p className="text-white font-medium">Motorcycles</p>
                 </Link>
               </div>

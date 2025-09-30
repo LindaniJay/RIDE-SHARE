@@ -184,7 +184,7 @@ const Contact: React.FC = () => {
             <div className="space-y-6">
               <div className="flex items-start space-x-4">
                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                  <span className="text-blue-600 dark:text-blue-400 text-xl">📞</span>
+                  <Icon name="Phone" size="md" className="text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white">Phone</h3>
@@ -195,7 +195,7 @@ const Contact: React.FC = () => {
 
               <div className="flex items-start space-x-4">
                 <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                  <span className="text-green-600 dark:text-green-400 text-xl">📧</span>
+                  <Icon name="Mail" size="md" className="text-green-600 dark:text-green-400" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white">Email</h3>

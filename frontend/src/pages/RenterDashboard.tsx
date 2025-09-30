@@ -264,7 +264,7 @@ const RenterDashboard: React.FC = () => {
         {/* Account Tab */}
         {activeTab === 'account' && (
           <Suspense fallback={<CardSkeleton />}>
-            <ProfileSettings />
+          <ProfileSettings />
           </Suspense>
         )}
 
@@ -453,21 +453,21 @@ const RenterDashboard: React.FC = () => {
         {/* Communication Tab */}
         {activeTab === 'communication' && (
           <Suspense fallback={<CardSkeleton />}>
-            <RealTimeMessaging />
+          <RealTimeMessaging />
           </Suspense>
         )}
 
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
           <Suspense fallback={<CardSkeleton />}>
-            <AnalyticsDashboard />
+          <AnalyticsDashboard />
           </Suspense>
         )}
 
         {/* Saved Vehicles Tab */}
         {activeTab === 'saved' && (
           <Suspense fallback={<CardSkeleton />}>
-            <SavedVehicles userId={user?.id || '0'} />
+          <SavedVehicles userId={user?.id || '0'} />
           </Suspense>
         )}
 
@@ -476,12 +476,12 @@ const RenterDashboard: React.FC = () => {
           <div className="space-y-6">
             <GlassCard title="Rental Cost Calculator" icon="Calculator">
               <Suspense fallback={<CardSkeleton />}>
-                <RentalCalculator 
-                  basePrice={500}
-                  onCalculate={(total, breakdown) => {
-                    console.log('Calculated total:', total, breakdown);
-                  }}
-                />
+              <RentalCalculator 
+                basePrice={500}
+                onCalculate={(total, breakdown) => {
+                  console.log('Calculated total:', total, breakdown);
+                }}
+              />
               </Suspense>
             </GlassCard>
           </div>
@@ -491,14 +491,14 @@ const RenterDashboard: React.FC = () => {
         {activeTab === 'documents' && (
           <div className="space-y-6">
             <Suspense fallback={<CardSkeleton />}>
-              <DocumentUpload 
-                label="Upload Document"
-                name="document"
-                onChange={() => {}}
-              />
+            <DocumentUpload 
+              label="Upload Document"
+              name="document"
+              onChange={() => {}}
+            />
             </Suspense>
             <Suspense fallback={<CardSkeleton />}>
-              <DocumentExpiryReminder userId={user?.id || '0'} />
+            <DocumentExpiryReminder userId={user?.id || '0'} />
             </Suspense>
             
             {/* Document Verification Request */}
@@ -522,7 +522,7 @@ const RenterDashboard: React.FC = () => {
         {/* Promotions Tab */}
         {activeTab === 'promotions' && (
           <Suspense fallback={<CardSkeleton />}>
-            <Promotions userId={user?.id || '0'} />
+          <Promotions userId={user?.id || '0'} />
           </Suspense>
         )}
 
@@ -530,7 +530,7 @@ const RenterDashboard: React.FC = () => {
         {activeTab === 'approvals' && (
           <div className="space-y-6">
             <Suspense fallback={<CardSkeleton />}>
-              <ApprovalRequests userRole="renter" />
+            <ApprovalRequests userRole="renter" />
             </Suspense>
             
             {/* Profile Verification Request */}
@@ -557,16 +557,16 @@ const RenterDashboard: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md">
             <Suspense fallback={<CardSkeleton />}>
-              <ApprovalRequestForm
-                requestType={approvalFormType}
-                entityId={parseInt(user?.id || '0')}
-                submittedBy="renter"
-                onSuccess={handleApprovalSuccess}
-                onCancel={() => {
-                  setShowApprovalForm(false);
-                  setApprovalFormType(null);
-                }}
-              />
+            <ApprovalRequestForm
+              requestType={approvalFormType}
+              entityId={parseInt(user?.id || '0')}
+              submittedBy="renter"
+              onSuccess={handleApprovalSuccess}
+              onCancel={() => {
+                setShowApprovalForm(false);
+                setApprovalFormType(null);
+              }}
+            />
             </Suspense>
           </div>
         </div>
