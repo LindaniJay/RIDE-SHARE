@@ -1,136 +1,134 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import GlassForm from '../components/GlassForm';
-import GlassInput from '../components/GlassInput';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import Icon from '../components/Icon';
+import GlassCard from '../components/GlassCard';
 import GlassButton from '../components/GlassButton';
 
 const Login: React.FC = () => {
+  const { login, loading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const { login } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setError(''); // Clear error when user starts typing
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setIsSubmitting(true);
 
     try {
       await login(formData.email, formData.password);
-      
-      // Get user role from localStorage and redirect accordingly
-      const userRole = localStorage.getItem('userRole');
-      if (userRole === 'admin') {
-        navigate('/dashboard/admin');
-      } else if (userRole === 'host') {
-        navigate('/dashboard/host');
-      } else {
-        navigate('/dashboard');
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
-        : 'Login failed. Please try again.';
-      setError(errorMessage || 'Login failed. Please try again.');
+      // Navigation will be handled by the AuthProvider based on user role
+    } catch (error: any) {
+      setError(error.message);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-          <GlassForm
-            title="Welcome Back"
-            subtitle="Sign in to your RideShare SA account"
-            onSubmit={handleSubmit}
-            className="w-full"
-          >
+        {/* Header */}
+        <div className="text-center">
+          <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+            <Icon name="Car" size="lg" className="text-white" />
+          </div>
+          <h2 className="mt-6 text-3xl font-bold text-white">
+            Welcome back
+          </h2>
+          <p className="mt-2 text-sm text-gray-300">
+            Sign in to your RideShare SA account
+          </p>
+        </div>
+
+        {/* Login Form */}
+        <GlassCard className="p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-red-500/20 border border-red-400/30 rounded-xl p-4 backdrop-blur-md">
-                <p className="text-sm text-red-200">{error}</p>
+              <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 text-red-200 text-sm">
+                {error}
               </div>
             )}
 
-            
-            <div className="space-y-6">
-              <GlassInput
-                label="Email address"
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+                Email address
+              </label>
+              <input
+                id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
                 value={formData.email}
                 onChange={handleChange}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your email"
-                icon="Mail"
               />
-              
-              <GlassInput
-                label="Password"
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
+                Password
+              </label>
+              <input
+                id="password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
                 required
                 value={formData.password}
                 onChange={handleChange}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your password"
-                icon="Lock"
-                variant="password"
               />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-white/60 focus:ring-white/20 border-white/30 rounded bg-white/10"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-white/80">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-white/80 hover:text-white">
-                  Forgot password?
-                </a>
-              </div>
             </div>
 
             <GlassButton
               type="submit"
-              disabled={loading}
-              className="w-full"
-              gradient={true}
-              icon="Car"
+              disabled={isSubmitting || loading}
+              className="w-full flex justify-center items-center space-x-2"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {isSubmitting || loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <Icon name="Login" size="sm" />
+                  <span>Sign in</span>
+                </>
+              )}
             </GlassButton>
+          </form>
 
-            <div className="text-center">
-              <p className="text-white/70 text-sm">
-                Don't have an account?{' '}
-                <Link to="/register" className="font-medium text-white hover:text-white/80 transition-colors">
-                  Create one here
-                </Link>
-              </p>
-            </div>
-          </GlassForm>
+          {/* Sign up link */}
+          <div className="mt-6 text-center">
+            <p className="text-gray-300 text-sm">
+              Don't have an account?{' '}
+              <Link 
+                to="/signup" 
+                className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+              >
+                Sign up here
+              </Link>
+            </p>
+          </div>
+        </GlassCard>
       </div>
     </div>
   );

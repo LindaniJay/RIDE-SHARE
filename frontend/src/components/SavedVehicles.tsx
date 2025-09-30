@@ -41,6 +41,7 @@ export const SavedVehicles: React.FC<SavedVehiclesProps> = ({ userId, className 
           year: 2022,
           type: 'bakkie',
           pricePerDay: 250,
+          dailyRate: 250,
           location: 'Cape Town',
           images: ['https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400'],
           features: [],

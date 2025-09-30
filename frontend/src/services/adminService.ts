@@ -1,59 +1,3 @@
-import { apiClient } from './apiClient';
-
-export interface AdminUser {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: 'renter' | 'host' | 'admin';
-  phoneNumber?: string;
-  approvalStatus: 'pending' | 'approved' | 'rejected';
-  rejectionReason?: string;
-  documentStatus: 'pending' | 'verified' | 'rejected';
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AdminVehicle {
-  id: number;
-  title: string;
-  make: string;
-  model: string;
-  year: number;
-  pricePerDay: number;
-  location: string;
-  status: 'pending' | 'approved' | 'declined';
-  declineReason?: string;
-  hostId: number;
-  host?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  createdAt: string;
-}
-
-export interface AdminBooking {
-  id: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  startDate: string;
-  endDate: string;
-  totalPrice: number;
-  renterId: number;
-  vehicleId: number;
-  renter?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  vehicle?: {
-    title: string;
-    make: string;
-    model: string;
-  };
-  createdAt: string;
-}
-
 export interface AdminStats {
   overview: {
     totalUsers: number;
@@ -65,129 +9,252 @@ export interface AdminStats {
     totalRevenue: number;
   };
   recentActivity: {
-    recentUsers: AdminUser[];
-    recentVehicles: AdminVehicle[];
+    recentUsers: any[];
+    recentVehicles: any[];
   };
 }
 
+export interface AdminUser {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface AdminVehicle {
+  id: number;
+  title: string;
+  make: string;
+  model: string;
+  year: number;
+  status: string;
+  hostName: string;
+  createdAt: string;
+}
+
 export class AdminService {
-  // Get all users for admin approval
-  static async getUsers(params?: {
-    page?: number;
-    limit?: number;
-    status?: string;
-    role?: string;
-  }) {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.role) queryParams.append('role', params.role);
-    
-    const url = `/admin/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await apiClient.get(url);
-    return response.data;
-  }
+  private static baseUrl = '/api/admin';
 
-  // Approve or reject user profile
-  static async approveUser(userId: number, status: 'approved' | 'rejected', reason?: string) {
-    const response = await apiClient.patch(`/admin/users/${userId}/approve`, {
-      status,
-      reason
-    });
-    return response.data;
-  }
-
-  // Get all vehicles for admin approval
-  static async getVehicles(params?: {
-    page?: number;
-    limit?: number;
-    status?: string;
-  }) {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    
-    const url = `/admin/vehicles${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await apiClient.get(url);
-    return response.data;
-  }
-
-  // Approve or reject vehicle listing
-  static async approveVehicle(vehicleId: number, status: 'approved' | 'declined', reason?: string) {
-    const response = await apiClient.patch(`/admin/vehicles/${vehicleId}/approve`, {
-      status,
-      reason
-    });
-    return response.data;
-  }
-
-  // Get all bookings for admin review
-  static async getBookings(params?: {
-    page?: number;
-    limit?: number;
-    status?: string;
-  }) {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    
-    const url = `/admin/bookings${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await apiClient.get(url);
-    return response.data;
-  }
-
-  // Get all reviews for admin moderation
-  static async getReviews(params?: {
-    page?: number;
-    limit?: number;
-  }) {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    
-    const url = `/admin/reviews${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await apiClient.get(url);
-    return response.data;
-  }
-
-  // Get admin dashboard statistics
   static async getStats(): Promise<AdminStats> {
-    const response = await apiClient.get('/admin/stats');
-    return (response.data as any).data as AdminStats;
+    try {
+      const response = await fetch(`${this.baseUrl}/stats`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch admin stats');
+      }
+
+      const data = await response.json();
+      return data.stats;
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      throw error;
+    }
   }
 
-  // Get pending documents for verification
-  static async getDocuments(params?: {
-    page?: number;
-    limit?: number;
-    status?: string;
-  }) {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    
-    const url = `/admin/documents${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await apiClient.get(url);
-    return response.data;
+  static async getUsers(page = 1, limit = 10, status?: string, role?: string) {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(status && { status }),
+        ...(role && { role })
+      });
+
+      const response = await fetch(`${this.baseUrl}/users?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
   }
 
-  // Get disputes for admin review
-  static async getDisputes(params?: {
-    page?: number;
-    limit?: number;
-    status?: string;
-  }) {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    
-    const url = `/admin/disputes${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await apiClient.get(url);
-    return response.data;
+  static async approveUser(userId: number, status: 'approved' | 'rejected', reason?: string) {
+    try {
+      const response = await fetch(`${this.baseUrl}/users/${userId}/approve`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({
+          status,
+          reason
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user status');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  }
+
+  static async getVehicles(page = 1, limit = 10, status?: string) {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(status && { status })
+      });
+
+      const response = await fetch(`${this.baseUrl}/vehicles?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch vehicles');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+      throw error;
+    }
+  }
+
+  static async approveVehicle(vehicleId: number, status: 'approved' | 'declined', reason?: string) {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/approve`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({
+          status,
+          reason
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update vehicle status');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating vehicle:', error);
+      throw error;
+    }
+  }
+
+  static async getBookings(page = 1, limit = 10, status?: string) {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(status && { status })
+      });
+
+      const response = await fetch(`${this.baseUrl}/bookings?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookings');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      throw error;
+    }
+  }
+
+  static async getReviews(page = 1, limit = 10) {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString()
+      });
+
+      const response = await fetch(`${this.baseUrl}/reviews?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch reviews');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      throw error;
+    }
+  }
+
+  static async getDocuments(page = 1, limit = 10, status?: string) {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(status && { status })
+      });
+
+      const response = await fetch(`${this.baseUrl}/documents?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch documents');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      throw error;
+    }
+  }
+
+  static async getDisputes(page = 1, limit = 10, status?: string) {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(status && { status })
+      });
+
+      const response = await fetch(`${this.baseUrl}/disputes?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch disputes');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching disputes:', error);
+      throw error;
+    }
   }
 }

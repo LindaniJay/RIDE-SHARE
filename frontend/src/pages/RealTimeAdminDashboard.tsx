@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { AdminService, AdminStats } from '../services/adminService';
-import AdminApprovalPanel from '../components/AdminApprovalPanel';
-import { useAuth } from '../hooks/useAuth';
+import UserApprovalPanel from '../components/admin/UserApprovalPanel';
+import VehicleApprovalPanel from '../components/admin/VehicleApprovalPanel';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import SystemAdminPanel from '../components/admin/SystemAdminPanel';
+import ApprovalRequests from '../components/ApprovalRequests';
+import ApprovalAnalytics from '../components/ApprovalAnalytics';
 import Icon from '../components/Icon';
 
 const RealTimeAdminDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -32,6 +39,15 @@ const RealTimeAdminDashboard: React.FC = () => {
     fetchStats();
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -41,14 +57,25 @@ const RealTimeAdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-6">
+    <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
-          <p className="text-gray-300">Real-time management of RideShare SA platform</p>
-          <div className="mt-4 text-sm text-gray-400">
-            Welcome, {user?.firstName} {user?.lastName}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
+              <p className="text-gray-300">Real-time management of RideShare SA platform</p>
+              <div className="mt-4 text-sm text-gray-400">
+                Welcome, {user?.firstName} {user?.lastName}
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-2 px-4 py-2 bg-red-600/80 backdrop-blur-md rounded-lg border border-red-500/30 text-white hover:bg-red-600 transition-all"
+            >
+              <Icon name="log-out" className="h-4 w-4" />
+              <span>Exit Admin</span>
+            </button>
           </div>
         </div>
 
@@ -117,8 +144,11 @@ const RealTimeAdminDashboard: React.FC = () => {
           <div className="flex space-x-1 bg-white/10 backdrop-blur-md rounded-lg p-1 border border-white/20">
             {[
               { id: 'overview', label: 'Overview', icon: 'bar-chart' },
+              { id: 'approvals', label: 'Approval Queue', icon: 'clock' },
               { id: 'users', label: 'User Approvals', icon: 'users' },
               { id: 'vehicles', label: 'Vehicle Approvals', icon: 'car' },
+              { id: 'analytics', label: 'Analytics', icon: 'trending-up' },
+              { id: 'system', label: 'System Admin', icon: 'settings' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -187,15 +217,34 @@ const RealTimeAdminDashboard: React.FC = () => {
             </div>
           )}
 
+          {activeTab === 'approvals' && (
+            <div className="p-6 space-y-6">
+              <ApprovalAnalytics />
+              <ApprovalRequests userRole="admin" showActions={true} />
+            </div>
+          )}
+
           {activeTab === 'users' && (
             <div className="p-6">
-              <AdminApprovalPanel type="users" onRefresh={handleRefresh} />
+              <UserApprovalPanel />
             </div>
           )}
 
           {activeTab === 'vehicles' && (
             <div className="p-6">
-              <AdminApprovalPanel type="vehicles" onRefresh={handleRefresh} />
+              <VehicleApprovalPanel />
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="p-6">
+              <AnalyticsDashboard />
+            </div>
+          )}
+
+          {activeTab === 'system' && (
+            <div className="p-6">
+              <SystemAdminPanel />
             </div>
           )}
         </div>
@@ -205,3 +254,4 @@ const RealTimeAdminDashboard: React.FC = () => {
 };
 
 export default RealTimeAdminDashboard;
+

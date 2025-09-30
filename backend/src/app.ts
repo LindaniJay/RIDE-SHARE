@@ -6,6 +6,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { sequelize } from './config/database';
+import { initializeFirebaseAdmin } from './config/firebase';
 import authRoutes from './routes/auth';
 import enhancedListingRoutes from './routes/enhanced-listings';
 import vehicleRoutes from './routes/vehicles';
@@ -15,6 +16,13 @@ import paymentRoutes from './routes/payments';
 import dashboardRoutes from './routes/dashboard';
 import statsRoutes from './routes/stats';
 import adminRoutes from './routes/admin';
+import userRoutes from './routes/users';
+import messageRoutes from './routes/messages';
+import analyticsRoutes from './routes/analytics';
+import earningsRoutes from './routes/earnings';
+import notificationRoutes from './routes/notifications';
+import approvalRequestRoutes from './routes/approval-requests';
+import firestoreAuthRoutes from './routes/firestore-auth';
 import { errorHandler } from './middlewares/errorHandler';
 
 dotenv.config();
@@ -42,7 +50,7 @@ app.use(compression());
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
   credentials: true,
 }));
 app.use(morgan('combined'));
@@ -59,6 +67,13 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/earnings', earningsRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/approval-requests', approvalRequestRoutes);
+app.use('/api/firestore-auth', firestoreAuthRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -71,6 +86,9 @@ app.use(errorHandler);
 // Database connection and server start
 const startServer = async () => {
   try {
+    // Initialize Firebase Admin SDK
+    initializeFirebaseAdmin();
+    
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
     

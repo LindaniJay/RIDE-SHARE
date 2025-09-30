@@ -17,15 +17,14 @@ const VehicleDetail = lazy(() => import('./pages/VehicleDetail'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const RealTimeAdminDashboard = lazy(() => import('./pages/RealTimeAdminDashboard'));
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const AdminLogin = lazy(() => import('./pages/AdminLogin'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const FAQ = lazy(() => import('./pages/FAQ'));
-const SetupAdmin = lazy(() => import('./pages/SetupAdmin'));
+const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const NotFound = lazy(() => import('./pages/NotFound'));
-const AdminGuard = lazy(() => import('./components/AdminGuard'));
 
 import './index.css';
 
@@ -88,25 +87,21 @@ function App() {
                         <Route path="/about" element={<Layout><About /></Layout>} />
                         <Route path="/contact" element={<Layout><Contact /></Layout>} />
                         <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route path="/unauthorized" element={<Unauthorized />} />
                         <Route path="/dashboard/*" element={
-                          <ProtectedRoute allowedRoles={['host', 'admin']}>
+                          <ProtectedRoute>
                             <Layout><Dashboard /></Layout>
                           </ProtectedRoute>
                         } />
-                        <Route path="/admin-dashboard" element={
-                          <AdminGuard>
-                            <RealTimeAdminDashboard />
-                          </AdminGuard>
+                        <Route path="/user-dashboard" element={
+                          <ProtectedRoute>
+                            <Layout><UserDashboard /></Layout>
+                          </ProtectedRoute>
                         } />
-                        <Route path="/login" element={<Layout><Login /></Layout>} />
-                        <Route path="/register" element={<Layout><Register /></Layout>} />
-                        <Route path="/admin-login" element={<AdminLogin />} />
-                        <Route path="/setup-admin" element={
-                          <AdminGuard>
-                            <SetupAdmin />
-                          </AdminGuard>
-                        } />
-                        <Route path="/unauthorized" element={<Layout><Unauthorized /></Layout>} />
+                        <Route path="/admin-dashboard/*" element={<AdminDashboard />} />
+                        <Route path="/legacy-admin-dashboard" element={<RealTimeAdminDashboard />} />
                         <Route path="*" element={<Layout><NotFound /></Layout>} />
                       </Routes>
                     </Suspense>

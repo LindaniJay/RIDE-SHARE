@@ -90,14 +90,14 @@ const Chatbot: React.FC = () => {
     {
       keywords: ['where', 'location', 'city', 'area'],
       synonyms: ['place', 'region', 'town', 'province'],
-      response: 'We operate across South Africa! 🇿🇦\n\nMajor cities:\n• Cape Town\n• Johannesburg\n• Durban\n• Pretoria\n• Port Elizabeth\n• Bloemfontein\n\nUse the location filter to find vehicles near you!',
+      response: 'We operate across South Africa! 🇿🇦\n\nMajor cities:\n• Cape Town (Western Cape)\n• Johannesburg (Gauteng)\n• Durban (KwaZulu-Natal)\n• Pretoria (Gauteng)\n• Port Elizabeth (Eastern Cape)\n• Bloemfontein (Free State)\n• Nelspruit (Mpumalanga)\n• Polokwane (Limpopo)\n• Kimberley (Northern Cape)\n\nUse the location filter to find vehicles near you!',
       followUp: ['Do you deliver to my area?', 'Can I pick up from the airport?', 'Are there any restrictions?'],
       priority: 3
     },
     {
       keywords: ['help', 'support', 'problem', 'issue', 'trouble'],
       synonyms: ['assistance', 'aid', 'support', 'problem'],
-      response: 'I\'m here to help! 🤝\n\nFor additional support:\n• FAQ page: /faq\n• Email: support@rideshare-sa.co.za\n• Phone: +27 21 123 4567\n• Live chat: Right here!\n\nWhat specific issue can I help you with?',
+      response: 'I\'m here to help! 🤝\n\nFor additional support:\n• FAQ page: /faq\n• Email: support@rideshare-sa.co.za\n• Phone: +27 21 123 4567\n• Live chat: Right here!\n• WhatsApp: +27 82 123 4567\n\nWhat specific issue can I help you with?',
       followUp: ['How do I contact support?', 'What are your hours?', 'Can you escalate my issue?'],
       priority: 4
     }
@@ -307,23 +307,23 @@ const Chatbot: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.8 }}
             transition={{ duration: 0.3, type: 'spring', damping: 25, stiffness: 500 }}
-            className="fixed bottom-24 right-6 w-96 h-[500px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 flex flex-col backdrop-blur-sm bg-white/95 dark:bg-gray-900/95"
+            className="fixed bottom-20 right-4 w-80 h-[400px] bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 flex flex-col backdrop-blur-sm bg-white/95 dark:bg-gray-900/95"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-t-2xl flex items-center justify-between">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-t-xl flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 backdrop-blur-sm">
-                  <span className="text-lg">🤖</span>
+                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-2 backdrop-blur-sm">
+                  <span className="text-sm">🤖</span>
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">RideShare Assistant</h3>
+                  <h3 className="font-bold text-sm">RideShare Assistant</h3>
                   <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                    <p className="text-sm text-blue-100">Online now</p>
+                    <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1 animate-pulse"></div>
+                    <p className="text-xs text-blue-100">Online</p>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
                 <motion.button
                   onClick={() => {
                     setMessages([{
@@ -338,22 +338,22 @@ const Chatbot: React.FC = () => {
                       userPreferences: {}
                     });
                   }}
-                  className="text-white hover:text-blue-200 transition-colors p-2 rounded-lg hover:bg-white/10"
+                  className="text-white hover:text-blue-200 transition-colors p-1.5 rounded hover:bg-white/10"
                   title="Start new conversation"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                 </motion.button>
                 <motion.button
                   onClick={() => setIsOpen(false)}
-                  className="text-white hover:text-blue-200 transition-colors p-2 rounded-lg hover:bg-white/10"
+                  className="text-white hover:text-blue-200 transition-colors p-1.5 rounded hover:bg-white/10"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </motion.button>
@@ -361,7 +361,7 @@ const Chatbot: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-800">
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50 dark:bg-gray-800">
               {messages.map((message) => (
                 <motion.div
                   key={message.id}
@@ -370,28 +370,28 @@ const Chatbot: React.FC = () => {
                   transition={{ duration: 0.2 }}
                   className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`flex items-end space-x-2 ${message.isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                  <div className={`flex items-end space-x-1 ${message.isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
                     {!message.isUser && (
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
                         🤖
                       </div>
                     )}
                     <div
-                      className={`max-w-xs px-4 py-3 rounded-2xl shadow-sm ${
+                      className={`max-w-[200px] px-3 py-2 rounded-lg shadow-sm ${
                         message.isUser
-                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-br-md'
-                          : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-bl-md'
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-br-sm'
+                          : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-bl-sm'
                       }`}
                     >
-                      <div className="text-sm whitespace-pre-line leading-relaxed">{message.text}</div>
-                      <p className={`text-xs mt-2 ${
+                      <div className="text-xs whitespace-pre-line leading-relaxed">{message.text}</div>
+                      <p className={`text-[10px] mt-1 ${
                         message.isUser ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
                       }`}>
                         {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                     {message.isUser && (
-                      <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
                         <Icon name="User" size="sm" />
                       </div>
                     )}
@@ -405,18 +405,18 @@ const Chatbot: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex justify-start"
                 >
-                  <div className="flex items-end space-x-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                  <div className="flex items-end space-x-1">
+                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
                       🤖
                     </div>
-                    <div className="bg-white dark:bg-gray-700 px-4 py-3 rounded-2xl rounded-bl-md border border-gray-200 dark:border-gray-600 shadow-sm">
-                      <div className="flex items-center space-x-2">
+                    <div className="bg-white dark:bg-gray-700 px-3 py-2 rounded-lg rounded-bl-sm border border-gray-200 dark:border-gray-600 shadow-sm">
+                      <div className="flex items-center space-x-1">
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">RideShare Assistant is typing...</span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400">typing...</span>
                       </div>
                     </div>
                   </div>
@@ -447,8 +447,8 @@ const Chatbot: React.FC = () => {
             )}
 
             {/* Input */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-              <div className="flex space-x-3">
+            <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+              <div className="flex space-x-2">
                 <div className="flex-1 relative">
                   <input
                     type="text"
@@ -456,29 +456,29 @@ const Chatbot: React.FC = () => {
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Type your message..."
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white text-sm placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 shadow-sm focus:shadow-md"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white text-xs placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 shadow-sm focus:shadow-md"
                   />
                   {inputValue && (
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
                     >
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
                     </motion.div>
                   )}
                 </div>
                 <motion.button
                   onClick={() => handleSendMessage()}
                   disabled={!inputValue.trim() || isTyping}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white px-4 py-3 rounded-2xl transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl disabled:shadow-none"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl disabled:shadow-none"
                   whileHover={{ scale: inputValue.trim() && !isTyping ? 1.05 : 1 }}
                   whileTap={{ scale: inputValue.trim() && !isTyping ? 0.95 : 1 }}
                 >
                   {isTyping ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                   )}

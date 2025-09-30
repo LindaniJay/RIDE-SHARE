@@ -1,178 +1,225 @@
 import { 
-  signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  updateProfile,
-  sendEmailVerification,
-  sendPasswordResetEmail
+  User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
-export interface UserProfile {
+export interface User {
   uid: string;
+  id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'renter' | 'host' | 'admin';
   phone?: string;
-  isEmailVerified: boolean;
-  createdAt: string;
+  phoneNumber?: string;
+  role: 'Renter' | 'Host';
+  approvalStatus: 'pending' | 'approved' | 'rejected';
+  createdAt: Date;
 }
 
-export class FirebaseAuthService {
-  // Sign in with email and password
-  static async signIn(email: string, password: string): Promise<UserProfile> {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      // Get user profile from Firestore
-      const userProfile = await this.getUserProfile(user.uid);
-      return userProfile;
-    } catch (error: any) {
-      throw new Error(this.getErrorMessage(error.code));
-    }
-  }
+export interface SignupData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  role: 'Renter' | 'Host';
+}
 
-  // Register new user
-  static async register(
-    email: string, 
-    password: string, 
-    firstName: string, 
-    lastName: string, 
-    role: 'renter' | 'host' = 'renter',
-    phone?: string
-  ): Promise<UserProfile> {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+export interface LoginData {
+  email: string;
+  password: string;
+}
 
-      // Update Firebase Auth profile
-      await updateProfile(user, {
-        displayName: `${firstName} ${lastName}`
-      });
+class FirebaseAuthService {
+  private currentUser: User | null = null;
+  private authStateListeners: ((user: User | null) => void)[] = [];
 
-      // Send email verification
-      await sendEmailVerification(user);
-
-      // Create user profile in Firestore
-      const userProfile: UserProfile = {
-        uid: user.uid,
-        email: user.email!,
-        firstName,
-        lastName,
-        role,
-        phone: phone || '',
-        isEmailVerified: false,
-        createdAt: new Date().toISOString()
-      };
-
-      await setDoc(doc(db, 'users', user.uid), userProfile);
-
-      return userProfile;
-    } catch (error: any) {
-      throw new Error(this.getErrorMessage(error.code));
-    }
-  }
-
-  // Sign out
-  static async signOut(): Promise<void> {
-    try {
-      await signOut(auth);
-    } catch (error: any) {
-      throw new Error('Failed to sign out');
-    }
-  }
-
-  // Get current user profile
-  static async getCurrentUser(): Promise<UserProfile | null> {
-    const user = auth.currentUser;
-    if (!user) return null;
-
-    try {
-      return await this.getUserProfile(user.uid);
-    } catch (error) {
-      console.error('Error getting current user:', error);
-      return null;
-    }
-  }
-
-  // Get user profile from Firestore
-  static async getUserProfile(uid: string): Promise<UserProfile> {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (!userDoc.exists()) {
-        throw new Error('User profile not found');
-      }
-      return userDoc.data() as UserProfile;
-    } catch (error) {
-      throw new Error('Failed to get user profile');
-    }
-  }
-
-  // Update user profile
-  static async updateUserProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
-    try {
-      await setDoc(doc(db, 'users', uid), updates, { merge: true });
-    } catch (error) {
-      throw new Error('Failed to update user profile');
-    }
-  }
-
-  // Reset password
-  static async resetPassword(email: string): Promise<void> {
-    try {
-      await sendPasswordResetEmail(auth, email);
-    } catch (error: any) {
-      throw new Error(this.getErrorMessage(error.code));
-    }
-  }
-
-  // Listen to auth state changes
-  static onAuthStateChanged(callback: (user: UserProfile | null) => void): () => void {
-    return onAuthStateChanged(auth, async (user) => {
-      if (user) {
+  constructor() {
+    // Listen to auth state changes
+    onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
         try {
-          const userProfile = await this.getUserProfile(user.uid);
-          callback(userProfile);
+          const userData = await this.getUserRole(firebaseUser.uid);
+          this.currentUser = userData;
         } catch (error) {
-          console.error('Error getting user profile:', error);
-          callback(null);
+          console.error('Error fetching user data:', error);
+          this.currentUser = null;
         }
       } else {
-        callback(null);
+        this.currentUser = null;
       }
+      
+      // Notify all listeners
+      this.authStateListeners.forEach(listener => listener(this.currentUser));
     });
   }
 
-  // Get Firebase ID token
-  static async getIdToken(): Promise<string | null> {
-    const user = auth.currentUser;
-    if (!user) return null;
-    
+  /**
+   * Sign up a new user with email, password, and role
+   */
+  async signupUser(data: SignupData): Promise<User> {
     try {
-      return await user.getIdToken();
-    } catch (error) {
-      console.error('Error getting ID token:', error);
-      return null;
+      // Create user with Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        data.email, 
+        data.password
+      );
+      
+      const firebaseUser = userCredential.user;
+      
+      // Save user data to Firestore
+      const userData: User = {
+        uid: firebaseUser.uid,
+        id: firebaseUser.uid,
+        email: firebaseUser.email!,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone || '',
+        phoneNumber: data.phone || '',
+        role: data.role,
+        approvalStatus: 'pending',
+        createdAt: new Date()
+      };
+      
+      await setDoc(doc(db, 'users', firebaseUser.uid), {
+        ...userData,
+        createdAt: serverTimestamp()
+      });
+      
+      this.currentUser = userData;
+      return userData;
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      throw new Error(this.getErrorMessage(error.code));
     }
   }
 
-  // Error message mapping
-  private static getErrorMessage(errorCode: string): string {
-    const errorMessages: { [key: string]: string } = {
-      'auth/user-not-found': 'No user found with this email address.',
-      'auth/wrong-password': 'Incorrect password.',
-      'auth/email-already-in-use': 'An account with this email already exists.',
-      'auth/weak-password': 'Password should be at least 6 characters.',
-      'auth/invalid-email': 'Invalid email address.',
-      'auth/user-disabled': 'This account has been disabled.',
-      'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
-      'auth/network-request-failed': 'Network error. Please check your connection.',
-    };
+  /**
+   * Sign in an existing user
+   */
+  async loginUser(data: LoginData): Promise<User> {
+    try {
+      // Authenticate with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(
+        auth, 
+        data.email, 
+        data.password
+      );
+      
+      const firebaseUser = userCredential.user;
+      
+      // Get user data from Firestore
+      const userData = await this.getUserRole(firebaseUser.uid);
+      this.currentUser = userData;
+      
+      return userData;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw new Error(this.getErrorMessage(error.code));
+    }
+  }
 
-    return errorMessages[errorCode] || 'An error occurred. Please try again.';
+  /**
+   * Sign out the current user
+   */
+  async logoutUser(): Promise<void> {
+    try {
+      await signOut(auth);
+      this.currentUser = null;
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      throw new Error('Failed to sign out. Please try again.');
+    }
+  }
+
+  /**
+   * Get the current user
+   */
+  getCurrentUser(): User | null {
+    return this.currentUser;
+  }
+
+  /**
+   * Get user role from Firestore
+   */
+  private async getUserRole(uid: string): Promise<User> {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      
+      if (!userDoc.exists()) {
+        throw new Error('User data not found. Please contact support.');
+      }
+      
+      const userData = userDoc.data();
+      return {
+        uid: userData.uid,
+        id: userData.uid,
+        email: userData.email,
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        phone: userData.phone || '',
+        phoneNumber: userData.phone || '',
+        role: userData.role,
+        approvalStatus: userData.approvalStatus || 'pending',
+        createdAt: userData.createdAt?.toDate() || new Date()
+      };
+    } catch (error: any) {
+      console.error('Error fetching user role:', error);
+      throw new Error('Failed to fetch user data. Please try again.');
+    }
+  }
+
+  /**
+   * Add auth state listener
+   */
+  onAuthStateChange(callback: (user: User | null) => void): () => void {
+    this.authStateListeners.push(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      const index = this.authStateListeners.indexOf(callback);
+      if (index > -1) {
+        this.authStateListeners.splice(index, 1);
+      }
+    };
+  }
+
+  /**
+   * Get user-friendly error messages
+   */
+  private getErrorMessage(errorCode: string): string {
+    switch (errorCode) {
+      case 'auth/email-already-in-use':
+        return 'An account with this email already exists.';
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.';
+      case 'auth/weak-password':
+        return 'Password should be at least 6 characters long.';
+      case 'auth/user-not-found':
+        return 'No account found with this email address.';
+      case 'auth/wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'auth/too-many-requests':
+        return 'Too many failed attempts. Please try again later.';
+      case 'auth/network-request-failed':
+        return 'Network error. Please check your connection.';
+      default:
+        return 'An error occurred. Please try again.';
+    }
   }
 }
+
+// Export singleton instance
+export const firebaseAuthService = new FirebaseAuthService();
+export default firebaseAuthService;

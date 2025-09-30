@@ -5,6 +5,7 @@ import app from '../app';
 import { sequelize } from '../config/database';
 import { User, Listing } from '../models';
 import { cacheService } from '../services/cache';
+import { createTestUser, generateTestToken } from './test-helpers';
 
 // Mock cache service
 vi.mock('../services/cache', () => ({
@@ -18,21 +19,16 @@ vi.mock('../services/cache', () => ({
 }));
 
 describe('Enhanced Listings API', () => {
+  let testUser: User;
+  let authToken: string;
+
   beforeEach(async () => {
     // Clean database
     await sequelize.sync({ force: true });
     
-    // Create test user with explicit password hash
-    const passwordHash = await bcrypt.hash('testpassword123', 12);
-    await User.create({
-      firstName: 'Test',
-      lastName: 'User',
-      email: 'test@example.com',
-      password: 'testpassword123',
-      passwordHash: passwordHash,
-      phoneNumber: '1234567890',
-      role: 'host'
-    });
+    // Create test user
+    testUser = await createTestUser();
+    authToken = generateTestToken(testUser.id, testUser.role);
     
     // Create test listings
     await Listing.bulkCreate([
@@ -183,7 +179,7 @@ describe('Enhanced Listings API', () => {
       const response = await request(app)
         .post('/api/listings')
         .send(listingData)
-        .set('Authorization', 'Bearer valid-token')
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(201);
 
       expect(response.body.title).toBe('Mercedes C-Class');
@@ -208,7 +204,7 @@ describe('Enhanced Listings API', () => {
       const response = await request(app)
         .post('/api/listings')
         .send(listingData)
-        .set('Authorization', 'Bearer valid-token')
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(400);
 
       expect(response.body.error).toBe('Price too low');
@@ -232,7 +228,7 @@ describe('Enhanced Listings API', () => {
       const response = await request(app)
         .post('/api/listings')
         .send(listingData)
-        .set('Authorization', 'Bearer valid-token')
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(400);
 
       expect(response.body.error).toBe('Vehicle too old');
@@ -249,7 +245,7 @@ describe('Enhanced Listings API', () => {
       const response = await request(app)
         .put('/api/listings/1')
         .send(updateData)
-        .set('Authorization', 'Bearer valid-token')
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       expect(response.body.pricePerDay).toBe(900);

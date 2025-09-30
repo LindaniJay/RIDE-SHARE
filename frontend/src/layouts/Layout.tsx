@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 import Chatbot from '../components/Chatbot';
 import Icon from '../components/Icon';
-import NotificationSystem from '../components/NotificationSystem';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -30,25 +29,29 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen">
       {/* Header with Logo and Navbar */}
       <header className="fixed top-4 left-0 right-0 z-50 w-full px-4">
-        <div className="flex items-center max-w-6xl mx-auto h-16">
-          {/* Logo - Left corner */}
+        <div className="flex items-center max-w-6xl mx-auto h-16 relative">
+          {/* Logo - Left side */}
           <Link 
             to="/" 
-            className="flex items-center hover:opacity-80 transition-all duration-300 h-full"
+            className="flex items-center hover:opacity-80 transition-all duration-300 h-full z-10 absolute left-0"
           >
-            <div className="flex items-center bg-gray-700 rounded-full h-full px-8 shadow-lg">
+            <div className="flex items-center bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-sm rounded-lg h-full px-6 shadow-xl border border-white/30 hover:shadow-2xl transition-all duration-300">
               <img 
                 src="/logo.png" 
                 alt="RideShare SA Logo" 
-                className="h-8 w-auto"
+                className="h-12 w-auto object-contain filter brightness-110"
               />
+              <div className="ml-3 hidden lg:block">
+                <div className="text-white font-bold text-lg">RideShare</div>
+                <div className="text-white/80 text-xs font-medium">South Africa</div>
+              </div>
             </div>
           </Link>
 
-          {/* Navbar - Centered on screen */}
-          <nav className="flex items-center absolute left-1/2 transform -translate-x-1/2">
-            <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-full shadow-xl px-4 py-2">
-              <div className="flex items-center justify-center h-[40px] px-4">
+          {/* Navbar - Centered */}
+          <nav className="flex items-center absolute left-1/2 transform -translate-x-1/2 ml-4 lg:ml-8">
+            <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-full shadow-xl px-2 lg:px-4 py-2">
+              <div className="flex items-center justify-center h-[40px] px-2 lg:px-4">
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex items-center space-x-1">
                   {navItems.map((item) => (
@@ -69,54 +72,49 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 
                 {/* Right side actions */}
                 <div className="flex items-center space-x-1 ml-3">
-              {/* Notifications */}
-              {user && user.id && (
-                <NotificationSystem userId={user.id.toString()} />
-              )}
-              
-              {user ? (
-                <div className="flex items-center space-x-1">
-                  <Link
-                    to="/dashboard"
-                    className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                      isActive('/dashboard') || location.pathname.startsWith('/dashboard')
-                        ? 'glass-button-primary text-white'
-                        : 'glass-button text-white/80 hover:text-white'
-                    }`}
-                  >
-                    <Icon name="User" size="sm" />
-                    <span className="hidden sm:block">Dashboard</span>
-                  </Link>
-                  <button
-                    onClick={logout}
-                    className="glass-button flex items-center space-x-1 px-2.5 py-1.5 text-white/80 hover:text-white transition-all duration-300"
-                  >
-                    <Icon name="Logout" size="sm" />
-                    <span className="hidden sm:block">Logout</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-1">
-                  <Link
-                    to="/login"
-                    className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                      isActive('/login')
-                        ? 'glass-button-primary text-white'
-                        : 'glass-button text-white/80 hover:text-white'
-                    }`}
-                  >
-                    <Icon name="Login" size="sm" />
-                    <span className="hidden sm:block">Login</span>
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="btn-primary flex items-center space-x-1 px-3 py-1.5"
-                  >
-                    <Icon name="Plus" size="sm" />
-                    <span className="hidden sm:block">Sign Up</span>
-                  </Link>
-                </div>
-              )}
+                  {user ? (
+                    <div className="flex items-center space-x-1">
+                      <Link
+                        to="/dashboard"
+                        className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
+                          isActive('/dashboard') || location.pathname.startsWith('/dashboard')
+                            ? 'glass-button-primary text-white'
+                            : 'glass-button text-white/80 hover:text-white'
+                        }`}
+                      >
+                        <Icon name="User" size="sm" />
+                        <span className="hidden sm:block">Dashboard</span>
+                      </Link>
+                      <button
+                        onClick={logout}
+                        className="glass-button flex items-center space-x-1 px-2.5 py-1.5 text-white/80 hover:text-white transition-all duration-300"
+                      >
+                        <Icon name="Logout" size="sm" />
+                        <span className="hidden sm:block">Logout</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-1">
+                      <Link
+                        to="/login"
+                        className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
+                          isActive('/login')
+                            ? 'glass-button-primary text-white'
+                            : 'glass-button text-white/80 hover:text-white'
+                        }`}
+                      >
+                        <Icon name="Login" size="sm" />
+                        <span className="hidden sm:block">Login</span>
+                      </Link>
+                      <Link
+                        to="/signup"
+                        className="glass-button-primary flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300"
+                      >
+                        <Icon name="Plus" size="sm" />
+                        <span className="hidden sm:block">Sign Up</span>
+                      </Link>
+                    </div>
+                  )}
               
               {/* Mobile menu button */}
               <button
@@ -130,77 +128,116 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               
               {/* Mobile Navigation - Fixed positioning to show all buttons */}
               {isMobileMenuOpen && (
-                <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl px-4 py-4 min-w-max">
-                  <div className="space-y-2">
-                    {navItems.map((item) => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
+                <>
+                  {/* Backdrop overlay */}
+                  <div 
+                    className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
+                  
+                  {/* Mobile menu */}
+                  <div className="md:hidden fixed top-20 left-4 right-4 z-50 bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl px-4 py-4 max-h-[80vh] overflow-y-auto">
+                    {/* Header with close button */}
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/20">
+                      <h3 className="text-white font-semibold text-lg">Menu</h3>
+                      <button
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 whitespace-nowrap ${
-                          isActive(item.path)
-                            ? 'glass-button-primary text-white'
-                            : 'glass-button text-white/80 hover:text-white'
-                        }`}
+                        className="glass-button p-2 text-white/80 hover:text-white transition-all duration-300"
                       >
-                        <Icon name={item.icon} size="sm" />
-                        <span>{item.name}</span>
-                      </Link>
-                    ))}
-                    {user ? (
-                      <>
+                        <Icon name="X" size="sm" />
+                      </button>
+                    </div>
+                    
+                    {/* Enhanced readability overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/5 rounded-inherit pointer-events-none" />
+                    <div className="space-y-2 relative z-10">
+                    {/* Navigation Items */}
+                    <div className="space-y-1">
+                      {navItems.map((item) => (
                         <Link
-                          to="/dashboard"
+                          key={item.path}
+                          to={item.path}
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 whitespace-nowrap ${
-                            isActive('/dashboard') || location.pathname.startsWith('/dashboard')
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 w-full ${
+                            isActive(item.path)
                               ? 'glass-button-primary text-white'
                               : 'glass-button text-white/80 hover:text-white'
                           }`}
                         >
-                          <Icon name="User" size="sm" />
-                          <span>Dashboard</span>
+                          <Icon name={item.icon} size="sm" />
+                          <span>{item.name}</span>
                         </Link>
-                        <button
-                          onClick={() => {
-                            logout();
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="glass-button flex items-center space-x-3 w-full px-4 py-3 text-white/80 hover:text-white transition-all duration-300 whitespace-nowrap"
-                        >
-                          <Icon name="Logout" size="sm" />
-                          <span>Logout</span>
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <Link
-                          to="/login"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 whitespace-nowrap ${
-                            isActive('/login')
-                              ? 'glass-button-primary text-white'
-                              : 'glass-button text-white/80 hover:text-white'
-                          }`}
-                        >
-                          <Icon name="Login" size="sm" />
-                          <span>Login</span>
-                        </Link>
-                        <Link
-                          to="/register"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className="btn-primary flex items-center space-x-3 px-4 py-3 whitespace-nowrap"
-                        >
-                          <Icon name="Plus" size="sm" />
-                          <span>Sign Up</span>
-                        </Link>
-                      </>
-                    )}
+                      ))}
+                    </div>
+                    {/* User Authentication Section */}
+                    <div className="pt-3 border-t border-white/20">
+                      {user ? (
+                        <div className="space-y-1">
+                          <div className="px-4 py-2 text-white/70 text-xs font-medium">
+                            Welcome, {user.email}
+                          </div>
+                          <div className="px-4 py-2 text-white/50 text-xs">
+                            Role: {user.role}
+                          </div>
+                          <Link
+                            to="/dashboard"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 w-full ${
+                              isActive('/dashboard') || location.pathname.startsWith('/dashboard')
+                                ? 'glass-button-primary text-white'
+                                : 'glass-button text-white/80 hover:text-white'
+                            }`}
+                          >
+                            <Icon name="User" size="sm" />
+                            <span>Dashboard</span>
+                          </Link>
+                          <button
+                            onClick={() => {
+                              logout();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="glass-button flex items-center space-x-3 w-full px-4 py-3 text-white/80 hover:text-white transition-all duration-300"
+                          >
+                            <Icon name="Logout" size="sm" />
+                            <span>Logout</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <Link
+                            to="/login"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 w-full ${
+                              isActive('/login')
+                                ? 'glass-button-primary text-white'
+                                : 'glass-button text-white/80 hover:text-white'
+                            }`}
+                          >
+                            <Icon name="Login" size="sm" />
+                            <span>Login</span>
+                          </Link>
+                          <Link
+                            to="/signup"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="glass-button-primary flex items-center space-x-3 px-4 py-3 w-full"
+                          >
+                            <Icon name="Plus" size="sm" />
+                            <span>Sign Up</span>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
           </nav>
+
+          {/* Right side spacer to balance layout */}
+          <div className="absolute right-0 h-full flex items-center">
+            {/* This space is reserved for future right-side elements */}
+          </div>
         </div>
       </header>
       
@@ -213,11 +250,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
             {/* Left: Logo and Copyright */}
             <div className="flex items-center space-x-4">
-              <div className="logo-footer">
+              <div className="logo-footer bg-gradient-to-r from-blue-600/80 to-purple-600/80 rounded-lg p-2 shadow-lg border border-white/20">
                 <img 
                   src="/logo.png" 
                   alt="RideShare SA Logo" 
-                  className="h-8 w-auto"
+                  className="h-10 w-auto object-contain filter brightness-110"
                 />
               </div>
               <p className="text-gray-400 text-xs">
@@ -251,9 +288,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </svg>
               </a>
               <Link 
-                to="/admin-login" 
+                to="/admin-dashboard" 
                 className="text-gray-400 hover:text-white transition-colors text-xs flex items-center space-x-1"
-                title="Admin Access"
+                title="Admin Dashboard"
               >
                 <Icon name="User" size="sm" />
                 <span>Admin</span>

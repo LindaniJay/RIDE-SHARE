@@ -1,140 +1,78 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { FirebaseAuthService } from '../services/firebaseAuth';
-
-interface User {
-  id?: number;
-  uid?: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: 'renter' | 'host' | 'admin';
-  isEmailVerified: boolean;
-  phone?: string;
-  approvalStatus?: 'pending' | 'approved' | 'rejected';
-  profileCompleted?: boolean;
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { firebaseAuthService, User } from '../services/firebaseAuth';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
-  logout: () => void;
   loading: boolean;
-  isAdmin: () => boolean;
-  isHost: () => boolean;
-  isRenter: () => boolean;
-  hasRole: (role: string) => boolean;
+  signup: (email: string, password: string, firstName: string, lastName: string, phone: string, role: 'Renter' | 'Host') => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-interface RegisterData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  role?: 'renter' | 'host';
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+interface AuthProviderProps {
+  children: ReactNode;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
+    // Listen to auth state changes
+    const unsubscribe = firebaseAuthService.onAuthStateChange((user) => {
+      setUser(user);
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, []);
 
-  const checkAuth = async () => {
+  const signup = async (email: string, password: string, firstName: string, lastName: string, phone: string, role: 'Renter' | 'Host') => {
     setLoading(true);
     try {
-      // Firebase auth state is handled by the listener
-      return;
+      await firebaseAuthService.signupUser({ email, password, firstName, lastName, phone, role });
     } catch (error) {
-      setUser(null);
-    } finally {
       setLoading(false);
+      throw error;
     }
   };
 
-  // Firebase auth state listener
-  useEffect(() => {
-    const unsubscribe = FirebaseAuthService.onAuthStateChanged((firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          firstName: firebaseUser.firstName,
-          lastName: firebaseUser.lastName,
-          role: firebaseUser.role,
-          phone: firebaseUser.phone,
-          isEmailVerified: firebaseUser.isEmailVerified
-        });
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
   const login = async (email: string, password: string) => {
-    const firebaseUser = await FirebaseAuthService.signIn(email, password);
-    const userData = {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      firstName: firebaseUser.firstName,
-      lastName: firebaseUser.lastName,
-      role: firebaseUser.role,
-      phone: firebaseUser.phone,
-      isEmailVerified: firebaseUser.isEmailVerified
-    };
-    setUser(userData);
-    localStorage.setItem('userRole', firebaseUser.role);
+    setLoading(true);
+    try {
+      await firebaseAuthService.loginUser({ email, password });
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
-
-  const register = async (userData: RegisterData) => {
-    const firebaseUser = await FirebaseAuthService.register(
-      userData.email,
-      userData.password,
-      userData.firstName,
-      userData.lastName,
-      userData.role,
-      userData.phone
-    );
-    setUser({
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      firstName: firebaseUser.firstName,
-      lastName: firebaseUser.lastName,
-      role: firebaseUser.role,
-      phone: firebaseUser.phone,
-      isEmailVerified: firebaseUser.isEmailVerified
-    });
-  };
-
 
   const logout = async () => {
-    await FirebaseAuthService.signOut();
+    setLoading(true);
+    try {
+      await firebaseAuthService.logoutUser();
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
-
-  // Role-based helper functions
-  const isAdmin = () => user?.role === 'admin';
-  const isHost = () => user?.role === 'host';
-  const isRenter = () => user?.role === 'renter';
-  const hasRole = (role: string) => user?.role === role;
 
   const value = {
     user,
-    login,
-    register,
-    logout,
     loading,
-    isAdmin,
-    isHost,
-    isRenter,
-    hasRole,
+    signup,
+    login,
+    logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

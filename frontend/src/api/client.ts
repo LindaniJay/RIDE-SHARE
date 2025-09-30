@@ -13,7 +13,7 @@ const createApiClient = (): AxiosInstance => {
   // Request interceptor to add auth token
   client.interceptors.request.use(
     async (config) => {
-      const authMethod = localStorage.getItem('authMethod') || 'firebase';
+      const authMethod = localStorage.getItem('authMethod') || 'jwt';
       
       if (authMethod === 'firebase') {
         // For Firebase, we'll get the token dynamically

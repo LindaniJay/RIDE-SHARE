@@ -49,7 +49,7 @@ const Contact: React.FC = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="page-background-light flex items-center justify-center">
         <div className="max-w-md mx-auto text-center">
           <div className="bg-green-100 dark:bg-green-900/20 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
             <span className="text-2xl text-green-600 dark:text-green-400">✓</span>
@@ -76,7 +76,7 @@ const Contact: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">Contact Us</h1>
           <p className="text-xl text-white text-opacity-90 max-w-3xl mx-auto">
-            Have questions? We're here to help! Get in touch with our team for support, partnerships, or just to say hello.
+            Have questions? We're here to help! Get in touch with our South African team for support, partnerships, or just to say howzit.
           </p>
         </div>
       </section>
@@ -127,13 +127,13 @@ const Contact: React.FC = () => {
                   name="inquiryType"
                   value={formData.inquiryType}
                   onChange={handleChange}
-                  className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                  className="glass-select"
                 >
-                  <option value="general">General Inquiry</option>
-                  <option value="support">Technical Support</option>
-                  <option value="partnership">Partnership</option>
-                  <option value="media">Media Inquiry</option>
-                  <option value="feedback">Feedback</option>
+                  <option value="general" className="bg-gray-800 text-white">General Inquiry</option>
+                  <option value="support" className="bg-gray-800 text-white">Technical Support</option>
+                  <option value="partnership" className="bg-gray-800 text-white">Partnership</option>
+                  <option value="media" className="bg-gray-800 text-white">Media Inquiry</option>
+                  <option value="feedback" className="bg-gray-800 text-white">Feedback</option>
                 </select>
               </div>
 
@@ -148,7 +148,7 @@ const Contact: React.FC = () => {
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                  className="glass-input"
                 />
               </div>
 
@@ -163,7 +163,7 @@ const Contact: React.FC = () => {
                   onChange={handleChange}
                   required
                   rows={6}
-                  className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                  className="glass-textarea"
                 />
               </div>
 
@@ -189,7 +189,7 @@ const Contact: React.FC = () => {
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white">Phone</h3>
                   <p className="text-gray-600 dark:text-gray-300">+27 11 123 4567</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Mon-Fri 8AM-6PM SAST</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Mon-Fri 8AM-6PM SAST (South African Standard Time)</p>
                 </div>
               </div>
 
@@ -199,7 +199,7 @@ const Contact: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white">Email</h3>
-                  <p className="text-gray-600 dark:text-gray-300">hello@rideshare.co.za</p>
+                  <p className="text-gray-600 dark:text-gray-300">hello@rideshare-sa.co.za</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">We respond within 24 hours</p>
                 </div>
               </div>
@@ -213,7 +213,7 @@ const Contact: React.FC = () => {
                   <p className="text-gray-600 dark:text-gray-300">
                     123 Sandton Drive<br />
                     Sandton, Johannesburg 2196<br />
-                    South Africa
+                    Gauteng, South Africa
                   </p>
                 </div>
               </div>
@@ -249,7 +249,7 @@ const Contact: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-900 dark:text-white">What payment methods do you accept?</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    We accept all major credit cards, EFT, and SnapScan for your convenience.
+                    We accept all major credit cards, EFT, Payfast, SnapScan, and Zapper for your convenience.
                   </p>
                 </div>
               </div>

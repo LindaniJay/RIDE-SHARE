@@ -60,7 +60,7 @@ const About: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="page-background">
       {/* Main Content Container */}
       <div className="min-h-screen flex flex-col">
           {/* Hero Section */}

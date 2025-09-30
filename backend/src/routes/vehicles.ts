@@ -22,10 +22,10 @@ router.get('/', async (req, res) => {
     
     if (search) {
       (whereClause as any)[Op.or] = [
-        { title: { [Op.iLike]: `%${search}%` } },
-        { make: { [Op.iLike]: `%${search}%` } },
-        { model: { [Op.iLike]: `%${search}%` } },
-        { location: { [Op.iLike]: `%${search}%` } },
+        { title: { [Op.like]: `%${search}%` } },
+        { make: { [Op.like]: `%${search}%` } },
+        { model: { [Op.like]: `%${search}%` } },
+        { location: { [Op.like]: `%${search}%` } },
       ];
     }
     
@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
     }
     
     if (location) {
-      whereClause.location = { [Op.iLike]: `%${location}%` };
+      whereClause.location = { [Op.like]: `%${location}%` };
     }
     
     if (type) {

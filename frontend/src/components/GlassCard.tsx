@@ -28,25 +28,27 @@ const GlassCard: React.FC<GlassCardProps> = ({
       {(title || subtitle || icon) && (
         <div className="flex items-center mb-4">
           {icon && (
-            <div className="w-12 h-12 bg-white/20 dark:bg-white/10 rounded-xl flex items-center justify-center mr-4">
+            <div className="w-12 h-12 bg-white/20 dark:bg-white/10 rounded-xl flex items-center justify-center mr-4 backdrop-blur-sm border border-white/30">
               {icon}
             </div>
           )}
           <div>
             {title && (
-              <h3 className="text-lg font-semibold text-white dark:text-white mb-1">
+              <h3 className="text-lg font-semibold text-white dark:text-white mb-1 text-shadow-md">
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="text-white/70 dark:text-white/60 text-sm">
+              <p className="text-white/90 dark:text-white/80 text-sm text-shadow-sm">
                 {subtitle}
               </p>
             )}
           </div>
         </div>
       )}
-      {children}
+      <div className="text-shadow-sm">
+        {children}
+      </div>
     </Glassmorphism>
   );
 };

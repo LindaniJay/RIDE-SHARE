@@ -1,4 +1,4 @@
-# RideShare - Peer-to-Peer Vehicle Rental Platform
+#  RideShare - Peer-to-Peer Vehicle Rental Platform
 
 > **Transform the way people access vehicles** - A modern, secure platform that connects vehicle owners with renters, making transportation more accessible and profitable for everyone.
 
@@ -9,7 +9,7 @@ RideShare revolutionizes vehicle rental by creating a **peer-to-peer marketplace
 - **Renters** get access to a diverse fleet of vehicles at competitive prices
 - **Communities** benefit from reduced vehicle ownership costs and environmental impact
 
-### Why RideShare?
+###  Why RideShare?
 
 **For Vehicle Owners:**
 - Turn your idle car into a source of income
@@ -165,7 +165,7 @@ npm run dev   # Start frontend server
 - **Real-time messaging** between users
 - **Secure payment processing** with Stripe integration
 
-### South African Focus
+###  South African Focus
 
 RideShare is specifically designed for the **South African market** with:
 - **Local payment methods** (EFT, Payfast integration)
@@ -241,7 +241,7 @@ VITE_GOOGLE_ANALYTICS_ID=your_ga_id
 - **API access** for third-party integrations
 - **White-label solutions** for other businesses
 
-##  Testing
+## 🧪 Testing
 
 ### Backend Tests
 ```bash
@@ -308,7 +308,7 @@ The API documentation is available at `/api/docs` when running the backend serve
 - `POST /api/payments/create-checkout` - Create Stripe checkout session
 - `POST /api/payments/webhook` - Stripe webhook handler
 
-## 👥 Contributing
+##  Contributing
 
 We welcome contributions! Here's how to get involved:
 
@@ -330,7 +330,7 @@ We welcome contributions! Here's how to get involved:
 - **Documentation**: Guides, API docs
 - **Testing**: Unit tests, E2E tests
 
-### Development Guidelines
+###  Development Guidelines
 
 - Follow TypeScript best practices
 - Write tests for new features
@@ -338,7 +338,7 @@ We welcome contributions! Here's how to get involved:
 - Follow the existing code style
 - Test on both development and production builds
 
-## Impact & Future
+##  Impact & Future
 
 ###  Current Impact
 - **Reduces vehicle ownership costs** for individuals
@@ -353,14 +353,14 @@ We welcome contributions! Here's how to get involved:
 - **International expansion** to other African markets
 - **Autonomous vehicle support** for future mobility
 
-### Success Metrics
+###  Success Metrics
 - User acquisition and retention rates
 - Vehicle utilization improvements
 - Revenue growth and profitability
 - Environmental impact measurements
 - Community engagement metrics
 
-## License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -375,8 +375,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**Built with Lobe for South Africa**
+**Built with Love for South Africa 🇿🇦**
 
-[ Live Demo](https://ridesharex.com) • [📖 Documentation](https://docs.ridesharex.com) • [Report Bug](https://github.com/your-username/ridesharex/issues) • [Request Feature](https://github.com/your-username/ridesharex/issues)
+[ Live Demo](https://ridesharex.com) • [📖 Documentation](https://docs.ridesharex.com) • [🐛 Report Bug](https://github.com/your-username/ridesharex/issues) • [💡 Request Feature](https://github.com/your-username/ridesharex/issues)
 
 </div>

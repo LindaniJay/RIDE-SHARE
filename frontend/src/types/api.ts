@@ -143,7 +143,6 @@ export interface ImportMetaEnv {
 
 declare global {
   interface ImportMeta {
-    readonly env: ImportMetaEnv;
   }
 }
 

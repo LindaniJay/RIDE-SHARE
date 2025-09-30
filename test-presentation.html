@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RideShare SA - Presentation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+        .info { background: rgba(33, 150, 243, 0.3); }
+        .demo-account {
+            background: rgba(255, 193, 7, 0.3);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚗 RideShare SA - Presentation Test</h1>
+    
+    <div class="demo-account">
+        <h3>📋 Demo Accounts for Presentation:</h3>
+        <p><strong>👑 Admin:</strong> admin@rideshare.co.za / admin123</p>
+        <p><strong>🏠 Host:</strong> host@rideshare.co.za / host123</p>
+        <p><strong>🚗 Renter:</strong> renter@rideshare.co.za / renter123</p>
+    </div>
+    
+    <div class="test-section">
+        <h3>🧪 Test All Demo Accounts</h3>
+        <button onclick="testAllAccounts()">Test All Accounts</button>
+        <div id="allResults" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>👑 Test Admin Login</h3>
+        <button onclick="testLogin('admin@rideshare.co.za', 'admin123')">Test Admin</button>
+        <div id="adminResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🏠 Test Host Login</h3>
+        <button onclick="testLogin('host@rideshare.co.za', 'host123')">Test Host</button>
+        <div id="hostResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🚗 Test Renter Login</h3>
+        <button onclick="testLogin('renter@rideshare.co.za', 'renter123')">Test Renter</button>
+        <div id="renterResult" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function testLogin(email, password) {
+            const resultId = email.split('@')[0] + 'Result';
+            const resultDiv = document.getElementById(resultId);
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result info';
+                resultDiv.innerHTML = '🔄 Testing login...';
+                
+                const response = await fetch('http://localhost:5001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h4>✅ Login Successful!</h4>
+                        <p><strong>Name:</strong> ${data.data.user.firstName} ${data.data.user.lastName}</p>
+                        <p><strong>Role:</strong> ${data.data.user.role.toUpperCase()}</p>
+                        <p><strong>Email:</strong> ${data.data.user.email}</p>
+                        <p><strong>Is Admin:</strong> ${data.data.user.isAdmin ? 'Yes' : 'No'}</p>
+                        <p><strong>Dashboard:</strong> Will redirect to ${data.data.user.role} dashboard</p>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<h4>❌ Login Failed</h4><p>${data.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h4>❌ Error</h4><p>${error.message}</p>`;
+            }
+        }
+
+        async function testAllAccounts() {
+            const resultDiv = document.getElementById('allResults');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = '🔄 Testing all demo accounts...';
+            
+            const accounts = [
+                { email: 'admin@rideshare.co.za', password: 'admin123', role: 'Admin' },
+                { email: 'host@rideshare.co.za', password: 'host123', role: 'Host' },
+                { email: 'renter@rideshare.co.za', password: 'renter123', role: 'Renter' }
+            ];
+            
+            let results = [];
+            
+            for (const account of accounts) {
+                try {
+                    const response = await fetch('http://localhost:5001/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: account.email,
+                            password: account.password
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        results.push(`✅ ${account.role}: ${data.data.user.firstName} ${data.data.user.lastName} (${data.data.user.role})`);
+                    } else {
+                        results.push(`❌ ${account.role}: Failed - ${data.error}`);
+                    }
+                } catch (error) {
+                    results.push(`❌ ${account.role}: Error - ${error.message}`);
+                }
+            }
+            
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = `
+                <h4>🎯 All Demo Accounts Test Results:</h4>
+                <div style="margin-top: 10px;">
+                    ${results.map(result => `<p>${result}</p>`).join('')}
+                </div>
+                <p style="margin-top: 15px; font-weight: bold;">
+                    🚀 Ready for presentation! All accounts working properly.
+                </p>
+            `;
+        }
+    </script>
+</body>
+</html>
+

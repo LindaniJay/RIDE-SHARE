@@ -123,4 +123,36 @@ export const dashboardAPI = {
     api.get('/dashboard/admin'),
 };
 
+// Approval Requests API
+export const approvalRequestsAPI = {
+  create: (data: {
+    requestType: 'DocumentVerification' | 'VehicleListing' | 'InsuranceVerification' | 'ProfileVerification' | 'VehicleApproval';
+    entityId: number;
+    submittedBy: 'renter' | 'host';
+    reviewNotes?: string;
+  }) => 
+    api.post<ApiResponse<any>>('/approval-requests', data),
+  
+  getMyRequests: (params?: { status?: string; requestType?: string; page?: number; limit?: number }) => 
+    api.get<ApiResponse<any>>('/approval-requests/my-requests', { params }),
+  
+  getAll: (params?: { status?: string; requestType?: string; submittedBy?: string; page?: number; limit?: number }) => 
+    api.get<ApiResponse<any>>('/approval-requests', { params }),
+  
+  getPending: (params?: { page?: number; limit?: number }) => 
+    api.get<ApiResponse<any>>('/approval-requests/pending', { params }),
+  
+  update: (id: number, data: { status: 'Approved' | 'Declined'; reviewNotes?: string }) => 
+    api.patch<ApiResponse<any>>(`/approval-requests/${id}`, data),
+  
+  getById: (id: number) => 
+    api.get<ApiResponse<any>>(`/approval-requests/${id}`),
+  
+  getStats: () => 
+    api.get<ApiResponse<any>>('/approval-requests/stats/overview'),
+  
+  bulkUpdate: (data: { requestIds: number[]; status: 'Approved' | 'Declined'; reviewNotes?: string }) => 
+    api.patch<ApiResponse<any>>('/approval-requests/bulk', data),
+};
+
 export default api;

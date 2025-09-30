@@ -89,11 +89,11 @@ router.get('/', async (req, res) => {
     // Enhanced search functionality
     if (searchTerm) {
       (whereClause as any)[Op.or] = [
-        { title: { [Op.iLike]: `%${searchTerm}%` } },
-        { make: { [Op.iLike]: `%${searchTerm}%` } },
-        { model: { [Op.iLike]: `%${searchTerm}%` } },
-        { location: { [Op.iLike]: `%${searchTerm}%` } },
-        { description: { [Op.iLike]: `%${searchTerm}%` } },
+        { title: { [Op.like]: `%${searchTerm}%` } },
+        { make: { [Op.like]: `%${searchTerm}%` } },
+        { model: { [Op.like]: `%${searchTerm}%` } },
+        { location: { [Op.like]: `%${searchTerm}%` } },
+        { description: { [Op.like]: `%${searchTerm}%` } },
       ];
     }
     
@@ -106,7 +106,7 @@ router.get('/', async (req, res) => {
     
     // Location filtering
     if (locationStr) {
-      whereClause.location = { [Op.iLike]: `%${locationStr}%` };
+      whereClause.location = { [Op.like]: `%${locationStr}%` };
     }
     
     // Geographic search

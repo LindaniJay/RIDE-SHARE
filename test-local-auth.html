@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Local Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Local Authentication</h1>
+    
+    <div class="test-section">
+        <h3>👑 Test Admin Login</h3>
+        <button onclick="testLogin('admin@rideshare.co.za', 'admin123')">Test Admin</button>
+        <div id="adminResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🏠 Test Host Login</h3>
+        <button onclick="testLogin('host@rideshare.co.za', 'host123')">Test Host</button>
+        <div id="hostResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🚗 Test Renter Login</h3>
+        <button onclick="testLogin('renter@rideshare.co.za', 'renter123')">Test Renter</button>
+        <div id="renterResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🎯 Test Demo Login</h3>
+        <button onclick="testLogin('demo@rideshare.co.za', 'demo123')">Test Demo</button>
+        <div id="demoResult" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function testLogin(email, password) {
+            const resultId = email.split('@')[0] + 'Result';
+            const resultDiv = document.getElementById(resultId);
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result';
+                resultDiv.innerHTML = '🔄 Testing...';
+                
+                const response = await fetch('http://localhost:5001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h4>✅ Login Successful!</h4>
+                        <p><strong>Name:</strong> ${data.data.user.firstName} ${data.data.user.lastName}</p>
+                        <p><strong>Role:</strong> ${data.data.user.role}</p>
+                        <p><strong>Email:</strong> ${data.data.user.email}</p>
+                        <p><strong>Is Admin:</strong> ${data.data.user.isAdmin ? 'Yes' : 'No'}</p>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<h4>❌ Login Failed</h4><p>${data.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h4>❌ Error</h4><p>${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
+

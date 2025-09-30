@@ -24,10 +24,14 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClose }) =>
   const vehicleTypes = [
     { value: 'car', label: 'Car', icon: 'Car' },
     { value: 'suv', label: 'SUV', icon: 'Car' },
+    { value: 'bakkie', label: 'Bakkie', icon: 'Car' },
     { value: 'truck', label: 'Truck', icon: 'Car' },
     { value: 'van', label: 'Van', icon: 'Car' },
+    { value: 'minibus', label: 'Minibus', icon: 'Car' },
     { value: 'motorcycle', label: 'Motorcycle', icon: 'Motorcycle' },
-    { value: 'trailer', label: 'Trailer', icon: 'Car' }
+    { value: 'trailer', label: 'Trailer', icon: 'Car' },
+    { value: 'bus', label: 'Bus', icon: 'Car' },
+    { value: 'commercial', label: 'Commercial', icon: 'Car' }
   ];
 
   const availableFeatures = [

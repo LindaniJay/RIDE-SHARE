@@ -10,7 +10,7 @@ const inputVariants = cva(
         default: 'border-gray-300 focus:ring-blue-500',
         error: 'border-red-500 focus:ring-red-500 focus:border-red-500',
         success: 'border-green-500 focus:ring-green-500 focus:border-green-500',
-        glass: 'bg-white/10 backdrop-blur-md border-white/20 text-white placeholder:text-white/60 focus:ring-white/50',
+        glass: 'bg-white/10 backdrop-blur-md border-white/20 text-white placeholder:text-white/50 focus:ring-blue-500/50 focus:border-blue-400 hover:border-white/30',
       },
       size: {
         sm: 'h-8 px-2 text-xs',

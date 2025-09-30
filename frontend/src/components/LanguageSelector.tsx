@@ -38,10 +38,10 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     <div className={`relative ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all duration-300"
+        className="flex items-center space-x-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all duration-300 text-shadow-sm"
       >
         <span className="text-lg">{currentLanguage.flag}</span>
-        <span className="text-sm">{currentLanguage.nativeName}</span>
+        <span className="text-sm text-shadow-sm">{currentLanguage.nativeName}</span>
         <svg 
           className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
@@ -53,23 +53,25 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-48 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-2xl z-50">
-          <div className="py-2">
+        <div className="absolute top-full right-0 mt-2 w-48 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-2xl z-50 relative">
+          {/* Enhanced readability overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/5 rounded-inherit pointer-events-none" />
+          <div className="py-2 relative z-10">
             {languages.map((language) => (
               <button
                 key={language.code}
                 onClick={() => handleLanguageSelect(language.code)}
-                className={`w-full flex items-center space-x-3 px-4 py-2 text-left hover:bg-white/20 transition-colors ${
+                className={`w-full flex items-center space-x-3 px-4 py-2 text-left hover:bg-white/20 transition-colors text-shadow-sm ${
                   selectedLanguage === language.code ? 'bg-white/20' : ''
                 }`}
               >
                 <span className="text-lg">{language.flag}</span>
                 <div>
-                  <div className="text-white text-sm font-medium">{language.nativeName}</div>
-                  <div className="text-white/70 text-xs">{language.name}</div>
+                  <div className="text-white text-sm font-medium text-shadow-sm">{language.nativeName}</div>
+                  <div className="text-white/70 text-xs text-shadow-sm">{language.name}</div>
                 </div>
                 {selectedLanguage === language.code && (
-                  <span className="ml-auto text-green-400">✓</span>
+                  <span className="ml-auto text-green-400 text-shadow-sm">✓</span>
                 )}
               </button>
             ))}

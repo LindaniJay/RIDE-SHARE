@@ -22,13 +22,13 @@ const FAQ: React.FC = () => {
     {
       id: '2',
       question: 'What payment methods do you accept?',
-      answer: 'We accept all major credit cards (Visa, Mastercard, American Express) through Stripe for international users, and Payfast for South African users, which includes EFT, credit cards, SnapScan, and Zapper.',
+      answer: 'We accept all major credit cards (Visa, Mastercard, American Express) through Stripe for international users, and Payfast for South African users, which includes EFT, credit cards, SnapScan, Zapper, and other local payment methods.',
       category: 'payments'
     },
     {
       id: '3',
       question: 'Is my vehicle insured during rental?',
-      answer: 'Yes! All vehicles are covered by comprehensive insurance during rentals. We work with leading South African insurers to protect both hosts and renters. The insurance covers damage, theft, and third-party liability.',
+      answer: 'Yes! All vehicles are covered by comprehensive insurance during rentals. We work with leading South African insurers like Santam, Outsurance, and Discovery to protect both hosts and renters. The insurance covers damage, theft, and third-party liability.',
       category: 'safety'
     },
     {
@@ -52,7 +52,7 @@ const FAQ: React.FC = () => {
     {
       id: '7',
       question: 'What documents do I need to rent a vehicle?',
-      answer: 'You\'ll need a valid South African driver\'s license, ID document, and a credit card for the security deposit. International visitors can use their valid international driver\'s license.',
+      answer: 'You\'ll need a valid South African driver\'s license, ID document (green bar-coded ID or smart card), and a credit card for the security deposit. International visitors can use their valid international driver\'s license.',
       category: 'requirements'
     },
     {
@@ -84,6 +84,36 @@ const FAQ: React.FC = () => {
       question: 'What support is available?',
       answer: 'We offer 24/7 customer support via phone, email, and live chat. Our support team can help with bookings, payments, emergencies, and any questions you might have.',
       category: 'support'
+    },
+    {
+      id: '13',
+      question: 'Do you operate in all South African provinces?',
+      answer: 'Yes! We operate across all 9 provinces of South Africa - from the Western Cape to Limpopo. Our platform connects hosts and renters in major cities like Cape Town, Johannesburg, Durban, Pretoria, and many more.',
+      category: 'general'
+    },
+    {
+      id: '14',
+      question: 'What about toll fees and e-tolls?',
+      answer: 'Toll fees and e-tolls are the responsibility of the renter. We recommend using your e-tag or paying cash at toll booths. Some hosts may include toll fees in their pricing - check the vehicle listing for details.',
+      category: 'payments'
+    },
+    {
+      id: '15',
+      question: 'Can I rent a vehicle for a long weekend or public holiday?',
+      answer: 'Absolutely! We have vehicles available for long weekends, public holidays, and school holidays. Book early for popular periods like December holidays, Easter, and long weekends.',
+      category: 'bookings'
+    },
+    {
+      id: '16',
+      question: 'What about South African road regulations?',
+      answer: 'All vehicles comply with South African road regulations including valid roadworthy certificates, valid license discs, and proper insurance. Drivers must have a valid SA driver\'s license and follow all traffic laws.',
+      category: 'safety'
+    },
+    {
+      id: '17',
+      question: 'Do you comply with POPI Act requirements?',
+      answer: 'Yes, we fully comply with the Protection of Personal Information (POPI) Act. Your personal data is protected and we only use it for legitimate business purposes. You can request your data or deletion at any time.',
+      category: 'safety'
     }
   ];
 
@@ -112,7 +142,7 @@ const FAQ: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="page-background-light">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

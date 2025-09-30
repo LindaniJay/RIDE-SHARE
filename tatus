@@ -1,0 +1,10 @@
+[33m150b9300[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m feat: Implement real-time admin approval system
+[33m6d8564c2[m feat: Integrate Firebase admin role authentication
+[33m4669b63c[m fix: Resolve GitHub Pages 404 and asset loading issues
+[33me7953e3e[m deploy: Update GitHub Pages with latest build
+[33m365428c9[m Fix TypeScript compilation errors and debug issues
+[33me1376f8a[m Update project files and configurations
+[33m3c81c533[m fixed chatbot chatflow and navbar
+[33mc2b69d4e[m fixed chatbot chatflow
+[33m5fd2ed50[m feat: Add realistic admin dashboard with interactive functionality and South African data
+[33mcf77ab1f[m feat: Remove authentication method selector and use Firebase-only authentication

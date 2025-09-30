@@ -23,9 +23,9 @@ const AdminApprovalPanel: React.FC<AdminApprovalPanelProps> = ({ type, onRefresh
     try {
       let response;
       if (type === 'users') {
-        response = await AdminService.getUsers({ status: 'pending' });
+        response = await AdminService.getUsers(1, 10, 'pending');
       } else {
-        response = await AdminService.getVehicles({ status: 'pending' });
+        response = await AdminService.getVehicles(1, 10, 'pending');
       }
 
       if ((response as any).success) {

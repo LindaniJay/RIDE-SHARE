@@ -5,6 +5,7 @@ export interface User {
   firstName: string;
   lastName: string;
   phone?: string;
+  phoneNumber?: string;
   role: UserRole;
   isEmailVerified: boolean;
   profileImage?: string;
@@ -77,6 +78,7 @@ export interface Vehicle {
   year: number;
   type: VehicleType;
   pricePerDay: number;
+  dailyRate: number;
   location: string;
   coordinates?: {
     lat: number;
@@ -253,14 +255,6 @@ export interface AppError {
 }
 
 // Context types
-export interface AuthContextType {
-  user: User | null;
-  login: (credentials: LoginForm) => Promise<void>;
-  register: (data: RegisterForm) => Promise<void>;
-  logout: () => void;
-  isLoading: boolean;
-  error: string | null;
-}
 
 export interface ThemeContextType {
   isDark: boolean;

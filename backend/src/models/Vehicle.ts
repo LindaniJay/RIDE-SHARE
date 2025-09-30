@@ -8,6 +8,7 @@ export interface VehicleAttributes {
   model: string;
   year: number;
   type: 'car' | 'truck' | 'trailer' | 'motorcycle' | 'van' | 'suv';
+  title: string;
   dailyRate: number;
   location: string;
   latitude?: number;
@@ -16,6 +17,7 @@ export interface VehicleAttributes {
   features: string[];
   images: string[];
   isAvailable: boolean;
+  status?: 'pending' | 'approved' | 'rejected';
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -29,6 +31,7 @@ export class Vehicle extends Model<VehicleAttributes, VehicleCreationAttributes>
   public model!: string;
   public year!: number;
   public type!: 'car' | 'truck' | 'trailer' | 'motorcycle' | 'van' | 'suv';
+  public title!: string;
   public dailyRate!: number;
   public location!: string;
   public latitude?: number;
@@ -37,6 +40,7 @@ export class Vehicle extends Model<VehicleAttributes, VehicleCreationAttributes>
   public features!: string[];
   public images!: string[];
   public isAvailable!: boolean;
+  public status?: 'pending' | 'approved' | 'rejected';
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -76,6 +80,10 @@ Vehicle.init(
       type: DataTypes.ENUM('car', 'truck', 'trailer', 'motorcycle', 'van', 'suv'),
       allowNull: false,
     },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     dailyRate: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
@@ -113,6 +121,11 @@ Vehicle.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+      allowNull: false,
+      defaultValue: 'pending',
     },
   },
   {

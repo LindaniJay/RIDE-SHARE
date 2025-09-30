@@ -9,6 +9,16 @@ export interface BookingAttributes {
   endDate: Date;
   totalPrice: number;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  specialRequests?: string;
+  addOns?: { name: string; price: number }[];
+  cancellationReason?: string;
+  paymentStatus?: 'pending' | 'paid' | 'refunded';
+  refundAmount?: number;
+  paymentIntentId?: string;
+  paymentReference?: string;
+  refundReason?: string;
+  cancelledAt?: Date;
+  refundedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -23,6 +33,16 @@ export class Booking extends Model<BookingAttributes, BookingCreationAttributes>
   public endDate!: Date;
   public totalPrice!: number;
   public status!: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  public specialRequests?: string;
+  public addOns?: { name: string; price: number }[];
+  public cancellationReason?: string;
+  public paymentStatus?: 'pending' | 'paid' | 'refunded';
+  public refundAmount?: number;
+  public paymentIntentId?: string;
+  public paymentReference?: string;
+  public refundReason?: string;
+  public cancelledAt?: Date;
+  public refundedAt?: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -66,6 +86,48 @@ Booking.init(
       type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'completed'),
       allowNull: false,
       defaultValue: 'pending',
+    },
+    specialRequests: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    addOns: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: [],
+    },
+    cancellationReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    paymentStatus: {
+      type: DataTypes.ENUM('pending', 'paid', 'refunded'),
+      allowNull: false,
+      defaultValue: 'pending',
+    },
+    refundAmount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
+    paymentIntentId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    paymentReference: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    refundReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    cancelledAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    refundedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {

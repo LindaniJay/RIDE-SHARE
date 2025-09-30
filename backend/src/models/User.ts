@@ -15,6 +15,9 @@ export interface UserAttributes {
   approvalStatus?: 'pending' | 'approved' | 'rejected';
   rejectionReason?: string;
   documentStatus?: 'pending' | 'verified' | 'rejected';
+  rating?: number;
+  profileImage?: string;
+  documents?: any;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -31,6 +34,9 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public role!: 'renter' | 'host' | 'admin';
   public phoneNumber?: string;
   public isEmailVerified?: boolean;
+  public rating?: number;
+  public profileImage?: string;
+  public documents?: any;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -60,7 +66,7 @@ User.init(
     },
     password: {
       type: DataTypes.VIRTUAL,
-      allowNull: false,
+      allowNull: true,
     },
     passwordHash: {
       type: DataTypes.STRING,
@@ -93,6 +99,19 @@ User.init(
       type: DataTypes.ENUM('pending', 'verified', 'rejected'),
       allowNull: false,
       defaultValue: 'pending',
+    },
+    rating: {
+      type: DataTypes.DECIMAL(3, 2),
+      allowNull: true,
+      defaultValue: 0.00,
+    },
+    profileImage: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    documents: {
+      type: DataTypes.JSON,
+      allowNull: true,
     },
   },
   {

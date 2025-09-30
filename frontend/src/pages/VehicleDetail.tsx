@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Icon from '../components/Icon';
 import { vehiclesAPI, bookingsAPI } from '../api';
-import { useAuth } from '../hooks/useAuth';
 import PaymentModal from '../components/PaymentModal';
 
 interface Vehicle {
@@ -197,7 +197,7 @@ const VehicleDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="page-background py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/3 mb-8"></div>
@@ -217,7 +217,7 @@ const VehicleDetail: React.FC = () => {
 
   if (!vehicle) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="page-background py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center py-12">
             <div className="mb-4">

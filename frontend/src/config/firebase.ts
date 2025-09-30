@@ -20,6 +20,9 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
 
+// Export a function to get Firebase Auth (for compatibility with authService)
+export const getFirebaseAuth = () => auth;
+
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
 

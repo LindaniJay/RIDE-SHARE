@@ -4,8 +4,12 @@ import { apiClient } from '../api/client';
 import SEO from '../components/SEO';
 import Glassmorphism from '../components/Glassmorphism';
 import GlassInput from '../components/GlassInput';
+import GlassDropdown from '../components/GlassDropdown';
 import GlassButton from '../components/GlassButton';
 import LazyImage from '../components/LazyImage';
+import BookingModal from '../components/BookingModal';
+import { getMockCars, searchMockCars, MockCar } from '../data/mockCars';
+import { BookingService } from '../services/bookingService';
 
 interface Vehicle {
   id: string;
@@ -29,10 +33,12 @@ interface Vehicle {
 const Search: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehicles, setVehicles] = useState<MockCar[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedCar, setSelectedCar] = useState<MockCar | null>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   const [filters, setFilters] = useState({
     location: searchParams.get('location') || '',
@@ -53,10 +59,15 @@ const Search: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/vehicles', {
-        params: Object.fromEntries(searchParams.entries())
+      // Use mock data for now
+      const searchQuery = searchParams.get('location') || '';
+      const filteredCars = searchMockCars(searchQuery, {
+        type: filters.vehicleType || undefined,
+        minPrice: filters.minPrice ? parseInt(filters.minPrice) : undefined,
+        maxPrice: filters.maxPrice ? parseInt(filters.maxPrice) : undefined,
+        location: filters.location || undefined
       });
-      setVehicles(response.data.vehicles || []);
+      setVehicles(filteredCars);
     } catch (err) {
       console.error('Error fetching vehicles:', err);
       setError('Failed to load vehicles. Please try again.');
@@ -70,6 +81,18 @@ const Search: React.FC = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleBookCar = (car: MockCar) => {
+    setSelectedCar(car);
+    setShowBookingModal(true);
+  };
+
+  const handleBookingSuccess = (booking: any) => {
+    console.log('Booking created:', booking);
+    // You can add a toast notification here
+    setShowBookingModal(false);
+    setSelectedCar(null);
   };
 
   const handleFeatureToggle = (feature: string) => {
@@ -111,7 +134,7 @@ const Search: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="page-background py-8">
       <SEO 
         title="Find Vehicles for Rent in South Africa | RideShare SA"
         description="Search and book vehicles across South Africa. Filter by location, date, vehicle type, and price. Find cars, bakkies, SUVs, and luxury vehicles from trusted hosts."
@@ -183,22 +206,18 @@ const Search: React.FC = () => {
                   </div>
 
                   {/* Vehicle Type */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      Vehicle Type
-                    </label>
-                    <select
-                      value={filters.vehicleType}
-                      onChange={(e) => handleFilterChange('vehicleType', e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/50 bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 dark:focus:ring-white/10 transition-all duration-300 ease-in-out"
-                    >
-                      <option value="" className="bg-gray-800 text-white">All Types</option>
-                      <option value="sedan" className="bg-gray-800 text-white">Sedan</option>
-                      <option value="suv" className="bg-gray-800 text-white">SUV</option>
-                      <option value="bakkie" className="bg-gray-800 text-white">Bakkie</option>
-                      <option value="luxury" className="bg-gray-800 text-white">Luxury</option>
-                    </select>
-                  </div>
+                  <GlassDropdown
+                    label="Vehicle Type"
+                    value={filters.vehicleType}
+                    onChange={(value) => handleFilterChange('vehicleType', value)}
+                    options={[
+                      { value: '', label: 'All Types', icon: 'Grid' },
+                      { value: 'sedan', label: 'Sedan', icon: 'Car' },
+                      { value: 'suv', label: 'SUV', icon: 'Truck' },
+                      { value: 'bakkie', label: 'Bakkie', icon: 'Truck' },
+                      { value: 'luxury', label: 'Luxury', icon: 'Star' }
+                    ]}
+                  />
 
                   {/* Price Range */}
                   <div>
@@ -319,13 +338,12 @@ const Search: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {vehicles.map((vehicle) => (
-                      <Link
-                        to={`/vehicle/${vehicle.id}`}
+                      <div
                         key={vehicle.id}
-                        className="block bg-white/10 backdrop-blur-md rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 border border-white/20"
+                        className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 border border-white/20"
                       >
                         <LazyImage
-                          src={vehicle.imageUrl}
+                          src={vehicle.images[0]}
                           alt={`${vehicle.make} ${vehicle.model}`}
                           className="w-full h-48 object-cover"
                           placeholder="https://via.placeholder.com/400x300/1f2937/ffffff?text=Vehicle+Image"
@@ -340,15 +358,29 @@ const Search: React.FC = () => {
                           <div className="flex items-center mb-2">
                             <span className="text-yellow-400 text-lg">★</span>
                             <span className="text-white ml-1">
-                              {vehicle.rating} ({vehicle.reviews})
+                              {vehicle.rating} ({vehicle.totalBookings} bookings)
                             </span>
                           </div>
-                          <div className="text-2xl font-bold text-white">
+                          <div className="text-2xl font-bold text-white mb-4">
                             R{vehicle.pricePerDay}
                             <span className="text-lg font-normal text-gray-300">/day</span>
                           </div>
+                          <div className="flex space-x-2">
+                            <Link
+                              to={`/vehicle/${vehicle.id}`}
+                              className="flex-1 bg-white/10 hover:bg-white/20 text-white text-center py-2 px-4 rounded-lg transition-all duration-300"
+                            >
+                              View Details
+                            </Link>
+                            <button
+                              onClick={() => handleBookCar(vehicle)}
+                              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-all duration-300"
+                            >
+                              Book Now
+                            </button>
+                          </div>
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 </>
@@ -356,6 +388,19 @@ const Search: React.FC = () => {
             </div>
           </div>
       </div>
+
+      {/* Booking Modal */}
+      {selectedCar && (
+        <BookingModal
+          car={selectedCar}
+          isOpen={showBookingModal}
+          onClose={() => {
+            setShowBookingModal(false);
+            setSelectedCar(null);
+          }}
+          onBookingSuccess={handleBookingSuccess}
+        />
+      )}
     </div>
   );
 };

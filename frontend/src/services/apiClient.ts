@@ -11,7 +11,7 @@ class ApiClient {
   private defaultTimeout: number = 10000;
   private defaultRetries: number = 3;
 
-  constructor(baseURL: string = import.meta.env.VITE_API_URL || 'http://localhost:5001/api') {
+  constructor(baseURL: string = import.meta.env.VITE_API_URL || 'http://localhost:5000/api') {
     this.baseURL = baseURL;
   }
 
@@ -34,7 +34,7 @@ class ApiClient {
       'Accept': 'application/json',
     };
 
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
     if (token) {
       defaultHeaders['Authorization'] = `Bearer ${token}`;
     }
@@ -147,7 +147,7 @@ class ApiClient {
       });
     }
 
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
     const headers: Record<string, string> = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
