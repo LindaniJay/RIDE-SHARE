@@ -97,8 +97,9 @@ const AdminDashboard: React.FC = () => {
         <div className="w-64 bg-white/10 backdrop-blur-md border-r border-white/20 min-h-screen">
           <div className="p-6">
             <div className="flex items-center space-x-3 mb-8">
-              <div className="bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-sm rounded-lg p-2 shadow-xl border border-white/30">
-                <img src="/logo.png" alt="RideShare SA" className="h-10 w-auto object-contain filter brightness-110" />
+              <div className="bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-sm rounded-lg p-3 shadow-xl border border-white/30">
+                <div className="text-white font-bold text-lg">RideShare</div>
+                <div className="text-white/80 text-xs">South Africa</div>
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">Admin Dashboard</h1>

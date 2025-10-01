@@ -63,14 +63,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             className="flex items-center hover:opacity-80 transition-all duration-300 h-full z-10 absolute left-0"
           >
             <div className="flex items-center bg-white/20 backdrop-blur-md rounded-lg h-full px-3 sm:px-4 lg:px-6 shadow-xl border border-white/40 hover:bg-white/30 hover:shadow-2xl transition-all duration-300">
-              <img 
-                src="/logo.png" 
-                alt="RideShare SA Logo" 
-                className="h-8 sm:h-10 lg:h-12 w-auto object-contain filter brightness-110 transition-all duration-300"
-                loading="eager"
-                decoding="async"
-              />
-              <div className="ml-2 sm:ml-3 hidden lg:block">
+              <div className="ml-2 sm:ml-3">
                 <div className="text-white font-bold text-sm lg:text-lg transition-all duration-300">RideShare</div>
                 <div className="text-white/80 text-xs font-medium">South Africa</div>
               </div>
@@ -268,12 +261,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
             {/* Left: Logo and Copyright */}
             <div className="flex items-center space-x-4">
-              <div className="logo-footer bg-white/20 backdrop-blur-md rounded-lg p-2 shadow-lg border border-white/40">
-                <img 
-                  src="/logo.png" 
-                  alt="RideShare SA Logo" 
-                  className="h-10 w-auto object-contain filter brightness-110"
-                />
+              <div className="logo-footer bg-white/20 backdrop-blur-md rounded-lg p-3 shadow-lg border border-white/40">
+                <div className="text-white font-bold text-lg">RideShare</div>
+                <div className="text-white/80 text-xs">South Africa</div>
               </div>
               <p className="text-gray-400 text-xs">
                 © 2025 RideShare SA. Cape Town, South Africa
