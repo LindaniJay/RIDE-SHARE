@@ -1,4 +1,4 @@
-import { ApiClient } from './apiClient';
+import { apiClient } from './apiClient';
 
 export interface Vehicle {
   id: string;

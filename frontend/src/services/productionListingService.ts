@@ -284,7 +284,7 @@ class ProductionListingService {
       const response = await apiClient.request('/listings/all');
       
       if (response.data) {
-        return response.data;
+        return response.data as Listing[];
       }
 
       return [];
@@ -303,7 +303,7 @@ class ProductionListingService {
       });
       
       if (response.data) {
-        return response.data.available;
+        return (response.data as any).available;
       }
 
       return false;

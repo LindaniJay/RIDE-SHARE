@@ -1,4 +1,4 @@
-import { paymentService } from './paymentService';
+// import { paymentService } from './paymentService';
 
 export interface PaymentGateway {
   id: string;
@@ -46,7 +46,7 @@ export interface PaymentResponse {
   metadata?: Record<string, any>;
 }
 
-export interface PaymentError {
+export interface PaymentErrorData {
   code: string;
   message: string;
   details?: string;

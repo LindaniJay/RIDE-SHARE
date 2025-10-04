@@ -232,13 +232,13 @@ export const API_ENDPOINT_MAPPINGS = {
 
 // Utility functions for updating components
 export const updateComponent = (componentName: string, content: string): string => {
-  const patterns = COMPONENT_UPDATE_PATTERNS[componentName];
+  const patterns = COMPONENT_UPDATE_PATTERNS[componentName as keyof typeof COMPONENT_UPDATE_PATTERNS];
   if (!patterns) return content;
   
   let updatedContent = content;
   
   // Update imports
-  patterns.imports.forEach(importStatement => {
+  patterns.imports.forEach((importStatement: string) => {
     if (!updatedContent.includes(importStatement)) {
       // Find the last import statement and add after it
       const lastImportIndex = updatedContent.lastIndexOf('import ');
@@ -252,7 +252,7 @@ export const updateComponent = (componentName: string, content: string): string 
   });
   
   // Update service calls
-  patterns.methods.forEach(method => {
+  patterns.methods.forEach((method: string) => {
     // Replace mock service calls with production service calls
     const mockPattern = new RegExp(`mock\\w+\\.${method}`, 'g');
     updatedContent = updatedContent.replace(mockPattern, `${method}`);

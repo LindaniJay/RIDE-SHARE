@@ -120,8 +120,9 @@ class ProductionAuthService {
       const response = await apiClient.getProfile();
       
       if (response.data) {
-        this.saveUserToStorage(response.data);
-        return response.data;
+        const user = response.data as User;
+        this.saveUserToStorage(user);
+        return user;
       }
 
       return null;
@@ -147,8 +148,9 @@ class ProductionAuthService {
       }
 
       if (response.data) {
-        this.saveUserToStorage(response.data);
-        return { success: true, user: response.data };
+        const user = response.data as User;
+        this.saveUserToStorage(user);
+        return { success: true, user };
       }
 
       return { success: false, error: 'Profile update failed' };

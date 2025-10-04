@@ -1,4 +1,4 @@
-import { useAuth } from '../contexts/AuthContext';
+// import { useAuth } from '../context/AuthContext';
 
 export interface ValidationRule {
   field: string;
@@ -200,7 +200,7 @@ class CheckoutValidationService {
     }
 
     // Check if user has sufficient balance for certain payment methods
-    if (data.paymentMethod === 'wallet' && this.user?.walletBalance < data.amount) {
+    if (data.paymentMethod === 'wallet' && data.amount && this.user?.walletBalance < data.amount) {
       errors.paymentMethod = 'Insufficient wallet balance';
     }
 

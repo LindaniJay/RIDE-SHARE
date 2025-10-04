@@ -165,7 +165,7 @@ class ProductionBookingService {
       const response = await apiClient.request(`/bookings/${bookingId}`);
       
       if (response.data) {
-        return response.data;
+        return response.data as Booking;
       }
 
       return null;
@@ -246,7 +246,7 @@ class ProductionBookingService {
       const response = await apiClient.request('/bookings');
       
       if (response.data) {
-        return response.data;
+        return response.data as Booking[];
       }
 
       return [];
