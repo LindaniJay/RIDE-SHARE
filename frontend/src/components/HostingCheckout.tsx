@@ -560,6 +560,7 @@ const HostingCheckout: React.FC<HostingCheckoutProps> = ({
                 {loading ? 'Processing...' : currentStep === 2 ? 'Complete Payment' : 'Continue'}
               </button>
             </div>
+          </div>
         )}
       </div>
     </div>
