@@ -179,7 +179,7 @@ const EnhancedFeaturesDemo: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <Component {...feature.props} />
+          <Component {...(feature.props as any)} />
         </div>
       </div>
     );

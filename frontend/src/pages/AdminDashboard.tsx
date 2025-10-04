@@ -114,7 +114,7 @@ const AdminDashboard: React.FC = () => {
     // Set up polling for real-time updates
     const interval = setInterval(fetchStats, 30000); // Update every 30 seconds
     return () => clearInterval(interval);
-  }, [user, navigate]);
+  }, [user, navigateFunc]);
 
   // Show loading while checking authentication or fetching data
   if (loading || !user) {
