@@ -3,12 +3,12 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? (process.env.VITE_BASE_PATH || '/RIDE-SHARE/') : '/',
+  base: process.env.NODE_ENV === 'production' ? (process.env.VITE_BASE_PATH || '/') : '/',
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'background-rideshare.png'],
       manifest: {
         name: 'RideShare SA',
         short_name: 'RideShare',
@@ -55,6 +55,17 @@ export default defineConfig({
               expiration: {
                 maxEntries: 200,
                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          },
+          {
+            urlPattern: /background-rideshare\.png$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'background-cache',
+              expiration: {
+                maxEntries: 1,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
               }
             }
           },
@@ -177,7 +188,7 @@ export default defineConfig({
   // Performance optimizations
   experimental: {
     renderBuiltUrl(filename: string) {
-      return `./${filename}`;
+      return `/${filename}`;
     }
   }
 });
