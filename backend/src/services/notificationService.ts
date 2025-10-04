@@ -14,11 +14,11 @@ export class NotificationService {
       type: 'user_registration',
       data: {
         id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        first_name: user.first_name,
+        last_name: user.last_name,
         email: user.email,
         role: user.role,
-        approvalStatus: (user as any).approvalStatus,
+        approval_status: (user as any).approval_status,
         createdAt: user.createdAt
       }
     });
@@ -34,10 +34,10 @@ export class NotificationService {
         make: listing.make,
         model: listing.model,
         year: listing.year,
-        pricePerDay: listing.pricePerDay,
+        price_per_day: listing.price_per_day,
         location: listing.location,
         status: listing.status,
-        hostId: listing.hostId,
+        host_id: listing.host_id,
         createdAt: listing.createdAt
       }
     });
@@ -50,11 +50,11 @@ export class NotificationService {
       data: {
         id: booking.id,
         status: booking.status,
-        startDate: booking.startDate,
-        endDate: booking.endDate,
-        totalPrice: booking.totalPrice,
-        renterId: booking.renterId,
-        vehicleId: booking.vehicleId,
+        start_date: booking.start_date,
+        end_date: booking.end_date,
+        total_amount: booking.total_amount,
+        renter_id: booking.renter_id,
+        listing_id: booking.listing_id,
         createdAt: booking.createdAt
       }
     });
@@ -73,11 +73,11 @@ export class NotificationService {
   }
 
   // Notify host of vehicle approval/rejection
-  async notifyVehicleUpdate(hostId: number, vehicleId: number, status: 'approved' | 'declined', reason?: string) {
-    this.io.emit(`user:${hostId}:vehicle-update`, {
+  async notifyVehicleUpdate(host_id: number, listing_id: number, status: 'approved' | 'declined', reason?: string) {
+    this.io.emit(`user:${host_id}:vehicle-update`, {
       type: 'vehicle_status_update',
       data: {
-        vehicleId,
+        listing_id,
         status,
         reason,
         timestamp: new Date().toISOString()
@@ -88,7 +88,7 @@ export class NotificationService {
   // Get pending approvals count for admin dashboard
   async getPendingApprovalsCount() {
     const [pendingUsers, pendingVehicles, pendingBookings] = await Promise.all([
-      User.count({ where: { approvalStatus: 'pending' } }),
+      User.count({ where: { approval_status: 'pending' } }),
       Listing.count({ where: { status: 'pending' } }),
       Booking.count({ where: { status: 'pending' } })
     ]);

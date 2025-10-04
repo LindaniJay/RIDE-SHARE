@@ -80,7 +80,7 @@ class SearchService {
       if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
       if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
 
-      const response = await fetch(`/api/vehicles/search?${queryParams.toString()}`);
+      const response = await fetch(`/api/listings/search?${queryParams.toString()}`);
       const data = await response.json();
       
       return data.vehicles || [];
@@ -218,7 +218,7 @@ class SearchService {
       const formData = new FormData();
       formData.append('image', imageFile);
       
-      const response = await fetch('/api/vehicles/search-by-image', {
+      const response = await fetch('/api/listings/search-by-image', {
         method: 'POST',
         body: formData
       });
@@ -296,7 +296,7 @@ class SearchService {
     routeInfo: { distance: number; duration: number }
   ): Promise<Vehicle[]> {
     try {
-      const response = await fetch('/api/vehicles/route-search', {
+      const response = await fetch('/api/listings/route-search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

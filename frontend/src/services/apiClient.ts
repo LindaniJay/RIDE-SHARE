@@ -11,7 +11,7 @@ class ApiClient {
   private defaultTimeout: number = 10000;
   private defaultRetries: number = 3;
 
-  constructor(baseURL: string = import.meta.env.VITE_API_URL || 'http://localhost:5000/api') {
+  constructor(baseURL: string = import.meta.env.VITE_API_URL || 'http://localhost:5001/api') {
     this.baseURL = baseURL;
   }
 

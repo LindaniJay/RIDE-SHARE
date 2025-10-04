@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import Icon from './Icon';
 import GlassCard from './GlassCard';
 import GlassButton from './GlassButton';
+import DocumentUpload from './DocumentUpload';
 
 interface HostSignupModalProps {
   isOpen: boolean;
@@ -19,7 +20,15 @@ const HostSignupModal: React.FC<HostSignupModalProps> = ({ isOpen, onClose, onSw
     password: '',
     confirmPassword: '',
     phoneNumber: '',
-    agreeToTerms: false
+    agreeToTerms: false,
+    documents: {
+      idDocument: null as File | null,
+      driverLicense: null as File | null,
+      proofOfAddress: null as File | null,
+      vehicleRegistration: null as File | null,
+      roadworthyCertificate: null as File | null,
+      insuranceCertificate: null as File | null
+    }
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,6 +56,16 @@ const HostSignupModal: React.FC<HostSignupModalProps> = ({ isOpen, onClose, onSw
 
     if (!formData.agreeToTerms) {
       setError('Please agree to the terms and conditions');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Check required documents for hosts
+    const requiredDocuments = ['idDocument', 'driverLicense', 'proofOfAddress', 'vehicleRegistration', 'roadworthyCertificate', 'insuranceCertificate'];
+    const missingDocuments = requiredDocuments.filter(doc => !formData.documents[doc as keyof typeof formData.documents]);
+    
+    if (missingDocuments.length > 0) {
+      setError(`Please upload all required documents: ${missingDocuments.join(', ')}`);
       setIsSubmitting(false);
       return;
     }
@@ -241,6 +260,118 @@ const HostSignupModal: React.FC<HostSignupModalProps> = ({ isOpen, onClose, onSw
                   className="block w-full pl-10 pr-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   placeholder="Confirm your password"
                 />
+              </div>
+            </div>
+
+            {/* Document Upload Section */}
+            <div className="space-y-4">
+              <div className="border-t border-white/20 pt-4">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <Icon name="FileText" size="sm" className="mr-2" />
+                  Required Documents
+                </h3>
+                <p className="text-sm text-white/70 mb-4">
+                  As a host, you need to upload the following documents to list your vehicles:
+                </p>
+              </div>
+
+              {/* Common documents */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DocumentUpload
+                  label="ID Document"
+                  name="idDocument"
+                  required={true}
+                  description="South African ID, passport, or driver's license"
+                  acceptedTypes={['image/*', 'application/pdf']}
+                  maxSize={5}
+                  value={formData.documents.idDocument}
+                  onChange={(file) => setFormData(prev => ({
+                    ...prev,
+                    documents: { ...prev.documents, idDocument: file }
+                  }))}
+                />
+
+                <DocumentUpload
+                  label="Driver's License"
+                  name="driverLicense"
+                  required={true}
+                  description="Valid South African driver's license"
+                  acceptedTypes={['image/*', 'application/pdf']}
+                  maxSize={5}
+                  value={formData.documents.driverLicense}
+                  onChange={(file) => setFormData(prev => ({
+                    ...prev,
+                    documents: { ...prev.documents, driverLicense: file }
+                  }))}
+                />
+
+                <DocumentUpload
+                  label="Proof of Address"
+                  name="proofOfAddress"
+                  required={true}
+                  description="Utility bill, bank statement, or municipal account (not older than 3 months)"
+                  acceptedTypes={['image/*', 'application/pdf']}
+                  maxSize={5}
+                  value={formData.documents.proofOfAddress}
+                  onChange={(file) => setFormData(prev => ({
+                    ...prev,
+                    documents: { ...prev.documents, proofOfAddress: file }
+                  }))}
+                />
+              </div>
+
+              {/* Vehicle documents */}
+              <div className="space-y-4">
+                <div className="border-t border-white/20 pt-4">
+                  <h4 className="text-md font-semibold text-white mb-3 flex items-center">
+                    <Icon name="Car" size="sm" className="mr-2" />
+                    Vehicle Documents
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <DocumentUpload
+                    label="Vehicle Registration"
+                    name="vehicleRegistration"
+                    required={true}
+                    description="Official vehicle registration document (NATIS)"
+                    acceptedTypes={['image/*', 'application/pdf']}
+                    maxSize={5}
+                    value={formData.documents.vehicleRegistration}
+                    onChange={(file) => setFormData(prev => ({
+                      ...prev,
+                      documents: { ...prev.documents, vehicleRegistration: file }
+                    }))}
+                  />
+
+                  <DocumentUpload
+                    label="Roadworthy Certificate"
+                    name="roadworthyCertificate"
+                    required={true}
+                    description="Valid roadworthy certificate (not older than 2 years)"
+                    acceptedTypes={['image/*', 'application/pdf']}
+                    maxSize={5}
+                    value={formData.documents.roadworthyCertificate}
+                    onChange={(file) => setFormData(prev => ({
+                      ...prev,
+                      documents: { ...prev.documents, roadworthyCertificate: file }
+                    }))}
+                  />
+
+                  <DocumentUpload
+                    label="Insurance Certificate"
+                    name="insuranceCertificate"
+                    required={true}
+                    description="Comprehensive insurance certificate"
+                    acceptedTypes={['image/*', 'application/pdf']}
+                    maxSize={5}
+                    value={formData.documents.insuranceCertificate}
+                    onChange={(file) => setFormData(prev => ({
+                      ...prev,
+                      documents: { ...prev.documents, insuranceCertificate: file }
+                    }))}
+                  />
+                </div>
               </div>
             </div>
 

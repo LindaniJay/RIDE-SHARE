@@ -143,11 +143,22 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     
     const listing = await Listing.create({
       ...listingData,
-      hostId: req.user!.id,
+      host_id: req.user!.id,
       features: listingData.features || [],
       images: listingData.images || [],
-      availability: listingData.availability || { available: true, blockedDates: [] },
+      // availability: listingData.availability || { available: true, blockedDates: [] }, // Field doesn't exist in model
       status: 'pending',
+      approval_status: 'pending',
+      is_featured: false,
+      total_bookings: 0,
+      total_earnings: 0,
+      minimum_rental_days: 1,
+      category: 'economy',
+      vehicle_type: listingData.type === 'trailer' ? 'truck' : listingData.type, // Map type to vehicle_type, handle trailer
+      price_per_day: listingData.pricePerDay || 0,
+      fuel_type: listingData.fuelType || 'petrol',
+      transmission: listingData.transmission || 'manual',
+      seats: listingData.seats || 4,
     });
     
     res.status(201).json(listing);
@@ -168,7 +179,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Listing not found' });
     }
     
-    if (listing.hostId !== req.user!.id) {
+    if (listing.host_id !== req.user!.id) {
       return res.status(403).json({ error: 'You can only update your own listings' });
     }
     
@@ -200,7 +211,10 @@ router.put('/:id/approve', authenticateToken, async (req: AuthRequest, res) => {
     
     const approvalData = approveListingSchema.parse(req.body);
     
-    await listing.update(approvalData);
+    await listing.update({
+      ...approvalData,
+      status: approvalData.status === 'declined' ? 'rejected' : approvalData.status
+    });
     
     res.json(listing);
   } catch (error) {
@@ -220,7 +234,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Listing not found' });
     }
     
-    if (listing.hostId !== req.user!.id) {
+    if (listing.host_id !== req.user!.id) {
       return res.status(403).json({ error: 'You can only delete your own listings' });
     }
     
@@ -242,7 +256,7 @@ router.get('/host/my-listings', authenticateToken, async (req: AuthRequest, res)
     const { page = 1, limit = 10, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
     
-    const whereClause: Record<string, unknown> = { hostId: req.user!.id };
+    const whereClause: Record<string, unknown> = { host_id: req.user!.id };
     if (status) {
       whereClause.status = status;
     }

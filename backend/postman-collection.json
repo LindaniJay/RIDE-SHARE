@@ -1,0 +1,804 @@
+{
+  "info": {
+    "name": "Rental Site API - Production Ready",
+    "description": "Comprehensive API collection for the rental site with all production endpoints",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vehicleId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "checkpointId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "User Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"role\": \"renter\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', response.token);",
+                  "    pm.collectionVariables.set('userId', response.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vehicles & Listings",
+      "item": [
+        {
+          "name": "Get All Vehicles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicle by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/vehicles/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles", "{{vehicleId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vehicle Listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('vehicleId', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Toyota Corolla 2020\",\n  \"make\": \"Toyota\",\n  \"model\": \"Corolla\",\n  \"year\": 2020,\n  \"vehicle_type\": \"car\",\n  \"category\": \"economy\",\n  \"price_per_day\": 450,\n  \"price_per_week\": 2500,\n  \"price_per_month\": 6500,\n  \"location\": {\n    \"city\": \"Cape Town\",\n    \"province\": \"Western Cape\",\n    \"latitude\": -33.9249,\n    \"longitude\": 18.4241\n  },\n  \"features\": [\"Air conditioning\", \"Bluetooth\", \"GPS\"],\n  \"description\": \"Perfect for city driving and daily commutes\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/listings",
+              "host": ["{{baseUrl}}"],
+              "path": ["listings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vehicle Listing",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price_per_day\": 500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/listings/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["listings", "{{vehicleId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vehicle Listing",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/listings/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["listings", "{{vehicleId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Get All Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "{{bookingId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('bookingId', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicle_id\": \"{{vehicleId}}\",\n  \"start_date\": \"2024-02-01\",\n  \"end_date\": \"2024-02-03\",\n  \"total_days\": 2,\n  \"total_price\": 1000,\n  \"special_requests\": \"Need GPS navigation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Booking Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "{{bookingId}}", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Change of plans\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "{{bookingId}}", "cancel"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Checkpoints",
+      "item": [
+        {
+          "name": "Create Pickup Checkpoint",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('checkpointId', response.checkpoint.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"type\": \"pickup\",\n  \"notes\": \"Vehicle pickup inspection\",\n  \"location\": {\n    \"latitude\": -33.9249,\n    \"longitude\": 18.4241,\n    \"address\": \"Cape Town International Airport\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/checkpoints",
+              "host": ["{{baseUrl}}"],
+              "path": ["checkpoints"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Checkpoints for Booking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/checkpoints/booking/{{bookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["checkpoints", "booking", "{{bookingId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Checkpoint Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"item_name\": \"Engine\",\n  \"status\": \"working\",\n  \"notes\": \"Engine starts and runs smoothly\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/checkpoints/{{checkpointId}}/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["checkpoints", "{{checkpointId}}", "items"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Checkpoint Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "category",
+                  "value": "exterior",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Vehicle exterior condition",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/checkpoints/{{checkpointId}}/images",
+              "host": ["{{baseUrl}}"],
+              "path": ["checkpoints", "{{checkpointId}}", "images"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Checkpoint Images",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/checkpoints/{{checkpointId}}/images",
+              "host": ["{{baseUrl}}"],
+              "path": ["checkpoints", "{{checkpointId}}", "images"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Checkpoint Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\",\n  \"notes\": \"Pickup inspection completed successfully\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/checkpoints/{{checkpointId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["checkpoints", "{{checkpointId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Get All Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"amount_cents\": 100000,\n  \"payment_method\": \"payfast\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Payment Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"succeeded\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "1", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get Admin Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Vehicles (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "vehicles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Bookings (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Checkpoints (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/checkpoints/admin/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["checkpoints", "admin", "all"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{userId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", "{{userId}}", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vehicle Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/vehicles/{{vehicleId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "vehicles", "{{vehicleId}}", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

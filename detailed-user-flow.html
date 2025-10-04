@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RideShare SA - Detailed User Flow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .flow-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 5px solid #667eea;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .flow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .flow-step:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .step-description {
+            color: #6c757d;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .step-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .action-yes {
+            background: #28a745;
+            color: white;
+        }
+
+        .action-no {
+            background: #dc3545;
+            color: white;
+        }
+
+        .action-neutral {
+            background: #6c757d;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .step-details {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-details.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .details-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .details-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .details-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            color: #495057;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .details-list li:before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .details-list li:last-child {
+            border-bottom: none;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            font-size: 1.5em;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .decision-point {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .decision-title {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .decision-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .flow-steps {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>RideShare SA</h1>
+            <p>Complete User Journey Flow - From Discovery to Rental Completion</p>
+        </div>
+
+        <div class="content">
+            <div class="flow-container">
+                <!-- Discovery Section -->
+                <div class="flow-section">
+                    <h2 class="section-title">START: User Discovers RideShare</h2>
+                    <div class="flow-steps">
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">1</div>
+                                <div class="step-title">Discovery Channels</div>
+                            </div>
+                            <div class="step-description">User discovers RideShare through various channels</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-neutral">Social Media</span>
+                                <span class="action-btn action-neutral">Word of Mouth</span>
+                                <span class="action-btn action-neutral">Google Search</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Discovery Process:</div>
+                                <ul class="details-list">
+                                    <li>User sees RideShare advertisement on social media</li>
+                                    <li>Friend recommends RideShare platform</li>
+                                    <li>User searches for car rental services on Google</li>
+                                    <li>User clicks on RideShare website link</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">2</div>
+                                <div class="step-title">Land on Website/App</div>
+                            </div>
+                            <div class="step-description">User arrives at RideShare platform</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-neutral">Browse Available Vehicles</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Landing Experience:</div>
+                                <ul class="details-list">
+                                    <li>Homepage loads with featured vehicles</li>
+                                    <li>Search bar prominently displayed</li>
+                                    <li>User can browse without registration</li>
+                                    <li>Platform showcases available vehicles</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="decision-point">
+                        <div class="decision-title">Ready to Book?</div>
+                        <div class="decision-options">
+                            <span class="action-btn action-yes">Yes - Register</span>
+                            <span class="action-btn action-no">Just Browsing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registration Section -->
+                <div class="flow-section">
+                    <h2 class="section-title">REGISTRATION & VERIFICATION</h2>
+                    <div class="flow-steps">
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">3</div>
+                                <div class="step-title">Click "Sign Up as Renter"</div>
+                            </div>
+                            <div class="step-description">User initiates registration process</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Enter Personal Details</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Registration Form:</div>
+                                <ul class="details-list">
+                                    <li>Name, Email, Phone Number</li>
+                                    <li>Create secure password</li>
+                                    <li>Accept terms and conditions</li>
+                                    <li>Select user type (Renter)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">4</div>
+                                <div class="step-title">Email Verification</div>
+                            </div>
+                            <div class="step-description">User verifies email address</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Verify Email</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Verification Process:</div>
+                                <ul class="details-list">
+                                    <li>Receive verification email</li>
+                                    <li>Click verification link</li>
+                                    <li>Email address confirmed</li>
+                                    <li>Account partially activated</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">5</div>
+                                <div class="step-title">Upload Driver's License</div>
+                            </div>
+                            <div class="step-description">User uploads driving documentation</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Upload Document</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Document Upload:</div>
+                                <ul class="details-list">
+                                    <li>Take clear photo of driver's license</li>
+                                    <li>Ensure all text is readable</li>
+                                    <li>Upload to secure platform</li>
+                                    <li>System validates document format</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">6</div>
+                                <div class="step-title">Take Selfie for Verification</div>
+                            </div>
+                            <div class="step-description">Identity verification process</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Take Selfie</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Identity Verification:</div>
+                                <ul class="details-list">
+                                    <li>Take clear selfie photo</li>
+                                    <li>Ensure good lighting and visibility</li>
+                                    <li>Match photo with license</li>
+                                    <li>Submit for automated verification</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">7</div>
+                                <div class="step-title">Identity Verification (Automated)</div>
+                            </div>
+                            <div class="step-description">System processes verification</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Processing...</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Automated Verification:</div>
+                                <ul class="details-list">
+                                    <li>AI compares selfie with license photo</li>
+                                    <li>Validates document authenticity</li>
+                                    <li>Checks against government databases</li>
+                                    <li>Processes verification results</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="decision-point">
+                        <div class="decision-title">Verification Approved?</div>
+                        <div class="decision-options">
+                            <span class="action-btn action-yes">Approved</span>
+                            <span class="action-btn action-no">Rejected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search & Booking Section -->
+                <div class="flow-section">
+                    <h2 class="section-title">SEARCHING & BOOKING</h2>
+                    <div class="flow-steps">
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">8</div>
+                                <div class="step-title">Enter Search Criteria</div>
+                            </div>
+                            <div class="step-description">User searches for vehicles</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-neutral">Search</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Search Parameters:</div>
+                                <ul class="details-list">
+                                    <li>Pickup location and dates</li>
+                                    <li>Vehicle type preferences</li>
+                                    <li>Budget range</li>
+                                    <li>Special requirements</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">9</div>
+                                <div class="step-title">View Search Results</div>
+                            </div>
+                            <div class="step-description">Browse available vehicles</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-neutral">Apply Filters</span>
+                                <span class="action-btn action-neutral">Select Vehicle</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Search Results:</div>
+                                <ul class="details-list">
+                                    <li>List of available vehicles</li>
+                                    <li>Price comparison</li>
+                                    <li>Owner ratings and reviews</li>
+                                    <li>Vehicle specifications</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">10</div>
+                                <div class="step-title">Select Vehicle</div>
+                            </div>
+                            <div class="step-description">Choose preferred vehicle</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">View Full Details</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Vehicle Selection:</div>
+                                <ul class="details-list">
+                                    <li>Review vehicle photos</li>
+                                    <li>Check specifications</li>
+                                    <li>Read owner profile</li>
+                                    <li>Review ratings and comments</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="decision-point">
+                        <div class="decision-title">Proceed with This Vehicle?</div>
+                        <div class="decision-options">
+                            <span class="action-btn action-yes">Yes - Book It</span>
+                            <span class="action-btn action-no">Keep Looking</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking Process Section -->
+                <div class="flow-section">
+                    <h2 class="section-title">BOOKING PROCESS</h2>
+                    <div class="flow-steps">
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">11</div>
+                                <div class="step-title">Review Rental Details</div>
+                            </div>
+                            <div class="step-description">Confirm booking information</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Confirm</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Booking Summary:</div>
+                                <ul class="details-list">
+                                    <li>Rental dates and times</li>
+                                    <li>Daily rate and total cost</li>
+                                    <li>Security deposit amount</li>
+                                    <li>Pickup and return locations</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">12</div>
+                                <div class="step-title">Add Insurance Coverage?</div>
+                            </div>
+                            <div class="step-description">Choose insurance options</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Full Coverage</span>
+                                <span class="action-btn action-no">No Insurance</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Insurance Options:</div>
+                                <ul class="details-list">
+                                    <li>Basic, Standard, or Premium coverage</li>
+                                    <li>Additional protection benefits</li>
+                                    <li>Owner's insurance applies if declined</li>
+                                    <li>Coverage cost added to total</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">13</div>
+                                <div class="step-title">Process Security Deposit</div>
+                            </div>
+                            <div class="step-description">Handle payment processing</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Payment Approved</span>
+                                <span class="action-btn action-no">Payment Failed</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Payment Process:</div>
+                                <ul class="details-list">
+                                    <li>Security deposit held on card</li>
+                                    <li>Not charged unless damage occurs</li>
+                                    <li>Full rental payment processed</li>
+                                    <li>Payment confirmation sent</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Owner Approval Section -->
+                <div class="flow-section">
+                    <h2 class="section-title">OWNER APPROVAL</h2>
+                    <div class="flow-steps">
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">14</div>
+                                <div class="step-title">Wait for Owner Response</div>
+                            </div>
+                            <div class="step-description">Owner reviews booking request</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Approved</span>
+                                <span class="action-btn action-no">Declined</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Owner Decision:</div>
+                                <ul class="details-list">
+                                    <li>Owner has 24 hours to respond</li>
+                                    <li>Reviews renter profile and history</li>
+                                    <li>Checks vehicle availability</li>
+                                    <li>Makes approval decision</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pre-Pickup Section -->
+                <div class="flow-section">
+                    <h2 class="section-title">PRE-PICKUP PREPARATION</h2>
+                    <div class="flow-steps">
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">15</div>
+                                <div class="step-title">Pre-Pickup Reminders</div>
+                            </div>
+                            <div class="step-description">48 hours before pickup</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-neutral">Review Instructions</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Preparation:</div>
+                                <ul class="details-list">
+                                    <li>Email and SMS reminders sent</li>
+                                    <li>Pickup instructions provided</li>
+                                    <li>Owner contact details shared</li>
+                                    <li>Meeting location confirmed</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Pickup Section -->
+                <div class="flow-section">
+                    <h2 class="section-title">VEHICLE PICKUP</h2>
+                    <div class="flow-steps">
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">16</div>
+                                <div class="step-title">Meet Owner at Location</div>
+                            </div>
+                            <div class="step-description">Initial meeting and vehicle review</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Review Vehicle</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Pickup Process:</div>
+                                <ul class="details-list">
+                                    <li>Meet at agreed location</li>
+                                    <li>Review vehicle together</li>
+                                    <li>Document condition thoroughly</li>
+                                    <li>Take photos of all sides</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">17</div>
+                                <div class="step-title">Document Vehicle Condition</div>
+                            </div>
+                            <div class="step-description">Record vehicle state</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Upload Photos</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Documentation:</div>
+                                <ul class="details-list">
+                                    <li>Photos of all vehicle sides</li>
+                                    <li>Interior condition photos</li>
+                                    <li>Odometer reading</li>
+                                    <li>Fuel level documentation</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">18</div>
+                                <div class="step-title">Sign Digital Rental Agreement</div>
+                            </div>
+                            <div class="step-description">Complete rental contract</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Both Sign</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Agreement Process:</div>
+                                <ul class="details-list">
+                                    <li>Digital contract displayed</li>
+                                    <li>Both parties review terms</li>
+                                    <li>Electronic signatures collected</li>
+                                    <li>Agreement stored securely</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Rental Section -->
+                <div class="flow-section">
+                    <h2 class="section-title">ACTIVE RENTAL PERIOD</h2>
+                    <div class="flow-steps">
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">19</div>
+                                <div class="step-title">Enjoy Your Ride!</div>
+                            </div>
+                            <div class="step-description">Rental period in progress</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">All Good</span>
+                                <span class="action-btn action-no">Issue Occurred</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">During Rental:</div>
+                                <ul class="details-list">
+                                    <li>Use vehicle according to terms</li>
+                                    <li>Follow safety guidelines</li>
+                                    <li>Keep vehicle clean and secure</li>
+                                    <li>Contact support if needed</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Return Section -->
+                <div class="flow-section">
+                    <h2 class="section-title">VEHICLE RETURN</h2>
+                    <div class="flow-steps">
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">20</div>
+                                <div class="step-title">Return Reminder</div>
+                            </div>
+                            <div class="step-description">24 hours before return</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-neutral">Confirm Return Time</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Return Preparation:</div>
+                                <ul class="details-list">
+                                    <li>Return reminder notifications</li>
+                                    <li>Confirm return time with owner</li>
+                                    <li>Clean vehicle thoroughly</li>
+                                    <li>Return with same fuel level</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">21</div>
+                                <div class="step-title">Return Inspection</div>
+                            </div>
+                            <div class="step-description">Final vehicle assessment</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">No Damage</span>
+                                <span class="action-btn action-no">Damage Found</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Inspection Process:</div>
+                                <ul class="details-list">
+                                    <li>Meet owner at return location</li>
+                                    <li>Conduct thorough inspection</li>
+                                    <li>Take return condition photos</li>
+                                    <li>Compare with pickup photos</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post-Rental Section -->
+                <div class="flow-section">
+                    <h2 class="section-title">POST-RENTAL</h2>
+                    <div class="flow-steps">
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">22</div>
+                                <div class="step-title">Receive Rating Request</div>
+                            </div>
+                            <div class="step-description">Rate the experience</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Rate & Review</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Feedback Process:</div>
+                                <ul class="details-list">
+                                    <li>Rate owner and vehicle</li>
+                                    <li>Write detailed review</li>
+                                    <li>Owner rates renter</li>
+                                    <li>Receive final receipt</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-step" onclick="toggleDetails(this)">
+                            <div class="step-header">
+                                <div class="step-number">23</div>
+                                <div class="step-title">Need Another Rental?</div>
+                            </div>
+                            <div class="step-description">Future booking decision</div>
+                            <div class="step-actions">
+                                <span class="action-btn action-yes">Book Again</span>
+                                <span class="action-btn action-neutral">Later</span>
+                            </div>
+                            <div class="step-details">
+                                <div class="details-title">Next Steps:</div>
+                                <ul class="details-list">
+                                    <li>Book same vehicle again</li>
+                                    <li>Save favorites for future</li>
+                                    <li>Exit - rental complete</li>
+                                    <li>Platform usage complete</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleDetails(stepElement) {
+            const details = stepElement.querySelector('.step-details');
+            const isActive = details.classList.contains('active');
+            
+            // Close all other details in the same section
+            const allDetails = stepElement.parentElement.parentElement.querySelectorAll('.step-details');
+            allDetails.forEach(detail => {
+                detail.classList.remove('active');
+            });
+            
+            // Toggle current details
+            if (!isActive) {
+                details.classList.add('active');
+            }
+        }
+
+        // Add smooth scrolling and animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click animations to flow steps
+            const flowSteps = document.querySelectorAll('.flow-step');
+            flowSteps.forEach(step => {
+                step.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+

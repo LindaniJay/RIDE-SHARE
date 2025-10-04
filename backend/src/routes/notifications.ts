@@ -1,211 +1,192 @@
 import express from 'express';
-import { authenticateToken } from '../middlewares/auth';
-import { User, Booking, Vehicle } from '../models';
+import { z } from 'zod';
+import { authenticateToken, AuthRequest, requireRole } from '../middlewares/auth';
+import { Notification, User } from '../models';
+import { Op } from 'sequelize';
 
 const router = express.Router();
 
+// Validation schemas
+const createNotificationSchema = z.object({
+  title: z.string().min(1).max(200),
+  message: z.string().min(1).max(1000),
+  type: z.enum(['booking_created', 'booking_confirmed', 'booking_cancelled', 'payment_received', 'payment_failed', 'review_received', 'system_announcement', 'security_alert']),
+  user_id: z.string().optional(),
+  data: z.any().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).optional().default('medium')
+});
+
+const markAsReadSchema = z.object({
+  notification_ids: z.array(z.string())
+});
+
 // Get user notifications
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const userId = req.user!.id;
-    const { page = 1, limit = 20 } = req.query;
-    
-    // Get notifications based on user role
-    let notifications: any[] = [];
-    
-    if (req.user!.role === 'renter') {
-      // Renter notifications: booking updates, payment confirmations, etc.
-      const bookings = await Booking.findAll({
-        where: { renterId: userId },
-        include: [{
-          model: Vehicle,
-          include: [{
-            model: User,
-            as: 'host',
-            attributes: ['firstName', 'lastName']
-          }]
-        }],
-        order: [['updatedAt', 'DESC']],
-        limit: Number(limit),
-        offset: (Number(page) - 1) * Number(limit)
-      });
+    const { page = 1, limit = 20, unread_only } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
 
-      notifications = bookings.map(booking => ({
-        id: `booking-${booking.id}`,
-        type: 'booking',
-        title: getBookingNotificationTitle(booking.status),
-        message: getBookingNotificationMessage(booking),
-        read: false,
-        createdAt: booking.updatedAt,
-        data: {
-          bookingId: booking.id,
-          vehicleTitle: (booking as any).Vehicle?.title,
-          hostName: `${(booking as any).Vehicle?.host?.firstName} ${(booking as any).Vehicle?.host?.lastName}`
-        }
-      }));
-    } else if (req.user!.role === 'host') {
-      // Host notifications: new booking requests, vehicle approvals, etc.
-      const hostVehicles = await Vehicle.findAll({
-        where: { hostId: userId },
-        include: [{
-          model: Booking,
-          include: [{
-            model: User,
-            as: 'renter',
-            attributes: ['firstName', 'lastName']
-          }]
-        }]
-      });
+    const whereClause: any = {
+      user_id: req.user!.id
+    };
 
-      const hostBookings = hostVehicles.flatMap(vehicle => 
-        (vehicle as any).bookings?.map((booking: any) => ({
-          id: `booking-${booking.id}`,
-          type: 'booking',
-          title: getHostBookingNotificationTitle(booking.status),
-          message: getHostBookingNotificationMessage(booking, vehicle),
-          read: false,
-          createdAt: booking.createdAt,
-          data: {
-            bookingId: booking.id,
-            vehicleTitle: vehicle.title,
-            renterName: `${booking.renter?.firstName} ${booking.renter?.lastName}`
-          }
-        })) || []
-      );
-
-      // Vehicle status notifications
-      const vehicleNotifications = hostVehicles.map(vehicle => ({
-        id: `vehicle-${vehicle.id}`,
-        type: 'vehicle',
-        title: getVehicleNotificationTitle((vehicle as any).status),
-        message: getVehicleNotificationMessage(vehicle),
-        read: false,
-        createdAt: vehicle.updatedAt,
-        data: {
-          vehicleId: vehicle.id,
-          vehicleTitle: (vehicle as any).title,
-          status: (vehicle as any).status
-        }
-      }));
-
-      notifications = [...hostBookings, ...vehicleNotifications]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, Number(limit));
+    if (unread_only === 'true') {
+      whereClause.is_read = false;
     }
+
+    const { count, rows: notifications } = await Notification.findAndCountAll({
+      where: whereClause,
+      order: [['created_at', 'DESC']],
+      limit: Number(limit),
+      offset
+    });
 
     res.json({
       success: true,
-      data: {
         notifications,
         pagination: {
           page: Number(page),
           limit: Number(limit),
-          total: notifications.length
-        }
+        total: count,
+        pages: Math.ceil(count / Number(limit))
       }
     });
   } catch (error) {
     console.error('Error fetching notifications:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to fetch notifications' 
-    });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Mark notification as read
-router.patch('/:notificationId/read', authenticateToken, async (req, res) => {
+// Get unread notification count
+router.get('/unread-count', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { notificationId } = req.params;
-    
-    // In a real implementation, you would update a notifications table
-    // For now, we'll just return success
+    const count = await Notification.count({
+      where: {
+        user_id: req.user!.id,
+        is_read: false
+      }
+    });
+
     res.json({
       success: true,
-      message: 'Notification marked as read'
+      unread_count: count
     });
   } catch (error) {
-    console.error('Error marking notification as read:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to mark notification as read' 
-    });
+    console.error('Error fetching unread count:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Helper functions for notification messages
-function getBookingNotificationTitle(status: string): string {
-  switch (status) {
-    case 'confirmed':
-      return 'Booking Confirmed';
-    case 'cancelled':
-      return 'Booking Cancelled';
-    case 'completed':
-      return 'Booking Completed';
-    default:
-      return 'Booking Update';
-  }
-}
+// Create notification (admin only)
+router.post('/', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+  try {
+    const notificationData = createNotificationSchema.parse(req.body);
 
-function getBookingNotificationMessage(booking: any): string {
-  switch (booking.status) {
-    case 'confirmed':
-      return `Your booking for ${booking.Vehicle?.title} has been confirmed by the host.`;
-    case 'cancelled':
-      return `Your booking for ${booking.Vehicle?.title} has been cancelled.`;
-    case 'completed':
-      return `Your booking for ${booking.Vehicle?.title} has been completed. Please leave a review!`;
-    default:
-      return `Your booking for ${booking.Vehicle?.title} has been updated.`;
-  }
-}
+    const notification = await Notification.create({
+      ...notificationData,
+      user_id: notificationData.user_id || req.user!.id,
+      is_read: false,
+      is_sent: false
+    });
 
-function getHostBookingNotificationTitle(status: string): string {
-  switch (status) {
-    case 'pending':
-      return 'New Booking Request';
-    case 'confirmed':
-      return 'Booking Confirmed';
-    case 'cancelled':
-      return 'Booking Cancelled';
-    default:
-      return 'Booking Update';
+    res.status(201).json({
+      success: true,
+      message: 'Notification created successfully',
+      notification
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.errors
+      });
+    }
+    
+    console.error('Error creating notification:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-}
+});
 
-function getHostBookingNotificationMessage(booking: any, vehicle: any): string {
-  switch (booking.status) {
-    case 'pending':
-      return `${booking.renter?.firstName} ${booking.renter?.lastName} has requested to book your ${vehicle.title}.`;
-    case 'confirmed':
-      return `Your ${vehicle.title} has been booked by ${booking.renter?.firstName} ${booking.renter?.lastName}.`;
-    case 'cancelled':
-      return `The booking for your ${vehicle.title} has been cancelled.`;
-    default:
-      return `There's an update to the booking for your ${vehicle.title}.`;
-  }
-}
+// Mark notifications as read
+router.put('/mark-read', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { notification_ids } = markAsReadSchema.parse(req.body);
 
-function getVehicleNotificationTitle(status: string): string {
-  switch (status) {
-    case 'approved':
-      return 'Vehicle Approved';
-    case 'declined':
-      return 'Vehicle Declined';
-    default:
-      return 'Vehicle Status Update';
-  }
-}
+    await Notification.update(
+      { is_read: true, read_at: new Date() },
+      {
+        where: {
+          id: notification_ids,
+          user_id: req.user!.id
+        }
+      }
+    );
 
-function getVehicleNotificationMessage(vehicle: any): string {
-  switch (vehicle.status) {
-    case 'approved':
-      return `Your vehicle "${vehicle.title}" has been approved and is now available for rent.`;
-    case 'declined':
-      return `Your vehicle "${vehicle.title}" has been declined. Please check the reason and resubmit.`;
-    default:
-      return `Your vehicle "${vehicle.title}" status has been updated.`;
+    res.json({
+      success: true,
+      message: 'Notifications marked as read'
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.errors
+      });
+    }
+    
+    console.error('Error marking notifications as read:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-}
+});
+
+// Mark all notifications as read
+router.put('/mark-all-read', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    await Notification.update(
+      { is_read: true, read_at: new Date() },
+      {
+        where: {
+          user_id: req.user!.id,
+          is_read: false
+        }
+      }
+    );
+
+    res.json({
+      success: true,
+      message: 'All notifications marked as read'
+    });
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete notification
+router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const notification = await Notification.findByPk(id);
+    if (!notification) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+
+    // Check if user owns the notification or is admin
+    if (notification.user_id !== req.user!.id && req.user!.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    await notification.destroy();
+
+    res.json({
+      success: true,
+      message: 'Notification deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 export default router;

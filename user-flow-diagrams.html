@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RideShare SA - Interactive User Flow Diagrams</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .flow-section {
+            display: none;
+        }
+
+        .flow-section.active {
+            display: block;
+        }
+
+        .flow-diagram {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .flow-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .flow-step:hover::before {
+            transform: scaleX(1);
+        }
+
+        .step-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: block;
+            font-weight: bold;
+            color: #667eea;
+            background: #f8f9fa;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+        }
+
+        .step-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .step-description {
+            color: #6c757d;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .step-details {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-details.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .details-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .details-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .details-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            color: #495057;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .details-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .details-list li:last-child {
+            border-bottom: none;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 300;
+        }
+
+        .section-description {
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .admin-flow { border-left: 5px solid #dc3545; }
+        .host-flow { border-left: 5px solid #28a745; }
+        .renter-flow { border-left: 5px solid #007bff; }
+
+        .admin-step { border-left: 4px solid #dc3545; }
+        .host-step { border-left: 4px solid #28a745; }
+        .renter-step { border-left: 4px solid #007bff; }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .flow-diagram {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>RideShare SA</h1>
+            <p>Interactive User Flow Diagrams - Click on any step to see detailed information</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showSection('admin')">Admin Flow</button>
+            <button class="nav-tab" onclick="showSection('host')">Host Flow</button>
+            <button class="nav-tab" onclick="showSection('renter')">Renter Flow</button>
+        </div>
+
+        <div class="content">
+            <!-- Admin Flow Section -->
+            <div id="admin" class="flow-section active">
+                <h2 class="section-title">Admin User Journey</h2>
+                <p class="section-description">Step-by-step flow of what happens when an admin enters the RideShare SA platform.</p>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step admin-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">1</span>
+                        <div class="step-title">Platform Entry</div>
+                        <div class="step-description">Admin visits ridesharex.co.za and sees the landing page</div>
+                        <div class="step-details">
+                            <div class="details-title">What happens:</div>
+                            <ul class="details-list">
+                                <li>Landing page loads with platform overview</li>
+                                <li>Admin login button is prominently displayed</li>
+                                <li>System checks for existing admin session</li>
+                                <li>If no session, redirects to admin login page</li>
+                                <li>If session exists, redirects to admin dashboard</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step admin-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">2</span>
+                        <div class="step-title">Admin Authentication</div>
+                        <div class="step-description">Admin enters credentials and completes security verification</div>
+                        <div class="step-details">
+                            <div class="details-title">Authentication Process:</div>
+                            <ul class="details-list">
+                                <li>Admin enters email and password</li>
+                                <li>System validates credentials against admin database</li>
+                                <li>Multi-factor authentication is triggered (SMS/Email)</li>
+                                <li>Admin enters verification code</li>
+                                <li>System creates secure admin session</li>
+                                <li>Admin is redirected to dashboard</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step admin-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">3</span>
+                        <div class="step-title">Admin Dashboard</div>
+                        <div class="step-description">Admin sees comprehensive platform overview and key metrics</div>
+                        <div class="step-details">
+                            <div class="details-title">Dashboard Display:</div>
+                            <ul class="details-list">
+                                <li>Real-time platform statistics load</li>
+                                <li>Active users, bookings, and revenue metrics shown</li>
+                                <li>Recent activity feed displays</li>
+                                <li>Alert notifications for critical issues</li>
+                                <li>Quick action buttons for common tasks</li>
+                                <li>Navigation menu with all admin functions</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step admin-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">4</span>
+                        <div class="step-title">User Management Actions</div>
+                        <div class="step-description">Admin reviews and manages user accounts and registrations</div>
+                        <div class="step-details">
+                            <div class="details-title">User Management Process:</div>
+                            <ul class="details-list">
+                                <li>Admin clicks on "User Management" section</li>
+                                <li>System loads pending user registrations</li>
+                                <li>Admin reviews user profiles and documents</li>
+                                <li>Admin approves or rejects registrations</li>
+                                <li>System sends notifications to users</li>
+                                <li>User status is updated in database</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step admin-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">5</span>
+                        <div class="step-title">Vehicle Approval Process</div>
+                        <div class="step-description">Admin reviews and approves vehicle listings from hosts</div>
+                        <div class="step-details">
+                            <div class="details-title">Vehicle Approval Workflow:</div>
+                            <ul class="details-list">
+                                <li>Admin navigates to vehicle management</li>
+                                <li>System shows pending vehicle listings</li>
+                                <li>Admin reviews vehicle photos and details</li>
+                                <li>Admin verifies vehicle documentation</li>
+                                <li>Admin approves or requests changes</li>
+                                <li>Vehicle becomes available for booking</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step admin-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">6</span>
+                        <div class="step-title">Financial Monitoring</div>
+                        <div class="step-description">Admin tracks platform revenue and financial performance</div>
+                        <div class="step-details">
+                            <div class="details-title">Financial Dashboard:</div>
+                            <ul class="details-list">
+                                <li>Admin accesses financial reports section</li>
+                                <li>System displays revenue analytics</li>
+                                <li>Transaction history and trends shown</li>
+                                <li>Payout status to hosts displayed</li>
+                                <li>Admin can process payouts manually</li>
+                                <li>Financial alerts and notifications shown</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step admin-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">7</span>
+                        <div class="step-title">Safety & Security Monitoring</div>
+                        <div class="step-description">Admin monitors platform safety and handles security issues</div>
+                        <div class="step-details">
+                            <div class="details-title">Safety Management:</div>
+                            <ul class="details-list">
+                                <li>Admin reviews safety incident reports</li>
+                                <li>System shows flagged content and users</li>
+                                <li>Admin investigates security alerts</li>
+                                <li>Admin takes action on violations</li>
+                                <li>System logs all admin actions</li>
+                                <li>Notifications sent to affected users</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step admin-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">8</span>
+                        <div class="step-title">Support & Communication</div>
+                        <div class="step-description">Admin handles customer support and platform communications</div>
+                        <div class="step-details">
+                            <div class="details-title">Support Operations:</div>
+                            <ul class="details-list">
+                                <li>Admin reviews support tickets</li>
+                                <li>System shows live chat conversations</li>
+                                <li>Admin responds to user inquiries</li>
+                                <li>Admin escalates complex issues</li>
+                                <li>System tracks response times</li>
+                                <li>Admin sends platform announcements</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Host Flow Section -->
+            <div id="host" class="flow-section">
+                <h2 class="section-title">Host User Journey</h2>
+                <p class="section-description">Step-by-step flow of what happens when a host enters the RideShare SA platform.</p>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step host-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">1</span>
+                        <div class="step-title">Platform Entry</div>
+                        <div class="step-description">Host visits ridesharex.co.za and sees the landing page</div>
+                        <div class="step-details">
+                            <div class="details-title">What happens:</div>
+                            <ul class="details-list">
+                                <li>Landing page loads with platform overview</li>
+                                <li>"Become a Host" button is prominently displayed</li>
+                                <li>System checks for existing user session</li>
+                                <li>If logged in, redirects to host dashboard</li>
+                                <li>If not logged in, shows registration options</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step host-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">2</span>
+                        <div class="step-title">Host Registration</div>
+                        <div class="step-description">Host creates account and completes verification process</div>
+                        <div class="step-details">
+                            <div class="details-title">Registration Process:</div>
+                            <ul class="details-list">
+                                <li>Host clicks "Become a Host" button</li>
+                                <li>Registration form loads with required fields</li>
+                                <li>Host enters email, phone, and personal details</li>
+                                <li>System sends verification email/SMS</li>
+                                <li>Host verifies contact information</li>
+                                <li>Account is created and pending approval</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step host-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">3</span>
+                        <div class="step-title">Document Upload</div>
+                        <div class="step-description">Host uploads required documents for verification</div>
+                        <div class="step-details">
+                            <div class="details-title">Document Verification:</div>
+                            <ul class="details-list">
+                                <li>Host navigates to document upload section</li>
+                                <li>System requests ID document, driver's license</li>
+                                <li>Host uploads clear photos of documents</li>
+                                <li>System validates document authenticity</li>
+                                <li>Host sets up bank account for payouts</li>
+                                <li>Documents are sent for admin review</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step host-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">4</span>
+                        <div class="step-title">Vehicle Listing Creation</div>
+                        <div class="step-description">Host adds their first vehicle to the platform</div>
+                        <div class="step-details">
+                            <div class="details-title">Vehicle Listing Process:</div>
+                            <ul class="details-list">
+                                <li>Host clicks "Add Vehicle" button</li>
+                                <li>Vehicle listing form loads with categories</li>
+                                <li>Host uploads high-quality vehicle photos</li>
+                                <li>Host enters vehicle details and specifications</li>
+                                <li>Host sets pricing and availability calendar</li>
+                                <li>Listing is submitted for admin approval</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step host-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">5</span>
+                        <div class="step-title">Host Dashboard</div>
+                        <div class="step-description">Host sees their personalized dashboard with vehicle status</div>
+                        <div class="step-details">
+                            <div class="details-title">Dashboard Display:</div>
+                            <ul class="details-list">
+                                <li>Host dashboard loads with vehicle overview</li>
+                                <li>Pending approvals and status updates shown</li>
+                                <li>Earnings summary and payout information displayed</li>
+                                <li>Recent activity and notifications shown</li>
+                                <li>Quick action buttons for common tasks</li>
+                                <li>Navigation menu with all host functions</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step host-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">6</span>
+                        <div class="step-title">Booking Management</div>
+                        <div class="step-description">Host receives and manages booking requests</div>
+                        <div class="step-details">
+                            <div class="details-title">Booking Workflow:</div>
+                            <ul class="details-list">
+                                <li>Host receives booking request notification</li>
+                                <li>System shows renter profile and rental details</li>
+                                <li>Host reviews renter's history and ratings</li>
+                                <li>Host approves or declines the booking</li>
+                                <li>System sends confirmation to renter</li>
+                                <li>Booking is added to host's calendar</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step host-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">7</span>
+                        <div class="step-title">Guest Communication</div>
+                        <div class="step-description">Host communicates with renter before and during rental</div>
+                        <div class="step-details">
+                            <div class="details-title">Communication Process:</div>
+                            <ul class="details-list">
+                                <li>Host receives message from renter</li>
+                                <li>System opens chat interface</li>
+                                <li>Host provides pickup instructions and details</li>
+                                <li>Host answers renter questions</li>
+                                <li>System logs all communication</li>
+                                <li>Host can send automated messages</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step host-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">8</span>
+                        <div class="step-title">Earnings & Payouts</div>
+                        <div class="step-description">Host tracks earnings and receives payouts</div>
+                        <div class="step-details">
+                            <div class="details-title">Financial Process:</div>
+                            <ul class="details-list">
+                                <li>Host views earnings dashboard</li>
+                                <li>System shows completed bookings and revenue</li>
+                                <li>Host tracks pending and completed payouts</li>
+                                <li>System processes automatic payouts</li>
+                                <li>Host receives payment notifications</li>
+                                <li>Financial reports are generated</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Renter Flow Section -->
+            <div id="renter" class="flow-section">
+                <h2 class="section-title">Renter User Journey</h2>
+                <p class="section-description">Step-by-step flow of what happens when a renter enters the RideShare SA platform.</p>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step renter-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">1</span>
+                        <div class="step-title">Platform Entry</div>
+                        <div class="step-description">Renter visits ridesharex.co.za and sees the landing page</div>
+                        <div class="step-details">
+                            <div class="details-title">What happens:</div>
+                            <ul class="details-list">
+                                <li>Landing page loads with featured vehicles</li>
+                                <li>Search bar is prominently displayed</li>
+                                <li>System shows available vehicles on map</li>
+                                <li>If logged in, shows personalized recommendations</li>
+                                <li>If not logged in, shows guest search options</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step renter-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">2</span>
+                        <div class="step-title">Vehicle Search</div>
+                        <div class="step-description">Renter searches for available vehicles by location and dates</div>
+                        <div class="step-details">
+                            <div class="details-title">Search Process:</div>
+                            <ul class="details-list">
+                                <li>Renter enters pickup location and dates</li>
+                                <li>System loads available vehicles in area</li>
+                                <li>Interactive map shows vehicle locations</li>
+                                <li>Renter can filter by vehicle type and price</li>
+                                <li>System displays search results with photos</li>
+                                <li>Renter can compare multiple vehicles</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step renter-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">3</span>
+                        <div class="step-title">Vehicle Selection</div>
+                        <div class="step-description">Renter views vehicle details and selects preferred option</div>
+                        <div class="step-details">
+                            <div class="details-title">Selection Process:</div>
+                            <ul class="details-list">
+                                <li>Renter clicks on preferred vehicle</li>
+                                <li>Vehicle details page loads with photos</li>
+                                <li>System shows pricing, features, and host info</li>
+                                <li>Renter reviews vehicle specifications</li>
+                                <li>Renter checks availability calendar</li>
+                                <li>Renter can contact host with questions</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step renter-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">4</span>
+                        <div class="step-title">Account Creation/Login</div>
+                        <div class="step-description">Renter creates account or logs in to proceed with booking</div>
+                        <div class="step-details">
+                            <div class="details-title">Authentication Process:</div>
+                            <ul class="details-list">
+                                <li>Renter clicks "Book Now" button</li>
+                                <li>System prompts for login or registration</li>
+                                <li>If new user, registration form loads</li>
+                                <li>If existing user, login form appears</li>
+                                <li>Renter completes identity verification</li>
+                                <li>Account is verified and booking continues</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step renter-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">5</span>
+                        <div class="step-title">Booking Details</div>
+                        <div class="step-description">Renter confirms booking dates, times, and pickup details</div>
+                        <div class="step-details">
+                            <div class="details-title">Booking Configuration:</div>
+                            <ul class="details-list">
+                                <li>Renter selects pickup and return dates</li>
+                                <li>System shows available time slots</li>
+                                <li>Renter chooses pickup and return locations</li>
+                                <li>System calculates total rental cost</li>
+                                <li>Renter adds insurance and extras</li>
+                                <li>Renter reviews all booking details</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step renter-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">6</span>
+                        <div class="step-title">Payment Processing</div>
+                        <div class="step-description">Renter completes payment and receives booking confirmation</div>
+                        <div class="step-details">
+                            <div class="details-title">Payment Process:</div>
+                            <ul class="details-list">
+                                <li>Renter selects payment method</li>
+                                <li>System shows secure payment form</li>
+                                <li>Renter enters payment details</li>
+                                <li>System processes payment securely</li>
+                                <li>Booking confirmation is generated</li>
+                                <li>Renter receives confirmation email/SMS</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step renter-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">7</span>
+                        <div class="step-title">Vehicle Pickup</div>
+                        <div class="step-description">Renter picks up the vehicle at the designated location</div>
+                        <div class="step-details">
+                            <div class="details-title">Pickup Process:</div>
+                            <ul class="details-list">
+                                <li>Renter receives pickup instructions</li>
+                                <li>Renter navigates to pickup location</li>
+                                <li>Renter meets host or uses contactless pickup</li>
+                                <li>Vehicle inspection is conducted</li>
+                                <li>Renter receives keys and documents</li>
+                                <li>Pickup is confirmed in the app</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step renter-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">8</span>
+                        <div class="step-title">Vehicle Return</div>
+                        <div class="step-description">Renter returns the vehicle and completes the rental</div>
+                        <div class="step-details">
+                            <div class="details-title">Return Process:</div>
+                            <ul class="details-list">
+                                <li>Renter returns to designated location</li>
+                                <li>Host conducts vehicle inspection</li>
+                                <li>Renter returns keys and documents</li>
+                                <li>Any damage or issues are documented</li>
+                                <li>Return is confirmed in the app</li>
+                                <li>Rental period is officially completed</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="flow-step renter-step" onclick="toggleDetails(this)">
+                        <span class="step-icon">9</span>
+                        <div class="step-title">Review & Feedback</div>
+                        <div class="step-description">Renter rates the experience and provides feedback</div>
+                        <div class="step-details">
+                            <div class="details-title">Feedback Process:</div>
+                            <ul class="details-list">
+                                <li>System prompts for review and rating</li>
+                                <li>Renter rates host and vehicle experience</li>
+                                <li>Renter writes detailed review</li>
+                                <li>Feedback is submitted to platform</li>
+                                <li>Renter earns loyalty points</li>
+                                <li>Review is published for other users</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.flow-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function toggleDetails(stepElement) {
+            const details = stepElement.querySelector('.step-details');
+            const isActive = details.classList.contains('active');
+            
+            // Close all other details in the same section
+            const allDetails = stepElement.parentElement.querySelectorAll('.step-details');
+            allDetails.forEach(detail => {
+                detail.classList.remove('active');
+            });
+            
+            // Toggle current details
+            if (!isActive) {
+                details.classList.add('active');
+            }
+        }
+
+        // Add smooth scrolling and animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click animations to flow steps
+            const flowSteps = document.querySelectorAll('.flow-step');
+            flowSteps.forEach(step => {
+                step.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

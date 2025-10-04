@@ -62,8 +62,8 @@ const Chatbot: React.FC = () => {
     {
       keywords: ['list', 'host', 'earn', 'money', 'income'],
       synonyms: ['hosting', 'listing', 'earning', 'revenue'],
-      response: 'Perfect! To list your vehicle and start earning:\n\n1. Click "List Your Vehicle" in the menu\n2. Create a host account (if you haven\'t already)\n3. Add vehicle details, photos, and description\n4. Set your availability and pricing\n5. Submit for approval\n\nOur hosts typically earn R200-800 per day!',
-      followUp: ['What are the requirements?', 'How much can I earn?', 'What insurance do I need?'],
+      response: 'Perfect! To list your vehicle and start earning:\n\n1. Click "List Your Vehicle" in the menu\n2. Create a host account (if you haven\'t already)\n3. Upload required documents:\n   • ID Document (SA ID/Passport)\n   • Driver\'s License\n   • Proof of Address (utility bill)\n   • Vehicle Registration (NATIS)\n   • Roadworthy Certificate\n   • Insurance Certificate\n4. Add vehicle details, photos, and description\n5. Set your availability and pricing\n6. Submit for approval\n\nOur hosts typically earn R200-800 per day!',
+      followUp: ['What documents do I need?', 'How much can I earn?', 'What insurance do I need?'],
       priority: 2
     },
     {
@@ -93,6 +93,13 @@ const Chatbot: React.FC = () => {
       response: 'We operate across South Africa! 🇿🇦\n\nMajor cities:\n• Cape Town (Western Cape)\n• Johannesburg (Gauteng)\n• Durban (KwaZulu-Natal)\n• Pretoria (Gauteng)\n• Port Elizabeth (Eastern Cape)\n• Bloemfontein (Free State)\n• Nelspruit (Mpumalanga)\n• Polokwane (Limpopo)\n• Kimberley (Northern Cape)\n\nUse the location filter to find vehicles near you!',
       followUp: ['Do you deliver to my area?', 'Can I pick up from the airport?', 'Are there any restrictions?'],
       priority: 3
+    },
+    {
+      keywords: ['documents', 'document', 'upload', 'verification', 'id', 'license', 'proof'],
+      synonyms: ['paperwork', 'files', 'certificates', 'registration', 'insurance'],
+      response: 'Here are the required documents for registration:\n\n**For All Users:**\n• ID Document (SA ID/Passport/Driver\'s License)\n• Driver\'s License\n• Proof of Address (utility bill, bank statement - not older than 3 months)\n\n**For Hosts (additional):**\n• Vehicle Registration (NATIS)\n• Roadworthy Certificate (not older than 2 years)\n• Insurance Certificate (comprehensive)\n\n**Accepted formats:** Images (JPG, PNG) or PDF files (max 5MB each)\n\nAll documents are securely stored and used only for verification purposes.',
+      followUp: ['How long does verification take?', 'What if my documents are rejected?', 'Can I update my documents later?'],
+      priority: 2
     },
     {
       keywords: ['help', 'support', 'problem', 'issue', 'trouble'],

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:clean": "node scripts/restart-dev.js",
     "build": "tsc && vite build",
     "build:netlify": "npm run build && node deploy-netlify.js",
     "build:vercel": "cross-env VITE_BASE_PATH=/ npm run build",

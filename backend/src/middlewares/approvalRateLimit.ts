@@ -1,44 +1,29 @@
-import rateLimit from 'express-rate-limit';
+// This file has been consolidated into security.ts
+// Import from the centralized security middleware instead
+export { 
+  createRateLimit,
+  authRateLimit,
+  apiRateLimit,
+  uploadRateLimit 
+} from './security';
 
-// Rate limiting for approval request creation
-export const approvalRequestRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 approval requests per windowMs
-  message: {
-    success: false,
-    error: 'Too Many Requests',
-    message: 'Too many approval requests from this IP, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting for admin users
-    return req.user?.role === 'admin';
-  }
-});
+// Approval-specific rate limits
+import { createRateLimit } from './security';
 
-// Rate limiting for approval request updates (admin actions)
-export const approvalUpdateRateLimit = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 20, // Limit each IP to 20 approval updates per minute
-  message: {
-    success: false,
-    error: 'Too Many Updates',
-    message: 'Too many approval updates from this IP, please slow down.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+export const approvalRequestRateLimit = createRateLimit(
+  15 * 60 * 1000, // 15 minutes
+  5, // 5 approval requests
+  'Too many approval requests, please try again later.'
+);
 
-// Rate limiting for bulk operations
-export const bulkApprovalRateLimit = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 3, // Limit each IP to 3 bulk operations per 5 minutes
-  message: {
-    success: false,
-    error: 'Bulk Operation Limit',
-    message: 'Too many bulk operations. Please wait before trying again.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+export const approvalUpdateRateLimit = createRateLimit(
+  1 * 60 * 1000, // 1 minute
+  20, // 20 updates
+  'Too many approval updates, please slow down.'
+);
+
+export const bulkApprovalRateLimit = createRateLimit(
+  5 * 60 * 1000, // 5 minutes
+  3, // 3 bulk operations
+  'Too many bulk operations, please wait before trying again.'
+);

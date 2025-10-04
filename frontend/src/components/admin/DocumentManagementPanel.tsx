@@ -8,10 +8,14 @@ interface DocumentManagementPanelProps {
 }
 
 interface Document {
-  id: number;
-  userId: number;
-  userName: string;
-  userEmail: string;
+  id: string;
+  userId: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   documentType: 'license' | 'id' | 'insurance' | 'registration' | 'other';
   fileName: string;
   fileUrl: string;
@@ -54,63 +58,42 @@ const DocumentManagementPanel: React.FC<DocumentManagementPanelProps> = ({ onRef
   const fetchDocuments = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API calls
-      const mockDocuments: Document[] = [
-        {
-          id: 1,
-          userId: 101,
-          userName: 'John Doe',
-          userEmail: 'john@example.com',
-          documentType: 'license',
-          fileName: 'drivers_license.pdf',
-          fileUrl: '/documents/drivers_license.pdf',
-          status: 'pending',
-          uploadedAt: '2024-01-15',
-          expiryDate: '2025-01-15'
-        },
-        {
-          id: 2,
-          userId: 102,
-          userName: 'Jane Smith',
-          userEmail: 'jane@example.com',
-          documentType: 'id',
-          fileName: 'id_card.pdf',
-          fileUrl: '/documents/id_card.pdf',
-          status: 'approved',
-          uploadedAt: '2024-01-14',
-          reviewedAt: '2024-01-15',
-          reviewedBy: 'Admin User',
-          expiryDate: '2029-01-14'
-        },
-        {
-          id: 3,
-          userId: 103,
-          userName: 'Bob Wilson',
-          userEmail: 'bob@example.com',
-          documentType: 'insurance',
-          fileName: 'insurance_cert.pdf',
-          fileUrl: '/documents/insurance_cert.pdf',
-          status: 'rejected',
-          rejectionReason: 'Document is expired',
-          uploadedAt: '2024-01-13',
-          reviewedAt: '2024-01-14',
-          reviewedBy: 'Admin User'
-        }
-      ];
+      // No mock data - use real API calls
+      try {
+        const response = await fetch('/api/admin/documents', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-      setDocuments(mockDocuments);
-      setQueue({
-        pending: mockDocuments.filter(d => d.status === 'pending').length,
-        approved: mockDocuments.filter(d => d.status === 'approved').length,
-        rejected: mockDocuments.filter(d => d.status === 'rejected').length,
-        expiring: mockDocuments.filter(d => {
-          if (!d.expiryDate) return false;
-          const expiry = new Date(d.expiryDate);
-          const now = new Date();
-          const daysUntilExpiry = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-          return daysUntilExpiry <= 30 && daysUntilExpiry > 0;
-        }).length
-      });
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            setDocuments(result.data.documents || []);
+            setQueue({
+              pending: result.data.documents?.filter((d: any) => d.status === 'pending').length || 0,
+              approved: result.data.documents?.filter((d: any) => d.status === 'approved').length || 0,
+              rejected: result.data.documents?.filter((d: any) => d.status === 'rejected').length || 0,
+              expiring: 0 // We'll need to calculate this from the backend
+            });
+          } else {
+            throw new Error(result.error || 'Failed to fetch documents');
+          }
+        } else {
+          throw new Error('Failed to fetch documents');
+        }
+      } catch (apiError) {
+        console.error('API error:', apiError);
+        // Show empty state instead of mock data
+        setDocuments([]);
+        setQueue({
+          pending: 0,
+          approved: 0,
+          rejected: 0,
+          expiring: 0
+        });
+      }
     } catch (error) {
       console.error('Error fetching documents:', error);
     } finally {
@@ -121,10 +104,21 @@ const DocumentManagementPanel: React.FC<DocumentManagementPanelProps> = ({ onRef
   const handleDocumentAction = async (documentId: number, action: 'approve' | 'reject', reason?: string) => {
     try {
       setLoading(true);
-      // API call to update document status
-      console.log(`Document ${documentId} ${action}d${reason ? ` with reason: ${reason}` : ''}`);
-      await fetchDocuments();
-      onRefresh();
+      const response = await fetch(`/api/admin/documents/${documentId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: action, reason })
+      });
+
+      if (response.ok) {
+        await fetchDocuments();
+        onRefresh();
+      } else {
+        throw new Error('Failed to update document status');
+      }
     } catch (error) {
       console.error('Error updating document:', error);
     } finally {
@@ -160,8 +154,9 @@ const DocumentManagementPanel: React.FC<DocumentManagementPanelProps> = ({ onRef
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       return (
-        doc.userName.toLowerCase().includes(searchTerm) ||
-        doc.userEmail.toLowerCase().includes(searchTerm) ||
+        doc.user.firstName.toLowerCase().includes(searchTerm) ||
+        doc.user.lastName.toLowerCase().includes(searchTerm) ||
+        doc.user.email.toLowerCase().includes(searchTerm) ||
         doc.fileName.toLowerCase().includes(searchTerm)
       );
     }
@@ -346,8 +341,8 @@ const DocumentManagementPanel: React.FC<DocumentManagementPanelProps> = ({ onRef
                   className="rounded border-gray-300"
                 />
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{document.userName}</h3>
-                  <p className="text-gray-400">{document.userEmail}</p>
+                  <h3 className="text-lg font-semibold text-white">{document.user.firstName} {document.user.lastName}</h3>
+                  <p className="text-gray-400">{document.user.email}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">

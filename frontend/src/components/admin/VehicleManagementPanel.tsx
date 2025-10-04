@@ -68,53 +68,10 @@ const VehicleManagementPanel: React.FC<VehicleManagementPanelProps> = ({ onRefre
       setLoading(true);
       setError(null);
       
-      // Try to fetch from API
-      try {
-        const response = await AdminService.getVehicles(1, 10,
-          filters.status !== 'all' ? filters.status : undefined
-        );
-        setVehicles(response.vehicles || []);
-      } catch (apiError) {
-        console.warn('API not available, using mock data:', apiError);
-        // Fallback to mock data for development
-        const mockVehicles: AdminVehicle[] = [
-          {
-            id: 1,
-            title: "2020 Toyota Corolla",
-            make: "Toyota",
-            model: "Corolla",
-            year: 2020,
-            status: "pending",
-            location: "Cape Town",
-            pricePerDay: 450,
-            images: ["/api/placeholder/300/200"],
-            owner: {
-              firstName: "John",
-              lastName: "Doe",
-              email: "john@example.com"
-            },
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: 2,
-            title: "2019 BMW 3 Series",
-            make: "BMW",
-            model: "3 Series",
-            year: 2019,
-            status: "approved",
-            location: "Johannesburg",
-            pricePerDay: 800,
-            images: ["/api/placeholder/300/200"],
-            owner: {
-              firstName: "Jane",
-              lastName: "Smith",
-              email: "jane@example.com"
-            },
-            createdAt: new Date().toISOString()
-          }
-        ];
-        setVehicles(mockVehicles);
-      }
+      const response = await AdminService.getVehicles(1, 10,
+        filters.status !== 'all' ? filters.status : undefined
+      );
+      setVehicles(response.vehicles || []);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       setError('Failed to load vehicles. Please try again.');

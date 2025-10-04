@@ -40,42 +40,27 @@ const UserBehaviorAnalytics: React.FC = () => {
 
   const fetchUserBehaviorData = async () => {
     try {
-      // Mock data - replace with actual API call
-      const mockData: UserBehaviorData = {
-        totalUsers: 15420,
-        activeUsers: 8230,
-        newUsers: 450,
-        retentionRate: 78.5,
-        userSegments: [
-          { segment: 'Frequent Renters', count: 2340, percentage: 15.2 },
-          { segment: 'Occasional Users', count: 4560, percentage: 29.6 },
-          { segment: 'New Users', count: 2340, percentage: 15.2 },
-          { segment: 'Inactive Users', count: 6180, percentage: 40.0 }
-        ],
-        behaviorMetrics: [
-          { metric: 'Avg Session Duration', value: 12.5, trend: 'up', change: 8.2 },
-          { metric: 'Pages per Session', value: 4.8, trend: 'up', change: 12.1 },
-          { metric: 'Bounce Rate', value: 23.4, trend: 'down', change: -5.3 },
-          { metric: 'Return Rate', value: 65.2, trend: 'up', change: 3.7 }
-        ],
-        topActions: [
-          { action: 'Search Vehicles', count: 12340, percentage: 45.2 },
-          { action: 'View Vehicle Details', count: 8900, percentage: 32.6 },
-          { action: 'Create Booking', count: 4560, percentage: 16.7 },
-          { action: 'User Registration', count: 1500, percentage: 5.5 }
-        ],
-        userJourney: [
-          { step: 'Landing Page', users: 10000, conversionRate: 100 },
-          { step: 'Search', users: 7500, conversionRate: 75 },
-          { step: 'Vehicle Details', users: 4500, conversionRate: 60 },
-          { step: 'Booking Form', users: 2800, conversionRate: 62.2 },
-          { step: 'Payment', users: 2100, conversionRate: 75 },
-          { step: 'Confirmation', users: 1900, conversionRate: 90.5 }
-        ]
-      };
-      setData(mockData);
+      const response = await fetch('/api/admin/user-behavior-analytics', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setData(result.data);
+      } else {
+        throw new Error(result.error || 'Failed to fetch user behavior data');
+      }
     } catch (error) {
       console.error('Error fetching user behavior data:', error);
+      setData(null);
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,11 @@ import { User } from '../models/User';
 import { Op } from 'sequelize';
 import { Server as SocketIOServer } from 'socket.io';
 
+// Extend global type to include io
+declare global {
+  var io: SocketIOServer | undefined;
+}
+
 const router = express.Router();
 
 // Message validation schemas
@@ -63,9 +68,9 @@ const conversations: any[] = [
 router.get('/conversations', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userConversations = conversations.filter(c => 
-      c.participants.includes(req.user!.id)
+      c.participants.includes(parseInt(req.user!.id))
     ).map(conversation => {
-      const otherParticipantId = conversation.participants.find((id: number) => id !== req.user!.id);
+      const otherParticipantId = conversation.participants.find((id: number) => id !== parseInt(req.user!.id));
       const otherParticipant = { id: otherParticipantId, firstName: 'John', lastName: 'Doe', email: 'john@example.com' };
       
       return {
@@ -91,8 +96,8 @@ router.get('/conversations/:conversationId/messages', authenticateToken, async (
   try {
     const { conversationId } = req.params;
     const conversationMessages = messages.filter(m => 
-      (m.senderId === req.user!.id && m.recipientId === parseInt(conversationId.split('-').find(id => parseInt(id) !== req.user!.id) || '0')) ||
-      (m.recipientId === req.user!.id && m.senderId === parseInt(conversationId.split('-').find(id => parseInt(id) !== req.user!.id) || '0'))
+      (m.senderId === parseInt(req.user!.id) && m.recipientId === parseInt(conversationId.split('-').find(id => parseInt(id) !== parseInt(req.user!.id)) || '0')) ||
+      (m.recipientId === parseInt(req.user!.id) && m.senderId === parseInt(conversationId.split('-').find(id => parseInt(id) !== parseInt(req.user!.id)) || '0'))
     ).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     res.json({
@@ -186,7 +191,7 @@ router.get('/conversations', authenticateToken, async (req: AuthRequest, res) =>
     });
 
     const conversationsWithDetails = userConversations.map(conversation => {
-      const otherParticipantId = conversation.participants.find((id: number) => id !== req.user!.id);
+      const otherParticipantId = conversation.participants.find((id: number) => id !== parseInt(req.user!.id));
       const otherParticipant = participants.find(p => p.id === otherParticipantId);
       
       return {
@@ -221,8 +226,8 @@ router.get('/conversations/:conversationId/messages', authenticateToken, async (
     // Get messages for this conversation
     const conversationMessages = messages
       .filter(m => 
-        (m.senderId === req.user!.id && m.recipientId === conversation.participants.find((id: number) => id !== req.user!.id)) ||
-        (m.recipientId === req.user!.id && m.senderId === conversation.participants.find((id: number) => id !== req.user!.id))
+        (m.senderId === parseInt(req.user!.id) && m.recipientId === conversation.participants.find((id: number) => id !== parseInt(req.user!.id))) ||
+        (m.recipientId === parseInt(req.user!.id) && m.senderId === conversation.participants.find((id: number) => id !== parseInt(req.user!.id)))
       )
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(offset, offset + Number(limit));

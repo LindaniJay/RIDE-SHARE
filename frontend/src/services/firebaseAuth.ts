@@ -21,7 +21,7 @@ export interface User {
   lastName: string;
   phone?: string;
   phoneNumber?: string;
-  role: 'Renter' | 'Host';
+  role: 'Renter' | 'Host' | 'admin';
   approvalStatus: 'pending' | 'approved' | 'rejected';
   createdAt: Date;
 }

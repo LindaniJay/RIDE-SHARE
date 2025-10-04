@@ -248,7 +248,7 @@ async function getAvailableTypes() {
     group: ['type'],
     raw: true
   });
-  return types.map(t => t.type);
+  return types.map(t => (t as any).type);
 }
 
 async function getAvailableLocations() {
@@ -294,11 +294,22 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     
     const listing = await Listing.create({
       ...listingData,
-      hostId: req.user!.id,
+      host_id: req.user!.id,
       status: 'pending', // Requires approval
+      approval_status: 'pending',
       features: listingData.features || [], // Ensure features is always an array
       images: listingData.images || [], // Ensure images is always an array
-      availability: listingData.availability || {},
+      is_featured: false,
+      total_bookings: 0,
+      total_earnings: 0,
+      minimum_rental_days: 1,
+      category: 'economy',
+      vehicle_type: listingData.type === 'trailer' ? 'truck' : listingData.type, // Map type to vehicle_type, handle trailer
+      price_per_day: listingData.pricePerDay || 0,
+      fuel_type: listingData.fuelType || 'petrol',
+      transmission: listingData.transmission || 'manual',
+      seats: listingData.seats || 4,
+      // availability: listingData.availability || {}, // Field doesn't exist in model
     });
     
     // Clear relevant caches
@@ -328,7 +339,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
     
     // Check ownership
-    if (listing.hostId !== req.user!.id && req.user!.role !== 'admin') {
+    if (listing.host_id !== req.user!.id && req.user!.role !== 'admin') {
       return res.status(403).json({ error: 'Not authorized' });
     }
     

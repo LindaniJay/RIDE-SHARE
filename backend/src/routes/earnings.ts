@@ -1,18 +1,18 @@
 import express from 'express';
-import { authenticateToken, requireHost } from '../middlewares/auth';
-import { Booking, Vehicle } from '../models';
+import { authenticateToken, requireHost, AuthRequest } from '../middlewares/auth';
+import { Booking, Listing } from '../models';
 
 const router = express.Router();
 
 // Get host earnings overview
-router.get('/', authenticateToken, requireHost, async (req, res) => {
+router.get('/', authenticateToken, requireHost, async (req: AuthRequest, res) => {
   try {
     const hostId = req.user!.id;
     
     // Get all bookings for host's vehicles
     const bookings = await Booking.findAll({
       include: [{
-        model: Vehicle,
+        model: Listing,
         where: { hostId },
         attributes: ['id', 'title', 'pricePerDay']
       }],
@@ -22,7 +22,7 @@ router.get('/', authenticateToken, requireHost, async (req, res) => {
     });
 
     // Calculate earnings
-    const totalEarnings = bookings.reduce((sum, booking) => sum + booking.totalPrice, 0);
+    const totalEarnings = bookings.reduce((sum, booking) => sum + booking.total_amount, 0);
     
     // Monthly earnings (current month)
     const currentMonth = new Date();
@@ -30,12 +30,12 @@ router.get('/', authenticateToken, requireHost, async (req, res) => {
     const monthlyBookings = bookings.filter(booking => 
       new Date(booking.createdAt) >= startOfMonth
     );
-    const monthlyEarnings = monthlyBookings.reduce((sum, booking) => sum + booking.totalPrice, 0);
+    const monthlyEarnings = monthlyBookings.reduce((sum, booking) => sum + booking.total_amount, 0);
 
     // Pending payouts (completed bookings not yet paid out)
     const pendingPayouts = bookings
       .filter(booking => booking.status === 'completed')
-      .reduce((sum, booking) => sum + booking.totalPrice, 0);
+      .reduce((sum, booking) => sum + booking.total_amount, 0);
 
     const completedBookings = bookings.filter(booking => booking.status === 'completed').length;
 
@@ -49,10 +49,10 @@ router.get('/', authenticateToken, requireHost, async (req, res) => {
         bookings: bookings.map(booking => ({
           id: booking.id,
           vehicleTitle: (booking as any).Vehicle?.title,
-          totalPrice: booking.totalPrice,
+          total_amount: booking.total_amount,
           status: booking.status,
-          startDate: booking.startDate,
-          endDate: booking.endDate,
+          start_date: booking.start_date,
+          end_date: booking.end_date,
           createdAt: booking.createdAt
         }))
       }
@@ -67,12 +67,12 @@ router.get('/', authenticateToken, requireHost, async (req, res) => {
 });
 
 // Get earnings by vehicle
-router.get('/by-vehicle', authenticateToken, requireHost, async (req, res) => {
+router.get('/by-vehicle', authenticateToken, requireHost, async (req: AuthRequest, res) => {
   try {
     const hostId = req.user!.id;
     
-    const vehicles = await Vehicle.findAll({
-      where: { hostId },
+    const vehicles = await Listing.findAll({
+      where: { host_id: hostId },
       include: [{
         model: Booking,
         where: {
@@ -83,7 +83,7 @@ router.get('/by-vehicle', authenticateToken, requireHost, async (req, res) => {
     });
 
     const vehicleEarnings = vehicles.map(vehicle => {
-      const totalEarnings = (vehicle as any).bookings?.reduce((sum: number, booking: any) => sum + booking.totalPrice, 0) || 0;
+      const totalEarnings = (vehicle as any).bookings?.reduce((sum: number, booking: any) => sum + booking.total_amount, 0) || 0;
       const bookingCount = (vehicle as any).bookings?.length || 0;
       
       return {
@@ -109,7 +109,7 @@ router.get('/by-vehicle', authenticateToken, requireHost, async (req, res) => {
 });
 
 // Get monthly earnings breakdown
-router.get('/monthly', authenticateToken, requireHost, async (req, res) => {
+router.get('/monthly', authenticateToken, requireHost, async (req: AuthRequest, res) => {
   try {
     const hostId = req.user!.id;
     const { year = new Date().getFullYear() } = req.query;
@@ -119,7 +119,7 @@ router.get('/monthly', authenticateToken, requireHost, async (req, res) => {
     
     const bookings = await Booking.findAll({
       include: [{
-        model: Vehicle,
+        model: Listing,
         where: { hostId }
       }],
       where: {
@@ -140,7 +140,7 @@ router.get('/monthly', authenticateToken, requireHost, async (req, res) => {
 
     bookings.forEach(booking => {
       const month = new Date(booking.createdAt).getMonth();
-      monthlyData[month].earnings += booking.totalPrice;
+      monthlyData[month].earnings += booking.total_amount;
       monthlyData[month].bookings += 1;
     });
 

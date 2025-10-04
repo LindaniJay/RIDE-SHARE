@@ -44,118 +44,29 @@ const BusinessIntelligence: React.FC = () => {
 
   const fetchBusinessData = async () => {
     try {
-      // Mock data - replace with actual API calls
-      const mockMetrics: BusinessMetric[] = [
-        {
-          name: 'Market Share',
-          value: 15.2,
-          unit: '%',
-          change: 2.1,
-          trend: 'up',
-          target: 20,
-          category: 'market'
-        },
-        {
-          name: 'Customer Acquisition Cost',
-          value: 45,
-          unit: 'ZAR',
-          change: -8.3,
-          trend: 'down',
-          target: 40,
-          category: 'operations'
-        },
-        {
-          name: 'Customer Lifetime Value',
-          value: 1250,
-          unit: 'ZAR',
-          change: 12.5,
-          trend: 'up',
-          target: 1500,
-          category: 'revenue'
-        },
-        {
-          name: 'Net Promoter Score',
-          value: 8.2,
-          unit: '/10',
-          change: 0.3,
-          trend: 'up',
-          target: 9,
-          category: 'users'
-        },
-        {
-          name: 'Churn Rate',
-          value: 5.8,
-          unit: '%',
-          change: -1.2,
-          trend: 'down',
-          target: 5,
-          category: 'users'
-        },
-        {
-          name: 'Revenue per User',
-          value: 85,
-          unit: 'ZAR',
-          change: 6.7,
-          trend: 'up',
-          target: 100,
-          category: 'revenue'
+      setLoading(true);
+      
+      const response = await fetch('/api/business-intelligence', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
         }
-      ];
-
-      const mockInsights: MarketInsight[] = [
-        {
-          title: 'Electric Vehicle Demand Surge',
-          description: 'Growing demand for electric vehicles in urban areas presents opportunity for EV fleet expansion.',
-          impact: 'high',
-          category: 'opportunity',
-          confidence: 85,
-          source: 'Market Research',
-          actionable: true
-        },
-        {
-          title: 'Competitor Price War',
-          description: 'Major competitor reducing prices by 15% may impact market share.',
-          impact: 'medium',
-          category: 'threat',
-          confidence: 75,
-          source: 'Competitive Intelligence',
-          actionable: true
-        },
-        {
-          title: 'Weekend Usage Pattern',
-          description: 'Weekend bookings show 40% higher revenue potential than weekdays.',
-          impact: 'medium',
-          category: 'trend',
-          confidence: 90,
-          source: 'Internal Analytics',
-          actionable: true
-        }
-      ];
-
-      const mockCompetitors: CompetitorAnalysis[] = [
-        {
-          competitor: 'RentACar SA',
-          marketShare: 25,
-          strengths: ['Established brand', 'Large fleet', 'Corporate partnerships'],
-          weaknesses: ['High prices', 'Limited digital presence', 'Poor customer service'],
-          threats: ['Price competition', 'Digital disruption'],
-          opportunities: ['Market expansion', 'Technology adoption']
-        },
-        {
-          competitor: 'QuickRide',
-          marketShare: 18,
-          strengths: ['Mobile-first approach', 'Low prices', 'Quick booking'],
-          weaknesses: ['Limited coverage', 'Small fleet', 'Quality issues'],
-          threats: ['Service quality', 'Scalability'],
-          opportunities: ['Market penetration', 'Service improvement']
-        }
-      ];
-
-      setMetrics(mockMetrics);
-      setInsights(mockInsights);
-      setCompetitors(mockCompetitors);
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch business intelligence data');
+      }
+      
+      const data = await response.json();
+      setMetrics(data.metrics || []);
+      setInsights(data.insights || []);
+      setCompetitors(data.competitors || []);
     } catch (error) {
       console.error('Error fetching business data:', error);
+      // Set empty state on error instead of mock data
+      setMetrics([]);
+      setInsights([]);
+      setCompetitors([]);
     } finally {
       setLoading(false);
     }

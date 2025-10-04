@@ -7,18 +7,22 @@ import GlassDropdown from '../components/GlassDropdown';
 import GlassButton from '../components/GlassButton';
 import LazyImage from '../components/LazyImage';
 import BookingModal from '../components/BookingModal';
-import { searchMockCars, MockCar } from '../data/mockCars';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { useToast } from '../components/ToastProvider';
+import { Vehicle } from '../services/productionApiService';
 
 
 const Search: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [vehicles, setVehicles] = useState<MockCar[]>([]);
+  const { showToast } = useToast();
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedCar, setSelectedCar] = useState<MockCar | null>(null);
+  const [selectedCar, setSelectedCar] = useState<Vehicle | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [totalVehicles, setTotalVehicles] = useState(0);
 
   const [filters, setFilters] = useState({
     location: searchParams.get('location') || '',
@@ -39,18 +43,51 @@ const Search: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      // Use mock data for now
-      const searchQuery = searchParams.get('location') || '';
-      const filteredCars = searchMockCars(searchQuery, {
-        type: filters.vehicleType || undefined,
-        minPrice: filters.minPrice ? parseInt(filters.minPrice) : undefined,
-        maxPrice: filters.maxPrice ? parseInt(filters.maxPrice) : undefined,
-        location: filters.location || undefined
-      });
-      setVehicles(filteredCars);
+      // Build search parameters
+      const apiParams = new URLSearchParams();
+      
+      if (filters.location) apiParams.append('location', filters.location);
+      if (filters.vehicleType) apiParams.append('vehicle_type', filters.vehicleType);
+      if (filters.minPrice) apiParams.append('min_price', filters.minPrice);
+      if (filters.maxPrice) apiParams.append('max_price', filters.maxPrice);
+      if (filters.pickupDate) apiParams.append('start_date', filters.pickupDate);
+      if (filters.returnDate) apiParams.append('end_date', filters.returnDate);
+      
+      // Add search query from URL
+      const urlQuery = searchParams.get('query') || '';
+      if (urlQuery) apiParams.append('query', urlQuery);
+
+      // Fetch vehicles from API
+      const response = await fetch(`/api/listings?${apiParams.toString()}`);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication required');
+        } else if (response.status === 403) {
+          throw new Error('Access denied');
+        } else if (response.status === 404) {
+          throw new Error('Service not found');
+        } else if (response.status >= 500) {
+          throw new Error('Server error. Please try again later.');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setVehicles(data.vehicles || []);
+        setTotalVehicles(data.pagination?.total || 0);
+      } else {
+        throw new Error(data.error || 'Failed to fetch vehicles');
+      }
     } catch (err) {
       console.error('Error fetching vehicles:', err);
-      setError('Failed to load vehicles. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load vehicles. Please try again.';
+      setError(errorMessage);
+      setVehicles([]);
+      setTotalVehicles(0);
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -63,7 +100,7 @@ const Search: React.FC = () => {
     }));
   };
 
-  const handleBookCar = (car: MockCar) => {
+  const handleBookCar = (car: Vehicle) => {
     setSelectedCar(car);
     setShowBookingModal(true);
   };
@@ -131,7 +168,7 @@ const Search: React.FC = () => {
               Find Your Perfect Ride in South Africa
             </h1>
             <p className="text-white/80">
-              {vehicles.length} vehicles available across South Africa
+              {totalVehicles} vehicles available across South Africa
             </p>
           </div>
 
@@ -282,18 +319,17 @@ const Search: React.FC = () => {
               )}
 
               {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="bg-gray-200 dark:bg-gray-700 rounded-lg shadow-md animate-pulse h-64"
-                    ></div>
-                  ))}
+                <div className="flex flex-col items-center justify-center py-20">
+                  <LoadingSpinner size="lg" text="Finding the perfect vehicles for you..." />
+                  <div className="mt-4 text-white/70 text-center">
+                    <p>Searching through our database...</p>
+                    <p className="text-sm mt-1">This may take a few moments</p>
+                  </div>
                 </div>
               ) : vehicles.length === 0 ? (
-                <div className="text-center py-10 text-gray-600 dark:text-gray-300">
-                  <p className="text-xl font-semibold mb-4">No vehicles found matching your criteria.</p>
-                  <p>Try adjusting your filters or searching a different location.</p>
+                <div className="text-center py-10 text-white">
+                  <p className="text-xl font-semibold mb-4">No vehicles are listed at the moment.</p>
+                  <p className="text-white/70">Check back later or try adjusting your search criteria.</p>
                 </div>
               ) : (
                 <>
@@ -326,26 +362,29 @@ const Search: React.FC = () => {
                         className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 border border-white/20"
                       >
                         <LazyImage
-                          src={vehicle.images[0]}
-                          alt={`${vehicle.make} ${vehicle.model}`}
+                          src={vehicle.images?.[0] || '/images/default-vehicle.jpg'}
+                          alt={vehicle.title}
                           className="w-full h-48 object-cover"
                           placeholder="https://via.placeholder.com/400x300/1f2937/ffffff?text=Vehicle+Image"
                         />
                         <div className="p-4">
                           <h3 className="text-xl font-semibold text-white mb-1">
-                            {vehicle.make} {vehicle.model}
+                            {vehicle.title}
                           </h3>
                           <p className="text-gray-300 text-sm mb-2">
-                            {vehicle.location} • {vehicle.year}
+                            {vehicle.location?.city || 'Location not specified'} • {vehicle.year}
+                          </p>
+                          <p className="text-gray-400 text-sm mb-2 line-clamp-2">
+                            {vehicle.description}
                           </p>
                           <div className="flex items-center mb-2">
                             <span className="text-yellow-400 text-lg">★</span>
                             <span className="text-white ml-1">
-                              {vehicle.rating} ({vehicle.totalBookings} bookings)
+                              {vehicle.rating || 4.5} ({vehicle.total_bookings || 0} bookings)
                             </span>
                           </div>
                           <div className="text-2xl font-bold text-white mb-4">
-                            R{vehicle.pricePerDay}
+                            R{vehicle.price_per_day}
                             <span className="text-lg font-normal text-gray-300">/day</span>
                           </div>
                           <div className="flex space-x-2">

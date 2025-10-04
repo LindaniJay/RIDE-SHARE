@@ -20,11 +20,17 @@ export const createRateLimit = (windowMs: number, max: number, message?: string)
   });
 };
 
-// Specific rate limits
+// Specific rate limits with enhanced security
 export const authRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  5, // 5 attempts
+  3, // 3 attempts (reduced from 5)
   'Too many authentication attempts, please try again later.'
+);
+
+export const strictAuthRateLimit = createRateLimit(
+  60 * 60 * 1000, // 1 hour
+  5, // 5 attempts per hour
+  'Account temporarily locked due to too many failed attempts.'
 );
 
 export const apiRateLimit = createRateLimit(
@@ -37,6 +43,18 @@ export const uploadRateLimit = createRateLimit(
   60 * 60 * 1000, // 1 hour
   10, // 10 uploads
   'Too many file uploads, please try again later.'
+);
+
+export const passwordResetRateLimit = createRateLimit(
+  60 * 60 * 1000, // 1 hour
+  3, // 3 password reset attempts
+  'Too many password reset attempts, please try again later.'
+);
+
+export const registrationRateLimit = createRateLimit(
+  60 * 60 * 1000, // 1 hour
+  5, // 5 registrations per hour
+  'Too many registration attempts, please try again later.'
 );
 
 // IP-based blocking
@@ -81,7 +99,7 @@ export const requestSizeLimit = (maxSize: string) => {
   };
 };
 
-// Security headers
+// Enhanced security headers
 export const securityHeaders = (req: Request, res: Response, next: NextFunction) => {
   // Prevent clickjacking
   res.setHeader('X-Frame-Options', 'DENY');
@@ -92,28 +110,44 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
   // Enable XSS protection
   res.setHeader('X-XSS-Protection', '1; mode=block');
   
+  // DNS prefetch control
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  
+  // Download options
+  res.setHeader('X-Download-Options', 'noopen');
+  
+  // Cross-domain policies
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  
+  // Cross-Origin policies
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  
   // Strict Transport Security
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
   
-  // Content Security Policy
+  // Enhanced Content Security Policy
   res.setHeader('Content-Security-Policy', 
-    'default-src \'self\'; ' +
-    'script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'; ' +
-    'style-src \'self\' \'unsafe-inline\'; ' +
-    'img-src \'self\' data: https:; ' +
-    'font-src \'self\' data:; ' +
-    'connect-src \'self\' https:; ' +
-    'frame-ancestors \'none\';'
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data: https:; " +
+    "font-src 'self' https:; " +
+    "connect-src 'self' https:; " +
+    "frame-ancestors 'none'; " +
+    "base-uri 'self'; " +
+    "form-action 'self'"
   );
   
   // Referrer Policy
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  // Permissions Policy
+  // Enhanced Permissions Policy
   res.setHeader('Permissions-Policy', 
-    'camera=(), microphone=(), geolocation=(self), payment=()'
+    'camera=(), microphone=(), geolocation=(self), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()'
   );
 
   next();

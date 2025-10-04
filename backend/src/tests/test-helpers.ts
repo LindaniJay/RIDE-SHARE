@@ -3,12 +3,17 @@ import { User } from '../models/User';
 
 export const createTestUser = async (userData: Partial<any> = {}) => {
   const defaultUser = {
-    firstName: 'Test',
-    lastName: 'User',
+    first_name: 'Test',
+    last_name: 'User',
     email: 'test@example.com',
     password: 'testpassword123',
-    passwordHash: 'hashedpassword123',
+    password_hash: 'hashedpassword123',
     role: 'host' as 'renter' | 'host' | 'admin',
+    is_email_verified: true,
+    is_phone_verified: false,
+    approval_status: 'approved' as 'pending' | 'approved' | 'rejected',
+    document_status: 'not_uploaded' as 'not_uploaded' | 'pending' | 'approved' | 'rejected',
+    is_active: true,
     ...userData
   };
 

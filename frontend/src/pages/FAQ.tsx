@@ -34,7 +34,7 @@ const FAQ: React.FC = () => {
     {
       id: '4',
       question: 'How do I become a host?',
-      answer: 'To become a host, register on our platform, verify your identity, and list your vehicle. We\'ll guide you through the process, help you set competitive pricing, and provide all the tools you need to manage your listings.',
+      answer: 'To become a host, register on our platform with the required documents:\n\n**Required Documents:**\n• ID Document (SA ID/Passport)\n• Driver\'s License\n• Proof of Address (utility bill - not older than 3 months)\n• Vehicle Registration (NATIS)\n• Roadworthy Certificate (not older than 2 years)\n• Insurance Certificate (comprehensive)\n\nAfter document verification, you can list your vehicle, set competitive pricing, and start earning!',
       category: 'hosting'
     },
     {
@@ -51,6 +51,12 @@ const FAQ: React.FC = () => {
     },
     {
       id: '7',
+      question: 'What documents do I need to register?',
+      answer: '**For Renters:**\n• ID Document (SA ID/Passport/Driver\'s License)\n• Driver\'s License\n• Proof of Address (utility bill, bank statement - not older than 3 months)\n\n**For Hosts (additional):**\n• Vehicle Registration (NATIS)\n• Roadworthy Certificate (not older than 2 years)\n• Insurance Certificate (comprehensive)\n\n**Accepted formats:** Images (JPG, PNG) or PDF files (max 5MB each)\n\nAll documents are securely stored and used only for verification purposes.',
+      category: 'requirements'
+    },
+    {
+      id: '7b',
       question: 'What documents do I need to rent a vehicle?',
       answer: 'You\'ll need a valid South African driver\'s license, ID document (green bar-coded ID or smart card), and a credit card for the security deposit. International visitors can use their valid international driver\'s license.',
       category: 'requirements'
@@ -72,6 +78,24 @@ const FAQ: React.FC = () => {
       question: 'What if the vehicle breaks down?',
       answer: 'If the vehicle breaks down due to mechanical issues, we\'ll help you find a replacement vehicle or provide a full refund. You\'re not responsible for mechanical failures, but you are responsible for damage caused by misuse.',
       category: 'safety'
+    },
+    {
+      id: '11',
+      question: 'How long does document verification take?',
+      answer: 'Document verification typically takes 1-3 business days. We review all documents manually to ensure authenticity and compliance with South African regulations. You\'ll receive an email notification once verification is complete.',
+      category: 'requirements'
+    },
+    {
+      id: '12',
+      question: 'What if my documents are rejected?',
+      answer: 'If your documents are rejected, you\'ll receive an email explaining the reason. Common issues include: blurry photos, expired documents, or incorrect file formats. You can upload new documents immediately and resubmit for verification.',
+      category: 'requirements'
+    },
+    {
+      id: '13',
+      question: 'Can I update my documents later?',
+      answer: 'Yes! You can update your documents anytime through your profile settings. This is especially useful when your driver\'s license or insurance certificate expires. Updated documents will need to be re-verified.',
+      category: 'requirements'
     },
     {
       id: '11',

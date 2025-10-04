@@ -27,12 +27,19 @@ router.post('/firestore-login', async (req, res) => {
       });
     }
 
-    // For admin users from Firestore, we'll use a simple password check
-    // In production, you might want to implement proper password hashing
+    // For admin users from Firestore, use proper password verification
     if (user.role === 'admin') {
-      // Simple password check for admin users
-      // You can implement proper password verification here
-      const isValidPassword = password === 'admin123' || password === 'Admin123!';
+      // Check if user has a proper password hash
+      if (!user.password_hash || user.password_hash === 'firebase-auth') {
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Admin account requires password reset. Please contact system administrator.' 
+        });
+      }
+      
+      // Verify password using bcrypt
+      const bcrypt = require('bcryptjs');
+      const isValidPassword = await bcrypt.compare(password, user.password_hash);
       
       if (!isValidPassword) {
         return res.status(401).json({ 
@@ -59,8 +66,8 @@ router.post('/firestore-login', async (req, res) => {
           user: {
             id: user.id,
             email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
+            first_name: user.first_name,
+            last_name: user.last_name,
             role: user.role,
           },
           accessToken,
@@ -120,14 +127,18 @@ router.post('/sync-firestore-users', async (req, res) => {
       if (!user) {
         // Create user in our database
         user = await User.create({
-          firstName: userData.firstName || 'Admin',
-          lastName: userData.lastName || 'User',
+          first_name: userData.first_name || 'Admin',
+          last_name: userData.last_name || 'User',
           email: userData.email,
           password: 'firestore-sync', // Virtual field
-          passwordHash: 'firestore-sync', // Placeholder
+          password_hash: 'firestore-sync', // Placeholder
           role: userData.role || 'admin',
-          isEmailVerified: true,
-          phoneNumber: userData.phoneNumber || null,
+          is_email_verified: true,
+          phone_number: userData.phone_number || null,
+          is_phone_verified: false,
+          approval_status: 'approved',
+          document_status: 'not_uploaded',
+          is_active: true
         });
         
         syncedUsers.push({

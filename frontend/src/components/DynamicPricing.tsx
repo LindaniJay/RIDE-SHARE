@@ -44,7 +44,7 @@ export const DynamicPricing: React.FC<DynamicPricingProps> = ({
   const fetchPricingRules = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/vehicles/${vehicleId}/pricing-rules`, {
+      const response = await fetch(`/api/listings/${vehicleId}/pricing-rules`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

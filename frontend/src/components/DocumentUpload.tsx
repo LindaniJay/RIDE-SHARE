@@ -1,44 +1,65 @@
-import React, { useState } from 'react';
-import { cn } from '../utils/cn';
+import React, { useState, useRef } from 'react';
+import Icon from './Icon';
 
 interface DocumentUploadProps {
   label: string;
   name: string;
-  value?: File;
-  onChange: (file: File | undefined) => void;
-  accept?: string;
   required?: boolean;
+  acceptedTypes?: string[];
+  maxSize?: number; // in MB
+  onChange: (file: File | null) => void;
+  value?: File | null;
   error?: string;
-  className?: string;
   description?: string;
 }
 
-export const DocumentUpload: React.FC<DocumentUploadProps> = ({
+const DocumentUpload: React.FC<DocumentUploadProps> = ({
   label,
   name,
-  value,
-  onChange,
-  accept = "image/*,.pdf",
   required = false,
+  acceptedTypes = ['image/*', 'application/pdf'],
+  maxSize = 5, // 5MB default
+  onChange,
+  value,
   error,
-  className,
   description
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (file: File) => {
-    if (file) {
-      onChange(file);
+  const handleFileSelect = (file: File) => {
+    setUploadError(null);
+
+    // Check file size
+    if (file.size > maxSize * 1024 * 1024) {
+      setUploadError(`File size must be less than ${maxSize}MB`);
+      return;
     }
+
+    // Check file type
+    const isValidType = acceptedTypes.some(type => {
+      if (type.endsWith('/*')) {
+        return file.type.startsWith(type.slice(0, -1));
+      }
+      return file.type === type;
+    });
+
+    if (!isValidType) {
+      setUploadError(`File type must be one of: ${acceptedTypes.join(', ')}`);
+      return;
+    }
+
+    onChange(file);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      handleFileChange(files[0]);
+      handleFileSelect(files[0]);
     }
   };
 
@@ -52,105 +73,102 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     setIsDragOver(false);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileChange(file);
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFileSelect(files[0]);
     }
   };
 
-  const removeFile = () => {
-    onChange(undefined);
+  const handleRemoveFile = () => {
+    onChange(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <label className="block text-sm font-medium text-white/90">
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-white/80">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
       </label>
       
       {description && (
-        <p className="text-xs text-white/70">{description}</p>
+        <p className="text-xs text-white/60">{description}</p>
       )}
 
       <div
-        className={cn(
-          "relative border-2 border-dashed rounded-lg p-6 transition-all duration-300",
+        className={`relative border-2 border-dashed rounded-lg p-6 transition-all duration-200 ${
           isDragOver
-            ? "border-blue-400 bg-blue-500/10"
-            : "border-white/20 hover:border-white/40",
-          error
-            ? "border-red-400 bg-red-500/10"
-            : "bg-white/5 backdrop-blur-md",
-          "hover:bg-white/10"
-        )}
+            ? 'border-blue-400 bg-blue-50/10'
+            : error || uploadError
+            ? 'border-red-400 bg-red-50/10'
+            : 'border-white/20 hover:border-white/40'
+        }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
       >
         {value ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">{value.name}</p>
-                <p className="text-xs text-white/70">
-                  {(value.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-              </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-2">
+              <Icon name="FileText" size="lg" className="text-green-400" />
             </div>
+            <p className="text-sm text-white/80 font-medium">{value.name}</p>
+            <p className="text-xs text-white/60">{formatFileSize(value.size)}</p>
             <button
               type="button"
-              onClick={removeFile}
-              className="text-red-400 hover:text-red-300 transition-colors"
+              onClick={handleRemoveFile}
+              className="mt-2 text-red-400 hover:text-red-300 text-xs underline"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              Remove file
             </button>
           </div>
         ) : (
           <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-4 bg-white/10 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
+            <div className="flex items-center justify-center mb-2">
+              <Icon name="Upload" size="lg" className="text-white/60" />
             </div>
-            <p className="text-sm text-white/80 mb-2">
-              {isDragOver ? "Drop your file here" : "Drag and drop your file here"}
+            <p className="text-sm text-white/80">
+              {isDragOver ? 'Drop file here' : 'Drag and drop or click to upload'}
             </p>
-            <p className="text-xs text-white/60 mb-4">
-              or click to browse (JPG, PNG, PDF up to 10MB)
+            <p className="text-xs text-white/60 mt-1">
+              Accepted: {acceptedTypes.join(', ')} (max {maxSize}MB)
             </p>
-            <input
-              type="file"
-              name={name}
-              accept={accept}
-              onChange={handleInputChange}
-              className="hidden"
-              id={`file-input-${name}`}
-              required={required}
-            />
-            <label
-              htmlFor={`file-input-${name}`}
-              className="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-all duration-300 cursor-pointer border border-white/20"
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="mt-3 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-colors"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
               Choose File
-            </label>
+            </button>
           </div>
         )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          name={name}
+          accept={acceptedTypes.join(',')}
+          onChange={handleFileInputChange}
+          className="hidden"
+        />
       </div>
 
-      {error && (
-        <p className="text-xs text-red-400 mt-1">{error}</p>
+      {(error || uploadError) && (
+        <p className="text-xs text-red-400 flex items-center">
+          <Icon name="AlertCircle" size="sm" className="mr-1" />
+          {error || uploadError}
+        </p>
       )}
     </div>
   );

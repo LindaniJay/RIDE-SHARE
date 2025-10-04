@@ -106,7 +106,7 @@ export interface WeatherData {
 }
 
 class LocalMarketService {
-  private readonly API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:5000/api';
+  private readonly API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:5001/api';
 
   /**
    * Get loadshedding schedule for an area

@@ -26,7 +26,7 @@ router.get('/listing/:listingId', async (req, res) => {
     const offset = (Number(page) - 1) * Number(limit);
     
     const reviews = await Review.findAndCountAll({
-      where: { vehicleId: req.params.listingId },
+      where: { listing_id: req.params.listingId },
       include: [
         {
           model: User,
@@ -60,7 +60,7 @@ router.get('/my-reviews', authenticateToken, async (req: AuthRequest, res) => {
     const offset = (Number(page) - 1) * Number(limit);
     
     const reviews = await Review.findAndCountAll({
-      where: { renterId: req.user!.id },
+      where: { reviewer_id: req.user!.id },
       include: [
         {
           model: Listing,
@@ -131,7 +131,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     const completedBooking = await Booking.findOne({
       where: {
         listingId: reviewData.listingId,
-        renterId: req.user!.id,
+        reviewer_id: req.user!.id,
         status: 'completed',
       },
     });
@@ -145,8 +145,8 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     // Check if user has already reviewed this listing
     const existingReview = await Review.findOne({
       where: {
-        vehicleId: reviewData.listingId,
-        renterId: req.user!.id,
+        listing_id: reviewData.listingId,
+        reviewer_id: req.user!.id,
       },
     });
     
@@ -156,8 +156,14 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     
     const review = await Review.create({
       ...reviewData,
-      renterId: req.user!.id,
-      vehicleId: reviewData.listingId,
+      reviewer_id: req.user!.id,
+      listing_id: reviewData.listingId.toString(),
+      booking_id: '',
+      reviewee_id: '',
+      review_type: 'renter_to_vehicle',
+      is_public: true,
+      is_verified: false,
+      helpful_count: 0
     });
     
     res.status(201).json(review);
@@ -178,7 +184,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Review not found' });
     }
     
-    if (review.renterId !== req.user!.id) {
+    if (review.reviewer_id !== req.user!.id) {
       return res.status(403).json({ error: 'You can only update your own reviews' });
     }
     
@@ -204,7 +210,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Review not found' });
     }
     
-    if (review.renterId !== req.user!.id) {
+    if (review.reviewer_id !== req.user!.id) {
       return res.status(403).json({ error: 'You can only delete your own reviews' });
     }
     

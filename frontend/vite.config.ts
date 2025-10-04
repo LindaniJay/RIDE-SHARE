@@ -79,6 +79,9 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    hmr: {
+      overlay: false
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:5001',
@@ -165,6 +168,11 @@ export default defineConfig({
       'tailwind-merge'
     ],
     exclude: ['firebase']
+  },
+  resolve: {
+    alias: {
+      '@': '/src'
+    }
   },
   // Performance optimizations
   experimental: {

@@ -43,57 +43,24 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ }) => {
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API calls
-      const mockData: AnalyticsData = {
-        userGrowth: [
-          { month: 'Jan', users: 1200, growth: 15 },
-          { month: 'Feb', users: 1400, growth: 17 },
-          { month: 'Mar', users: 1650, growth: 18 },
-          { month: 'Apr', users: 1900, growth: 15 },
-          { month: 'May', users: 2200, growth: 16 },
-          { month: 'Jun', users: 2500, growth: 14 },
-        ],
-        bookingTrends: [
-          { month: 'Jan', bookings: 450, revenue: 22500 },
-          { month: 'Feb', bookings: 520, revenue: 26000 },
-          { month: 'Mar', bookings: 680, revenue: 34000 },
-          { month: 'Apr', bookings: 750, revenue: 37500 },
-          { month: 'May', bookings: 890, revenue: 44500 },
-          { month: 'Jun', bookings: 950, revenue: 47500 },
-        ],
-        vehicleStats: {
-          total: 1250,
-          active: 1100,
-          pending: 150,
-          topTypes: [
-            { type: 'Sedan', count: 450 },
-            { type: 'SUV', count: 380 },
-            { type: 'Hatchback', count: 320 },
-            { type: 'Truck', count: 100 },
-          ]
-        },
-        platformMetrics: {
-          averageBookingValue: 250,
-          userRetentionRate: 78,
-          conversionRate: 12.5,
-          customerSatisfaction: 4.6
-        },
-        topLocations: [
-          { location: 'Cape Town', bookings: 320, revenue: 16000 },
-          { location: 'Johannesburg', bookings: 280, revenue: 14000 },
-          { location: 'Durban', bookings: 180, revenue: 9000 },
-          { location: 'Pretoria', bookings: 150, revenue: 7500 },
-        ],
-        systemPerformance: {
-          uptime: 99.8,
-          responseTime: 120,
-          errorRate: 0.2,
-          activeUsers: 450
+      
+      const response = await fetch(`/api/analytics?dateRange=${dateRange}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
         }
-      };
-      setAnalyticsData(mockData);
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics data');
+      }
+      
+      const data = await response.json();
+      setAnalyticsData(data);
     } catch (error) {
       console.error('Error fetching analytics data:', error);
+      // Set empty state on error instead of mock data
+      setAnalyticsData(null);
     } finally {
       setLoading(false);
     }

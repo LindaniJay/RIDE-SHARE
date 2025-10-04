@@ -7,20 +7,29 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { sequelize } from './config/database';
 import { initializeFirebaseAdmin } from './config/firebase';
+import { 
+  securityHeaders, 
+  apiRateLimit, 
+  ipBlocking,
+  requestSizeLimit 
+} from './middlewares/security';
+import { sanitizeRequestBody } from './middlewares/sanitization';
+// Production routes
 import authRoutes from './routes/auth';
-import enhancedListingRoutes from './routes/enhanced-listings';
-import vehicleRoutes from './routes/vehicles';
-import bookingRoutes from './routes/bookings';
+import listingRoutes from './routes/listings-production';
+import bookingRoutes from './routes/bookings-production';
+import paymentRoutes from './routes/payments-production';
+import checkpointRoutes from './routes/checkpoints-production';
+import adminProductionRoutes from './routes/admin-production';
+
+// Legacy routes (for backward compatibility) - Consolidated
 import reviewRoutes from './routes/reviews';
-import paymentRoutes from './routes/payments';
-import dashboardRoutes from './routes/dashboard';
-import statsRoutes from './routes/stats';
-import adminRoutes from './routes/admin';
 import userRoutes from './routes/users';
 import messageRoutes from './routes/messages';
 import analyticsRoutes from './routes/analytics';
 import earningsRoutes from './routes/earnings';
 import notificationRoutes from './routes/notifications';
+import documentRoutes from './routes/documents';
 import approvalRequestRoutes from './routes/approval-requests';
 import firestoreAuthRoutes from './routes/firestore-auth';
 import { errorHandler } from './middlewares/errorHandler';
@@ -30,48 +39,89 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: {
-    error: 'Too many requests from this IP, please try again later.',
+// Enhanced security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
   },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+  crossOriginEmbedderPolicy: false
+}));
 
-// Apply rate limiting to all requests
-app.use(limiter);
+// Security headers
+app.use(securityHeaders);
+
+// IP blocking
+app.use(ipBlocking);
+
+// Enhanced rate limiting
+app.use(apiRateLimit);
+
+// Request size limiting
+app.use(requestSizeLimit('10mb'));
 
 // Compression middleware
 app.use(compression());
 
-// Middleware
-app.use(helmet());
+// CORS with enhanced security
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL!] 
+    : ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Session-ID'],
+  exposedHeaders: ['X-Total-Count', 'X-Page-Count']
 }));
-app.use(morgan('combined'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// Enhanced logging
+app.use(morgan('combined', {
+  skip: (req, res) => res.statusCode < 400
+}));
+
+// Body parsing with enhanced security
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    // Additional security checks can be added here
+    if (buf.length > 10 * 1024 * 1024) {
+      throw new Error('Request too large');
+    }
+  }
+}));
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '10mb' 
+}));
+
+// Input sanitization
+app.use(sanitizeRequestBody);
+
+// Production API routes
 app.use('/api/auth', authRoutes);
-app.use('/api/listings', enhancedListingRoutes);
-app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/listings', listingRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/stats', statsRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/checkpoints', checkpointRoutes);
+app.use('/api/admin', adminProductionRoutes);
+
+// Legacy routes (for backward compatibility) - Consolidated
+app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/earnings', earningsRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/documents', documentRoutes);
 app.use('/api/approval-requests', approvalRequestRoutes);
 app.use('/api/firestore-auth', firestoreAuthRoutes);
 

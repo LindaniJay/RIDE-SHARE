@@ -38,7 +38,7 @@ class AutoApprovalService {
     const accountAge = Math.floor((Date.now() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24));
 
     // Check conditions
-    if (rule.conditions.verifiedUser && !user.isEmailVerified) return false;
+    if (rule.conditions.verifiedUser && !user.is_email_verified) return false;
     if (rule.conditions.minAccountAge && accountAge < rule.conditions.minAccountAge) return false;
 
     // Auto-approve

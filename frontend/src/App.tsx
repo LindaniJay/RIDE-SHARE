@@ -1,3 +1,9 @@
+// Production Service Imports (available for use)
+// import { authService } from './services/productionAuthService';
+// import { bookingService } from './services/productionBookingService';
+// import { listingService } from './services/productionListingService';
+// import { apiClient } from './services/productionApiClient';
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -5,10 +11,10 @@ import { Suspense, lazy, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { ToastProvider } from './components/Toast';
+import { ToastProvider } from './components/ToastProvider';
 import Layout from './layouts/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
-import AdminProtectedRoute from './components/AdminProtectedRoute';
+// import AdminProtectedRoute from './components/AdminProtectedRoute';
 import { FullPageLoading } from './components/Loading';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -18,7 +24,8 @@ const Search = lazy(() => import('./pages/Search'));
 const VehicleDetail = lazy(() => import('./pages/VehicleDetail'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
+// Import Dashboard directly to avoid dynamic import issues
+import Dashboard from './pages/Dashboard';
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const RealTimeAdminDashboard = lazy(() => import('./pages/RealTimeAdminDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -54,28 +61,36 @@ function App() {
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
       // Suppress "message channel closed" errors as they're typically from browser extensions
-      if (event.message && event.message.includes('message channel closed')) {
+      if (event.message && (
+        event.message.includes('message channel closed') ||
+        event.message.includes('listener indicated an asynchronous response')
+      )) {
         event.preventDefault();
-        console.warn('Suppressed message channel error (likely from browser extension):', event.message);
+        event.stopPropagation();
+        console.warn('Suppressed browser extension error:', event.message);
         return false;
       }
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       // Suppress "message channel closed" promise rejections
-      if (event.reason && event.reason.message && event.reason.message.includes('message channel closed')) {
+      if (event.reason && event.reason.message && (
+        event.reason.message.includes('message channel closed') ||
+        event.reason.message.includes('listener indicated an asynchronous response')
+      )) {
         event.preventDefault();
-        console.warn('Suppressed message channel promise rejection (likely from browser extension):', event.reason.message);
+        event.stopPropagation();
+        console.warn('Suppressed browser extension promise rejection:', event.reason.message);
         return false;
       }
     };
 
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError, true);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection, true);
 
     return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError, true);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection, true);
     };
   }, []);
 
@@ -83,10 +98,10 @@ function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
-          <ErrorBoundary>
-            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <AuthProvider>
-                <ThemeProvider>
+            <ErrorBoundary>
+              <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <AuthProvider>
+                  <ThemeProvider>
               <div className="App">
                 <Suspense fallback={<FullPageLoading text="Loading RideShare SA..." />}>
                       <Routes>
@@ -117,11 +132,9 @@ function App() {
                           </ProtectedRoute>
                         } />
                         <Route path="/admin-dashboard/*" element={
-                          <AdminAuthProvider>
-                            <AdminProtectedRoute>
-                              <AdminDashboard />
-                            </AdminProtectedRoute>
-                          </AdminAuthProvider>
+                          <ProtectedRoute requiredRole="admin">
+                            <Layout><AdminDashboard /></Layout>
+                          </ProtectedRoute>
                         } />
                         <Route path="/legacy-admin-dashboard" element={<RealTimeAdminDashboard />} />
                         <Route path="*" element={<Layout><NotFound /></Layout>} />
@@ -130,8 +143,8 @@ function App() {
                   </div>
                 </ThemeProvider>
               </AuthProvider>
-            </Router>
-          </ErrorBoundary>
+              </Router>
+            </ErrorBoundary>
         </ToastProvider>
       </QueryClientProvider>
     </HelmetProvider>

@@ -99,7 +99,7 @@ router.post('/', approvalRequestRateLimit, authenticateToken, async (req: AuthRe
       action: wasAutoApproved ? 'AUTO_APPROVED' : 'CREATED',
       entityType: 'ApprovalRequest',
       entityId: approvalRequest.id,
-      userId: req.user!.id,
+      userId: parseInt(req.user!.id),
       userRole: req.user!.role,
       newValues: { requestType, entityId, submittedBy, status: wasAutoApproved ? 'Approved' : 'Pending' },
       req
@@ -305,7 +305,7 @@ router.patch('/:id', approvalUpdateRateLimit, authenticateToken, requireRole(['a
       action: `APPROVAL_${status.toUpperCase()}`,
       entityType: 'ApprovalRequest',
       entityId: parseInt(id),
-      userId: req.user!.id,
+      userId: parseInt(req.user!.id),
       userRole: req.user!.role,
       oldValues: { status: 'Pending' },
       newValues: { status, reviewNotes },

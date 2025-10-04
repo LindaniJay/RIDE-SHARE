@@ -7,8 +7,8 @@ export interface ApprovalRequestAttributes {
   entityId: number;
   submittedBy: 'renter' | 'host';
   status: 'Pending' | 'UnderReview' | 'Approved' | 'Declined' | 'RequiresMoreInfo';
-  submittedById: number;
-  reviewedById?: number;
+  submittedById: string;
+  reviewedById?: string;
   reviewNotes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -23,8 +23,8 @@ export class ApprovalRequest extends Model<ApprovalRequestAttributes, ApprovalRe
   public entityId!: number;
   public submittedBy!: 'renter' | 'host';
   public status!: 'Pending' | 'UnderReview' | 'Approved' | 'Declined' | 'RequiresMoreInfo';
-  public submittedById!: number;
-  public reviewedById?: number;
+  public submittedById!: string;
+  public reviewedById?: string;
   public reviewNotes?: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -60,7 +60,7 @@ ApprovalRequest.init(
       defaultValue: 'Pending',
     },
     submittedById: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
@@ -68,7 +68,7 @@ ApprovalRequest.init(
       }
     },
     reviewedById: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
       references: {
         model: 'users',

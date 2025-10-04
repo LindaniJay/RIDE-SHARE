@@ -9,33 +9,48 @@ const seedData = async () => {
 
     // Create sample users
     const host1 = await User.create({
-      firstName: 'John',
-      lastName: 'Smith',
+      first_name: 'John',
+      last_name: 'Smith',
       email: 'john@example.com',
       password: 'password123',
-      passwordHash: await bcrypt.hash('password123', 12),
+      password_hash: await bcrypt.hash('password123', 12),
       role: 'host',
-      phoneNumber: '+27 21 123 4567'
+      phone_number: '+27 21 123 4567',
+      is_email_verified: true,
+      is_phone_verified: false,
+      approval_status: 'approved',
+      document_status: 'not_uploaded',
+      is_active: true
     });
 
     const host2 = await User.create({
-      firstName: 'Sarah',
-      lastName: 'Johnson',
+      first_name: 'Sarah',
+      last_name: 'Johnson',
       email: 'sarah@example.com',
       password: 'password123',
-      passwordHash: await bcrypt.hash('password123', 12),
+      password_hash: await bcrypt.hash('password123', 12),
       role: 'host',
-      phoneNumber: '+27 11 987 6543'
+      phone_number: '+27 11 987 6543',
+      is_email_verified: true,
+      is_phone_verified: false,
+      approval_status: 'approved',
+      document_status: 'not_uploaded',
+      is_active: true
     });
 
     await User.create({
-      firstName: 'Mike',
-      lastName: 'Wilson',
+      first_name: 'Mike',
+      last_name: 'Wilson',
       email: 'mike@example.com',
       password: 'password123',
-      passwordHash: await bcrypt.hash('password123', 12),
+      password_hash: await bcrypt.hash('password123', 12),
       role: 'renter',
-      phoneNumber: '+27 82 555 1234'
+      phone_number: '+27 82 555 1234',
+      is_email_verified: true,
+      is_phone_verified: false,
+      approval_status: 'approved',
+      document_status: 'not_uploaded',
+      is_active: true
     });
 
     // Create sample listings
@@ -45,11 +60,11 @@ const seedData = async () => {
         make: 'Toyota',
         model: 'Corolla',
         year: 2020,
-        type: 'car' as const,
+        vehicle_type: 'car' as const,
         transmission: 'automatic' as const,
-        fuelType: 'petrol' as const,
+        fuel_type: 'petrol' as const,
         seats: 5,
-        pricePerDay: 250,
+        price_per_day: 250,
         location: 'Cape Town',
         latitude: -33.9249,
         longitude: 18.4241,
@@ -59,19 +74,25 @@ const seedData = async () => {
           'https://images.unsplash.com/photo-1549317336-206569e8475c?w=800'
         ],
         features: ['Air Conditioning', 'Bluetooth', 'USB Port', 'GPS'],
-        hostId: host1.id,
-        status: 'approved' as const
+        host_id: host1.id,
+        status: 'approved' as const,
+        approval_status: 'approved' as const,
+        is_featured: false,
+        total_bookings: 0,
+        total_earnings: 0,
+        category: 'economy',
+        minimum_rental_days: 1
       },
       {
         title: '2019 BMW X3 - Luxury SUV for Family Trips',
         make: 'BMW',
         model: 'X3',
         year: 2019,
-        type: 'suv' as const,
+        vehicle_type: 'suv' as const,
         transmission: 'automatic' as const,
-        fuelType: 'petrol' as const,
+        fuel_type: 'petrol' as const,
         seats: 5,
-        pricePerDay: 450,
+        price_per_day: 450,
         location: 'Johannesburg',
         latitude: -26.2041,
         longitude: 28.0473,
@@ -81,19 +102,25 @@ const seedData = async () => {
           'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800'
         ],
         features: ['Air Conditioning', 'Bluetooth', 'USB Port', 'GPS', 'Sunroof', 'Heated Seats'],
-        hostId: host2.id,
-        status: 'approved' as const
+        host_id: host2.id,
+        status: 'approved' as const,
+        approval_status: 'approved' as const,
+        is_featured: false,
+        total_bookings: 0,
+        total_earnings: 0,
+        category: 'economy',
+        minimum_rental_days: 1
       },
       {
         title: '2021 Ford Ranger - Work and Adventure Ready',
         make: 'Ford',
         model: 'Ranger',
         year: 2021,
-        type: 'bakkie' as const,
+        vehicle_type: 'bakkie' as const,
         transmission: 'manual' as const,
-        fuelType: 'diesel' as const,
+        fuel_type: 'diesel' as const,
         seats: 5,
-        pricePerDay: 350,
+        price_per_day: 350,
         location: 'Durban',
         latitude: -29.8587,
         longitude: 31.0218,
@@ -103,19 +130,25 @@ const seedData = async () => {
           'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800'
         ],
         features: ['Air Conditioning', 'Bluetooth', '4x4', 'Towing Package'],
-        hostId: host1.id,
-        status: 'approved' as const
+        host_id: host1.id,
+        status: 'approved' as const,
+        approval_status: 'approved' as const,
+        is_featured: false,
+        total_bookings: 0,
+        total_earnings: 0,
+        category: 'economy',
+        minimum_rental_days: 1
       },
       {
         title: '2018 Mercedes-Benz C-Class - Executive Comfort',
         make: 'Mercedes-Benz',
         model: 'C-Class',
         year: 2018,
-        type: 'car' as const,
+        vehicle_type: 'car' as const,
         transmission: 'automatic' as const,
-        fuelType: 'petrol' as const,
+        fuel_type: 'petrol' as const,
         seats: 5,
-        pricePerDay: 400,
+        price_per_day: 400,
         location: 'Cape Town',
         latitude: -33.9249,
         longitude: 18.4241,
@@ -125,19 +158,25 @@ const seedData = async () => {
           'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800'
         ],
         features: ['Air Conditioning', 'Bluetooth', 'USB Port', 'GPS', 'Leather Seats', 'Sunroof'],
-        hostId: host2.id,
-        status: 'approved' as const
+        host_id: host2.id,
+        status: 'approved' as const,
+        approval_status: 'approved' as const,
+        is_featured: false,
+        total_bookings: 0,
+        total_earnings: 0,
+        category: 'economy',
+        minimum_rental_days: 1
       },
       {
         title: '2020 Volkswagen Polo - Compact and Efficient',
         make: 'Volkswagen',
         model: 'Polo',
         year: 2020,
-        type: 'car' as const,
+        vehicle_type: 'car' as const,
         transmission: 'manual' as const,
-        fuelType: 'petrol' as const,
+        fuel_type: 'petrol' as const,
         seats: 5,
-        pricePerDay: 200,
+        price_per_day: 200,
         location: 'Pretoria',
         latitude: -25.7479,
         longitude: 28.2293,
@@ -147,19 +186,25 @@ const seedData = async () => {
           'https://images.unsplash.com/photo-1549317336-206569e8475c?w=800'
         ],
         features: ['Air Conditioning', 'Bluetooth', 'USB Port'],
-        hostId: host1.id,
-        status: 'approved' as const
+        host_id: host1.id,
+        status: 'approved' as const,
+        approval_status: 'approved' as const,
+        is_featured: false,
+        total_bookings: 0,
+        total_earnings: 0,
+        category: 'economy',
+        minimum_rental_days: 1
       },
       {
         title: '2019 Toyota Hilux - Ultimate Adventure Vehicle',
         make: 'Toyota',
         model: 'Hilux',
         year: 2019,
-        type: 'bakkie' as const,
+        vehicle_type: 'bakkie' as const,
         transmission: 'manual' as const,
-        fuelType: 'diesel' as const,
+        fuel_type: 'diesel' as const,
         seats: 5,
-        pricePerDay: 300,
+        price_per_day: 300,
         location: 'Port Elizabeth',
         latitude: -33.9608,
         longitude: 25.6022,
@@ -169,15 +214,26 @@ const seedData = async () => {
           'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800'
         ],
         features: ['Air Conditioning', 'Bluetooth', '4x4', 'Towing Package', 'Off-road Package'],
-        hostId: host2.id,
-        status: 'approved' as const
+        host_id: host2.id,
+        status: 'approved' as const,
+        approval_status: 'approved' as const,
+        is_featured: false,
+        total_bookings: 0,
+        total_earnings: 0,
+        category: 'economy',
+        minimum_rental_days: 1
       }
     ];
 
     for (const listingData of listings) {
       await Listing.create({
         ...listingData,
-        availability: {}
+        is_featured: false,
+        total_bookings: 0,
+        total_earnings: 0,
+        category: 'economy',
+        minimum_rental_days: 1,
+        host_id: listingData.host_id!
       });
     }
 

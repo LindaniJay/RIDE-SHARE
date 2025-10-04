@@ -33,65 +33,25 @@ const SystemHealthMonitor: React.FC = () => {
 
   const fetchSystemHealth = async () => {
     try {
-      // Mock data - replace with actual API call
-      const mockHealth: SystemHealth = {
-        overall: 'healthy',
-        uptime: '99.9%',
-        lastUpdate: new Date().toISOString(),
-        metrics: [
-          {
-            name: 'CPU Usage',
-            value: 45,
-            unit: '%',
-            status: 'healthy',
-            trend: 'stable',
-            threshold: { warning: 70, critical: 90 }
-          },
-          {
-            name: 'Memory Usage',
-            value: 62,
-            unit: '%',
-            status: 'healthy',
-            trend: 'up',
-            threshold: { warning: 80, critical: 95 }
-          },
-          {
-            name: 'Disk Usage',
-            value: 35,
-            unit: '%',
-            status: 'healthy',
-            trend: 'stable',
-            threshold: { warning: 85, critical: 95 }
-          },
-          {
-            name: 'Database Connections',
-            value: 23,
-            unit: 'active',
-            status: 'healthy',
-            trend: 'down',
-            threshold: { warning: 80, critical: 100 }
-          },
-          {
-            name: 'API Response Time',
-            value: 120,
-            unit: 'ms',
-            status: 'healthy',
-            trend: 'stable',
-            threshold: { warning: 500, critical: 1000 }
-          },
-          {
-            name: 'Active Users',
-            value: 1247,
-            unit: 'users',
-            status: 'healthy',
-            trend: 'up',
-            threshold: { warning: 5000, critical: 10000 }
-          }
-        ]
-      };
-      setHealth(mockHealth);
+      setLoading(true);
+      
+      const response = await fetch('/api/system/health', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch system health data');
+      }
+      
+      const data = await response.json();
+      setHealth(data);
     } catch (error) {
       console.error('Error fetching system health:', error);
+      // Set empty state on error instead of mock data
+      setHealth(null);
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -13,32 +12,15 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   className = '' 
 }) => {
   const sizeClasses = {
-    sm: 'h-6 w-6',
-    md: 'h-12 w-12',
-    lg: 'h-16 w-16'
+    sm: 'h-4 w-4',
+    md: 'h-8 w-8',
+    lg: 'h-12 w-12'
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen ${className}`}>
-      <motion.div
-        className={`${sizeClasses[size]} border-4 border-blue-200 border-t-blue-600 rounded-full`}
-        animate={{ rotate: 360 }}
-        transition={{
-          duration: 1,
-          repeat: Infinity,
-          ease: 'linear'
-        }}
-      />
-      {text && (
-        <motion.p 
-          className="mt-4 text-gray-600 dark:text-gray-300"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          {text}
-        </motion.p>
-      )}
+    <div className={`flex items-center justify-center space-x-2 ${className}`}>
+      <div className={`animate-spin rounded-full border-2 border-white/20 border-t-white ${sizeClasses[size]}`}></div>
+      {text && <span className="text-white/70 text-sm">{text}</span>}
     </div>
   );
 };

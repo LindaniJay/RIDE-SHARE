@@ -14,34 +14,34 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
     
     // Get booking statistics
     const totalBookings = await Booking.count({
-      where: { renterId: userId }
+      where: { renter_id: userId }
     });
     
     const activeBookings = await Booking.count({
       where: { 
-        renterId: userId,
+        renter_id: userId,
         status: ['pending', 'confirmed']
       }
     });
     
     const completedBookings = await Booking.count({
       where: { 
-        renterId: userId,
+        renter_id: userId,
         status: 'completed'
       }
     });
     
     // Get total spent
-    const totalSpent = await Booking.sum('totalPrice', {
+    const totalSpent = await Booking.sum('total_amount', {
       where: { 
-        renterId: userId,
+        renter_id: userId,
         status: 'completed'
       }
     }) || 0;
     
     // Get recent bookings
     const recentBookings = await Booking.findAll({
-      where: { renterId: userId },
+      where: { renter_id: userId },
       include: [
         {
           model: Vehicle,
@@ -97,7 +97,7 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
     const upcomingBookings = await Booking.count({
       where: {
         status: 'confirmed',
-        startDate: { [Op.gte]: new Date() }
+        start_date: { [Op.gte]: new Date() }
       },
       include: [
         {
@@ -113,12 +113,12 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
       where: { hostId: userId },
       attributes: ['id']
     });
-    const vehicleIds = hostVehicles.map(v => v.id);
+    const listing_ids = hostVehicles.map(v => v.id);
     
-    const totalEarnings = await Booking.sum('totalPrice', {
+    const totalEarnings = await Booking.sum('total_amount', {
       where: {
         status: 'completed',
-        vehicleId: { [Op.in]: vehicleIds }
+        listing_id: { [Op.in]: listing_ids }
       }
     }) || 0;
     

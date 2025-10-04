@@ -35,8 +35,14 @@ class AdminAuthService {
     onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         try {
-          const adminData = await this.getAdminData(firebaseUser.uid);
-          this.currentAdmin = adminData;
+          // Only check for admin data if we're on an admin route or if explicitly requested
+          const isAdminRoute = window.location.pathname.includes('/admin');
+          if (isAdminRoute) {
+            const adminData = await this.getAdminData(firebaseUser.uid);
+            this.currentAdmin = adminData;
+          } else {
+            this.currentAdmin = null;
+          }
         } catch (error) {
           console.error('Error fetching admin data:', error);
           this.currentAdmin = null;

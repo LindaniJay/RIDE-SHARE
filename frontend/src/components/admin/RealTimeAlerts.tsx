@@ -28,45 +28,27 @@ const RealTimeAlerts: React.FC = () => {
 
   const fetchAlerts = async () => {
     try {
-      // Mock data - replace with actual API call
-      const mockAlerts: Alert[] = [
-        {
-          id: '1',
-          type: 'error',
-          title: 'Payment Processing Error',
-          message: 'Failed to process payment for booking #12345',
-          timestamp: new Date().toISOString(),
-          priority: 'high',
-          category: 'payment',
-          isRead: false,
-          actionRequired: true
-        },
-        {
-          id: '2',
-          type: 'warning',
-          title: 'High Server Load',
-          message: 'Server CPU usage is at 85%',
-          timestamp: new Date(Date.now() - 300000).toISOString(),
-          priority: 'medium',
-          category: 'system',
-          isRead: false,
-          actionRequired: false
-        },
-        {
-          id: '3',
-          type: 'info',
-          title: 'New User Registration',
-          message: 'New user registered: john.doe@email.com',
-          timestamp: new Date(Date.now() - 600000).toISOString(),
-          priority: 'low',
-          category: 'user',
-          isRead: true,
-          actionRequired: false
+      const response = await fetch('/api/admin/real-time-alerts', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
         }
-      ];
-      setAlerts(mockAlerts);
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setAlerts(result.alerts || []);
+      } else {
+        throw new Error(result.error || 'Failed to fetch alerts');
+      }
     } catch (error) {
       console.error('Error fetching alerts:', error);
+      setAlerts([]);
     } finally {
       setLoading(false);
     }

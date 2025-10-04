@@ -11,9 +11,9 @@ const router = express.Router();
 
 // Validation schemas
 const createBookingSchema = z.object({
-  vehicleId: z.number(),
-  startDate: z.string().transform(str => new Date(str)),
-  endDate: z.string().transform(str => new Date(str)),
+  listing_id: z.number(),
+  start_date: z.string().transform(str => new Date(str)),
+  end_date: z.string().transform(str => new Date(str)),
   totalPrice: z.number().positive(),
   specialRequests: z.string().optional(),
   addOns: z.array(z.object({
@@ -23,8 +23,8 @@ const createBookingSchema = z.object({
 });
 
 const updateBookingSchema = z.object({
-  startDate: z.string().transform(str => new Date(str)).optional(),
-  endDate: z.string().transform(str => new Date(str)).optional(),
+  start_date: z.string().transform(str => new Date(str)).optional(),
+  end_date: z.string().transform(str => new Date(str)).optional(),
   specialRequests: z.string().optional(),
   addOns: z.array(z.object({
     name: z.string(),
@@ -43,7 +43,7 @@ router.post('/', authenticateToken, requireRole(['renter', 'admin']), async (req
     const bookingData = createBookingSchema.parse(req.body);
     
     // Verify vehicle exists and is available
-    const vehicle = await Listing.findByPk(bookingData.vehicleId);
+    const vehicle = await Listing.findByPk(bookingData.listing_id);
     if (!vehicle) {
       return res.status(404).json({ error: 'Vehicle not found' });
     }
@@ -55,19 +55,19 @@ router.post('/', authenticateToken, requireRole(['renter', 'admin']), async (req
     // Check for date conflicts
     const existingBooking = await Booking.findOne({
       where: {
-        vehicleId: bookingData.vehicleId,
+        listing_id: bookingData.listing_id,
         status: { [Op.in]: ['pending', 'confirmed'] },
         [Op.or]: [
           {
-            startDate: { [Op.between]: [bookingData.startDate, bookingData.endDate] }
+            start_date: { [Op.between]: [bookingData.start_date, bookingData.end_date] }
           },
           {
-            endDate: { [Op.between]: [bookingData.startDate, bookingData.endDate] }
+            end_date: { [Op.between]: [bookingData.start_date, bookingData.end_date] }
           },
           {
             [Op.and]: [
-              { startDate: { [Op.lte]: bookingData.startDate } },
-              { endDate: { [Op.gte]: bookingData.endDate } }
+              { start_date: { [Op.lte]: bookingData.start_date } },
+              { end_date: { [Op.gte]: bookingData.end_date } }
             ]
           }
         ]
@@ -87,14 +87,21 @@ router.post('/', authenticateToken, requireRole(['renter', 'admin']), async (req
 
     // Create booking
     const booking = await Booking.create({
-      vehicleId: bookingData.vehicleId,
-      renterId: req.user!.id,
-      startDate: bookingData.startDate,
-      endDate: bookingData.endDate,
-      totalPrice,
+      listing_id: bookingData.listing_id.toString(),
+      renter_id: req.user!.id,
+      start_date: bookingData.start_date,
+      end_date: bookingData.end_date,
+      total_amount: totalPrice,
       status: 'pending',
-      specialRequests: bookingData.specialRequests,
-      addOns: bookingData.addOns || []
+      special_requests: bookingData.specialRequests,
+      add_ons: bookingData.addOns || [],
+      total_days: Math.ceil((new Date(bookingData.end_date).getTime() - new Date(bookingData.start_date).getTime()) / (1000 * 60 * 60 * 24)),
+      price_per_day: 0, // Will be calculated from listing
+      subtotal: totalPrice,
+      service_fee: 0,
+      insurance_fee: 0,
+      // tax_amount: 0, // Field doesn't exist in model
+      payment_status: 'pending'
     });
 
     // Include vehicle and renter details in response
@@ -132,7 +139,7 @@ router.get('/my-bookings', authenticateToken, async (req: AuthRequest, res) => {
     const { page = 1, limit = 10, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    const whereClause: any = { renterId: req.user!.id };
+    const whereClause: any = { renter_id: req.user!.id };
     if (status) {
       whereClause.status = status;
     }
@@ -174,12 +181,12 @@ router.get('/host-requests', authenticateToken, requireRole(['host', 'admin']), 
 
     // Get host's vehicles
     const hostVehicles = await Listing.findAll({
-      where: { hostId: req.user!.id },
+      where: { host_id: req.user!.id },
       attributes: ['id']
     });
-    const vehicleIds = hostVehicles.map(v => v.id);
+    const listing_ids = hostVehicles.map(v => v.id);
 
-    const whereClause: any = { vehicleId: { [Op.in]: vehicleIds } };
+    const whereClause: any = { listing_id: { [Op.in]: listing_ids } };
     if (status) {
       whereClause.status = status;
     }
@@ -230,7 +237,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Check if user owns the booking
-    if (booking.renterId !== req.user!.id && req.user!.role !== 'admin') {
+    if (booking.renter_id !== req.user!.id && req.user!.role !== 'admin') {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -240,26 +247,26 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // If dates are being changed, check for conflicts
-    if (updateData.startDate || updateData.endDate) {
-      const startDate = updateData.startDate || booking.startDate;
-      const endDate = updateData.endDate || booking.endDate;
+    if (updateData.start_date || updateData.end_date) {
+      const start_date = updateData.start_date || booking.start_date;
+      const end_date = updateData.end_date || booking.end_date;
 
       const existingBooking = await Booking.findOne({
         where: {
-          vehicleId: booking.vehicleId,
+          listing_id: booking.listing_id,
           id: { [Op.ne]: booking.id },
           status: { [Op.in]: ['pending', 'confirmed'] },
           [Op.or]: [
             {
-              startDate: { [Op.between]: [startDate, endDate] }
+              start_date: { [Op.between]: [start_date, end_date] }
             },
             {
-              endDate: { [Op.between]: [startDate, endDate] }
+              end_date: { [Op.between]: [start_date, end_date] }
             },
             {
               [Op.and]: [
-                { startDate: { [Op.lte]: startDate } },
-                { endDate: { [Op.gte]: endDate } }
+                { start_date: { [Op.lte]: start_date } },
+                { end_date: { [Op.gte]: end_date } }
               ]
             }
           ]
@@ -312,7 +319,7 @@ router.patch('/:id/action', authenticateToken, requireRole(['host', 'admin']), a
         {
           model: Vehicle,
           as: 'vehicle',
-          attributes: ['hostId']
+          attributes: ['host_id']
         }
       ]
     });
@@ -322,7 +329,7 @@ router.patch('/:id/action', authenticateToken, requireRole(['host', 'admin']), a
     }
 
     // Check if user is the host or admin
-    if ((booking as any).vehicle.hostId !== req.user!.id && req.user!.role !== 'admin') {
+    if ((booking as any).vehicle.host_id !== req.user!.id && req.user!.role !== 'admin') {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -343,7 +350,7 @@ router.patch('/:id/action', authenticateToken, requireRole(['host', 'admin']), a
 
     await booking.update({
       status: newStatus as 'pending' | 'confirmed' | 'cancelled' | 'completed',
-      ...(reason && { cancellationReason: reason })
+      ...(reason && { cancellation_reason: reason })
     });
 
     const updatedBooking = await Booking.findByPk(booking.id, {
@@ -385,7 +392,7 @@ router.patch('/:id/cancel', authenticateToken, async (req: AuthRequest, res) => 
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    if (booking.renterId !== req.user!.id && req.user!.role !== 'admin') {
+    if (booking.renter_id !== req.user!.id && req.user!.role !== 'admin') {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -395,8 +402,7 @@ router.patch('/:id/cancel', authenticateToken, async (req: AuthRequest, res) => 
 
     await booking.update({
       status: 'cancelled',
-      cancellationReason: reason,
-      cancelledAt: new Date()
+      cancellation_reason: reason
     });
 
     res.json({
@@ -434,9 +440,9 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Check if user has access to this booking
-    const hasAccess = booking.renterId === req.user!.id || 
+    const hasAccess = booking.renter_id === req.user!.id || 
                      req.user!.role === 'admin' ||
-                     (req.user!.role === 'host' && (booking as any).vehicle.hostId === req.user!.id);
+                     (req.user!.role === 'host' && (booking as any).vehicle.host_id === req.user!.id);
 
     if (!hasAccess) {
       return res.status(403).json({ error: 'Unauthorized' });
@@ -454,18 +460,18 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
 // Get all bookings (admin)
 router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
   try {
-    const { page = 1, limit = 10, status, renterId, hostId } = req.query;
+    const { page = 1, limit = 10, status, renter_id, host_id } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     const whereClause: any = {};
     if (status) whereClause.status = status;
-    if (renterId) whereClause.renterId = renterId;
+    if (renter_id) whereClause.renter_id = renter_id;
 
     const includeClause: any[] = [
       {
         model: Listing,
         as: 'vehicle',
-        attributes: ['id', 'title', 'make', 'model', 'hostId']
+        attributes: ['id', 'title', 'make', 'model', 'host_id']
       },
       {
         model: User,
@@ -474,8 +480,8 @@ router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthReque
       }
     ];
 
-    if (hostId) {
-      includeClause[0].where = { hostId };
+    if (host_id) {
+      includeClause[0].where = { host_id };
     }
 
     const bookings = await Booking.findAndCountAll({

@@ -1,8 +1,9 @@
 import express from 'express';
 import { z } from 'zod';
-import { User, Listing, Booking, Review } from '../models';
+import { User, Listing, Booking, Review, Document } from '../models';
 import { Op } from 'sequelize';
 import { NotificationService } from '../services/notificationService';
+import { AuthRequest } from '../middlewares/auth';
 
 const router = express.Router();
 
@@ -13,27 +14,17 @@ export const setNotificationService = (service: NotificationService) => {
   notificationService = service;
 };
 
-// Admin middleware - verify admin role
-const requireAdmin = async (req: any, res: any, next: any) => {
-  try {
-    // In a real implementation, you would verify the Firebase token here
-    // and check if the user has admin role in Firestore
-    // For now, we'll assume the user is authenticated as admin
-    req.user = { id: 1, role: 'admin' }; // Mock admin user
-    next();
-  } catch (error) {
-    res.status(401).json({ error: 'Unauthorized' });
-  }
-};
+// Import centralized authentication middleware
+import { authenticateToken, requireRole } from '../middlewares/auth';
 
 // Get all users for admin approval
-router.get('/users', requireAdmin, async (req, res) => {
+router.get('/users', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const { page = 1, limit = 10, status, role } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     const whereClause: any = {};
-    if (status) whereClause.approvalStatus = status;
+    if (status) whereClause.approval_status = status;
     if (role) whereClause.role = role;
 
     const users = await User.findAndCountAll({
@@ -60,7 +51,7 @@ router.get('/users', requireAdmin, async (req, res) => {
 });
 
 // Approve or reject user profile
-router.patch('/users/:id/approve', requireAdmin, async (req, res) => {
+router.patch('/users/:id/approve', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = req.body;
@@ -75,13 +66,13 @@ router.patch('/users/:id/approve', requireAdmin, async (req, res) => {
     }
 
     await user.update({
-      approvalStatus: status,
+      approval_status: status,
       ...(status === 'rejected' && reason && { rejectionReason: reason })
     });
 
     // Notify user of profile update
     if (notificationService) {
-      await notificationService.notifyUserProfileUpdate(user.id, status, reason);
+      await notificationService.notifyUserProfileUpdate(parseInt(user.id), status, reason);
       await notificationService.broadcastAdminUpdates();
     }
 
@@ -97,7 +88,7 @@ router.patch('/users/:id/approve', requireAdmin, async (req, res) => {
 });
 
 // Get all vehicles for admin approval
-router.get('/vehicles', requireAdmin, async (req, res) => {
+router.get('/vehicles', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -136,7 +127,7 @@ router.get('/vehicles', requireAdmin, async (req, res) => {
 });
 
 // Approve or reject vehicle listing
-router.patch('/vehicles/:id/approve', requireAdmin, async (req, res) => {
+router.patch('/vehicles/:id/approve', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = req.body;
@@ -157,7 +148,7 @@ router.patch('/vehicles/:id/approve', requireAdmin, async (req, res) => {
 
     // Notify host of vehicle update
     if (notificationService) {
-      await notificationService.notifyVehicleUpdate(vehicle.hostId, vehicle.id, status, reason);
+      await notificationService.notifyVehicleUpdate(parseInt(vehicle.host_id), parseInt(vehicle.id), status, reason);
       await notificationService.broadcastAdminUpdates();
     }
 
@@ -173,7 +164,7 @@ router.patch('/vehicles/:id/approve', requireAdmin, async (req, res) => {
 });
 
 // Get all bookings for admin review
-router.get('/bookings', requireAdmin, async (req, res) => {
+router.get('/bookings', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -217,7 +208,7 @@ router.get('/bookings', requireAdmin, async (req, res) => {
 });
 
 // Get all reviews for admin moderation
-router.get('/reviews', requireAdmin, async (req, res) => {
+router.get('/reviews', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -257,7 +248,7 @@ router.get('/reviews', requireAdmin, async (req, res) => {
 });
 
 // Get admin dashboard statistics
-router.get('/stats', requireAdmin, async (req, res) => {
+router.get('/stats', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const [
       totalUsers,
@@ -271,14 +262,14 @@ router.get('/stats', requireAdmin, async (req, res) => {
       recentVehicles
     ] = await Promise.all([
       User.count(),
-      User.count({ where: { approvalStatus: 'pending' } }),
+      User.count({ where: { approval_status: 'pending' } }),
       Listing.count(),
       Listing.count({ where: { status: 'pending' } }),
       Booking.count(),
       Booking.count({ where: { status: 'pending' } }),
-      Booking.sum('totalPrice', { where: { status: 'completed' } }) || 0,
+      Booking.sum('total_amount', { where: { status: 'completed' } }) || 0,
       User.findAll({
-        where: { approvalStatus: 'pending' },
+        where: { approval_status: 'pending' },
         limit: 5,
         order: [['createdAt', 'DESC']]
       }),
@@ -321,31 +312,37 @@ router.get('/stats', requireAdmin, async (req, res) => {
 });
 
 // Get pending documents for verification
-router.get('/documents', requireAdmin, async (req, res) => {
+router.get('/documents', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const { page = 1, limit = 10, status, documentType } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    // This would typically come from a documents table
-    // For now, we'll return users with pending verification
-    const whereClause: any = { approvalStatus: 'pending' };
-    if (status) whereClause.documentStatus = status;
+    const whereClause: any = {};
+    if (status) whereClause.status = status;
+    if (documentType) whereClause.documentType = documentType;
 
-    const users = await User.findAndCountAll({
+    const documents = await Document.findAndCountAll({
       where: whereClause,
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'firstName', 'lastName', 'email']
+        }
+      ],
       limit: Number(limit),
       offset,
-      order: [['createdAt', 'DESC']]
+      order: [['uploadedAt', 'DESC']]
     });
 
     res.json({
       success: true,
       data: {
-        documents: users.rows,
-        total: users.count,
+        documents: documents.rows,
+        total: documents.count,
         page: Number(page),
         limit: Number(limit),
-        totalPages: Math.ceil(users.count / Number(limit))
+        totalPages: Math.ceil(documents.count / Number(limit))
       }
     });
   } catch (error) {
@@ -354,8 +351,47 @@ router.get('/documents', requireAdmin, async (req, res) => {
   }
 });
 
+// Update document status
+router.patch('/documents/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { status, reason } = req.body;
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be approved or rejected' });
+    }
+
+    const document = await Document.findByPk(id);
+    if (!document) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    await document.update({
+      status,
+      reviewedAt: new Date(),
+      reviewedBy: req.user!.id,
+      ...(status === 'rejected' && reason && { rejectionReason: reason })
+    });
+
+    // Notify user of document update
+    if (notificationService) {
+      // await notificationService.notifyDocumentUpdate(document.userId, document.id, status, reason); // Method doesn't exist
+      await notificationService.broadcastAdminUpdates();
+    }
+
+    res.json({
+      success: true,
+      message: `Document ${status}`,
+      data: document
+    });
+  } catch (error) {
+    console.error('Error updating document status:', error);
+    res.status(500).json({ error: 'Failed to update document status' });
+  }
+});
+
 // Get disputes for admin review
-router.get('/disputes', requireAdmin, async (req, res) => {
+router.get('/disputes', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);

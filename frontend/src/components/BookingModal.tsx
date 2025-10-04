@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { MockCar } from '../data/mockCars';
+import { Vehicle } from '../services/productionApiService';
 import Icon from './Icon';
 import GlassInput from './GlassInput';
 import GlassButton from './GlassButton';
+import { useAuth } from '../context/AuthContext';
 
 interface BookingModalProps {
-  car: MockCar;
+  car: Vehicle;
   isOpen: boolean;
   onClose: () => void;
   onBookingSuccess: (booking: any) => void;
 }
 
 const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBookingSuccess }) => {
+  const { user } = useAuth();
   const [bookingData, setBookingData] = useState({
     startDate: '',
     endDate: '',
@@ -27,7 +29,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
     const start = new Date(bookingData.startDate);
     const end = new Date(bookingData.endDate);
     const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return days * car.pricePerDay;
+    return days * (car.price_per_day || car.pricePerDay || 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,88 +40,45 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
     try {
       // Create booking request
       const requestData = {
-        vehicleId: car.id,
-        startDate: bookingData.startDate,
-        endDate: bookingData.endDate,
-        notes: bookingData.notes,
-        pickupLocation: bookingData.pickupLocation,
-        returnLocation: bookingData.returnLocation,
-        totalPrice: calculateTotal(),
-        totalDays: Math.ceil((new Date(bookingData.endDate).getTime() - new Date(bookingData.startDate).getTime()) / (1000 * 60 * 60 * 24))
+        listing_id: car.id,
+        start_date: bookingData.startDate,
+        end_date: bookingData.endDate,
+        special_requests: bookingData.notes,
+        pickup_location: {
+          address: bookingData.pickupLocation,
+          city: car.location?.city || 'Unknown',
+          province: car.location?.province || 'Unknown'
+        },
+        return_location: {
+          address: bookingData.returnLocation,
+          city: car.location?.city || 'Unknown',
+          province: car.location?.province || 'Unknown'
+        }
       };
 
-      // Try to create booking via API first
-      try {
-        const response = await fetch('/api/bookings', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-          },
-          body: JSON.stringify(requestData)
-        });
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify(requestData)
+      });
 
-        if (response.ok) {
-          const result = await response.json();
+      if (response.ok) {
+        const result = await response.json();
+        if (result.booking) {
           onBookingSuccess(result.booking);
           onClose();
-          return;
+        } else {
+          throw new Error(result.error || 'Failed to create booking');
         }
-      } catch (apiError) {
-        console.log('API not available, using mock booking');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create booking');
       }
-
-      // Fallback to mock booking for development
-      const mockBooking = {
-        id: `booking_${Date.now()}`,
-        vehicleId: car.id,
-        renterId: 'current_user',
-        hostId: car.host.id,
-        startDate: bookingData.startDate,
-        endDate: bookingData.endDate,
-        totalDays: Math.ceil((new Date(bookingData.endDate).getTime() - new Date(bookingData.startDate).getTime()) / (1000 * 60 * 60 * 24)),
-        pricePerDay: car.pricePerDay,
-        totalPrice: calculateTotal(),
-        status: 'pending',
-        paymentStatus: 'pending',
-        vehicle: {
-          id: car.id,
-          make: car.make,
-          model: car.model,
-          year: car.year,
-          type: car.type,
-          images: car.images,
-          location: car.location
-        },
-        host: car.host,
-        renter: {
-          id: 'current_user',
-          name: 'Current User',
-          email: 'user@example.com',
-          phone: '+27 82 123 4567'
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        notes: bookingData.notes,
-        pickupLocation: bookingData.pickupLocation,
-        returnLocation: bookingData.returnLocation
-      };
-
-      // Store mock booking in localStorage for admin dashboard to pick up
-      const existingBookings = JSON.parse(localStorage.getItem('mockBookings') || '[]');
-      existingBookings.push(mockBooking);
-      localStorage.setItem('mockBookings', JSON.stringify(existingBookings));
-
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('bookingCreated', { detail: mockBooking }));
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      onBookingSuccess(mockBooking);
-      onClose();
-    } catch (err) {
-      setError('Failed to create booking. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create booking. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -153,7 +112,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
               <div>
                 <h3 className="text-lg font-semibold text-white">{car.make} {car.model} ({car.year})</h3>
                 <p className="text-white/70">{car.location}</p>
-                <p className="text-green-400 font-semibold">R{car.pricePerDay}/day</p>
+                <p className="text-green-400 font-semibold">R{car.price_per_day || car.pricePerDay}/day</p>
               </div>
             </div>
           </div>
@@ -217,7 +176,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
                 </div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-white/70">Price per day:</span>
-                  <span className="text-white">R{car.pricePerDay}</span>
+                  <span className="text-white">R{car.price_per_day || car.pricePerDay}</span>
                 </div>
                 <div className="border-t border-white/20 pt-2">
                   <div className="flex justify-between items-center">

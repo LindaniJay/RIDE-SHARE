@@ -43,96 +43,27 @@ const AdminMessagingCenter: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      // Mock data - replace with actual API calls
-      const mockMessages: Message[] = [
-        {
-          id: 'MSG001',
-          type: 'broadcast',
-          subject: 'Welcome to RideShare SA!',
-          content: 'Thank you for joining our platform. Start exploring vehicles today!',
-          recipients: {
-            total: 5000,
-            sent: 5000,
-            delivered: 4850,
-            opened: 3200,
-            clicked: 1200
-          },
-          status: 'sent',
-          createdAt: new Date().toISOString(),
-          createdBy: 'Admin User',
-          tags: ['welcome', 'onboarding']
-        },
-        {
-          id: 'MSG002',
-          type: 'targeted',
-          subject: 'Payment Reminder',
-          content: 'Your payment is due. Please complete your payment to continue using our services.',
-          recipients: {
-            total: 150,
-            sent: 150,
-            delivered: 145,
-            opened: 98,
-            clicked: 45
-          },
-          status: 'sent',
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-          createdBy: 'Admin User',
-          tags: ['payment', 'reminder']
-        },
-        {
-          id: 'MSG003',
-          type: 'announcement',
-          subject: 'System Maintenance Notice',
-          content: 'We will be performing scheduled maintenance on Sunday from 2-4 AM.',
-          recipients: {
-            total: 10000,
-            sent: 0,
-            delivered: 0,
-            opened: 0,
-            clicked: 0
-          },
-          status: 'scheduled',
-          createdAt: new Date(Date.now() - 7200000).toISOString(),
-          scheduledFor: new Date(Date.now() + 86400000).toISOString(),
-          createdBy: 'Admin User',
-          tags: ['maintenance', 'system']
+      setLoading(true);
+      
+      const response = await fetch('/api/admin/messaging', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
         }
-      ];
-
-      const mockTemplates: MessageTemplate[] = [
-        {
-          id: 'TMP001',
-          name: 'Welcome Message',
-          subject: 'Welcome to RideShare SA, {{firstName}}!',
-          content: 'Hi {{firstName}}, welcome to RideShare SA! We\'re excited to have you on board.',
-          category: 'welcome',
-          variables: ['firstName', 'lastName'],
-          usageCount: 25
-        },
-        {
-          id: 'TMP002',
-          name: 'Booking Confirmation',
-          subject: 'Booking Confirmed - {{vehicleName}}',
-          content: 'Your booking for {{vehicleName}} has been confirmed for {{startDate}} to {{endDate}}.',
-          category: 'booking',
-          variables: ['vehicleName', 'startDate', 'endDate', 'totalAmount'],
-          usageCount: 150
-        },
-        {
-          id: 'TMP003',
-          name: 'Payment Reminder',
-          subject: 'Payment Due - {{amount}}',
-          content: 'Your payment of {{amount}} is due. Please complete payment to avoid service interruption.',
-          category: 'payment',
-          variables: ['amount', 'dueDate'],
-          usageCount: 45
-        }
-      ];
-
-      setMessages(mockMessages);
-      setTemplates(mockTemplates);
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch messaging data');
+      }
+      
+      const data = await response.json();
+      setMessages(data.messages || []);
+      setTemplates(data.templates || []);
     } catch (error) {
       console.error('Error fetching data:', error);
+      // Set empty state on error instead of mock data
+      setMessages([]);
+      setTemplates([]);
     } finally {
       setLoading(false);
     }

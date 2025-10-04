@@ -1,25 +1,30 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+// Production Service Imports
+import { bookingService, Booking } from '../services/productionBookingService';
+
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
 import StatusBadge from '../components/StatusBadge';
 import OptimizedImage from '../components/OptimizedImage';
-import { DashboardSkeleton, CardSkeleton } from '../components/SkeletonLoader';
-import { mockRenterStats, mockBookings, mockTransactions } from '../data/mockData';
-import { bookingService, Booking } from '../services/bookingService';
+import { DashboardSkeleton } from '../components/SkeletonLoader';
+// Removed mock data imports
+import EnhancedBookingManagement from '../components/EnhancedBookingManagement';
+import RealTimeBookingNotifications from '../components/RealTimeBookingNotifications';
+import BookingWorkflowTracker from '../components/BookingWorkflowTracker';
 
-// Lazy load heavy components
-const DocumentUpload = lazy(() => import('../components/DocumentUpload'));
-const SavedVehicles = lazy(() => import('../components/SavedVehicles'));
-const DocumentExpiryReminder = lazy(() => import('../components/DocumentExpiryReminder'));
-const Promotions = lazy(() => import('../components/Promotions'));
-const RentalCalculator = lazy(() => import('../components/RentalCalculator'));
-const RealTimeMessaging = lazy(() => import('../components/RealTimeMessaging'));
-const AnalyticsDashboard = lazy(() => import('../components/AnalyticsDashboard'));
-const ProfileSettings = lazy(() => import('../components/ProfileSettings'));
-const ApprovalRequests = lazy(() => import('../components/ApprovalRequests'));
-const ApprovalRequestForm = lazy(() => import('../components/ApprovalRequestForm'));
+// Import components directly to avoid dynamic import issues
+import DocumentUpload from '../components/DocumentUpload';
+import SavedVehicles from '../components/SavedVehicles';
+import DocumentExpiryReminder from '../components/DocumentExpiryReminder';
+import Promotions from '../components/Promotions';
+import RentalCalculator from '../components/RentalCalculator';
+import RealTimeMessaging from '../components/RealTimeMessaging';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import ProfileSettings from '../components/ProfileSettings';
+import ApprovalRequests from '../components/ApprovalRequests';
+import ApprovalRequestForm from '../components/ApprovalRequestForm';
 
 // Booking interface is now imported from bookingService
 
@@ -65,37 +70,30 @@ const RenterDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      if (user?.id) {
-        // Get bookings from the booking service
-        const userBookings = await bookingService.getRenterBookings(user.id);
-        setBookings(userBookings);
-        
-        // Convert bookings to payments for display
-        const bookingPayments = userBookings.map(booking => ({
-          id: `payment_${booking.id}`,
-          amount: booking.totalPrice,
-          status: (booking.paymentStatus === 'paid' ? 'completed' : 'pending') as 'pending' | 'completed' | 'failed' | 'refunded',
-          method: 'stripe' as 'stripe' | 'payfast',
-          bookingId: booking.id,
-          createdAt: booking.createdAt
-        }));
-        setPayments(bookingPayments);
-      } else {
-        // Fallback to mock data if no user
-        setBookings(mockBookings.filter(b => b.renterId === user?.id) as any);
-        setPayments(mockTransactions.filter(t => t.type === 'booking').map(t => ({
-          id: t.id,
-          amount: t.amount,
-          status: t.status as 'pending' | 'completed' | 'failed' | 'refunded',
-          method: 'stripe' as 'stripe' | 'payfast',
-          bookingId: t.bookingId || '',
-          createdAt: t.date
-        })));
+      if (!user?.id) {
+        setLoading(false);
+        return;
       }
+
+      // Get bookings from the booking service
+      const userBookings = await bookingService.getRenterBookings(user.id);
+      setBookings(userBookings);
+      
+      // Convert bookings to payments for display
+      const bookingPayments = userBookings.map(booking => ({
+        id: `payment_${booking.id}`,
+        amount: booking.total_amount,
+        status: (booking.payment_status === 'paid' ? 'completed' : 'pending') as 'pending' | 'completed' | 'failed' | 'refunded',
+        method: 'stripe' as 'stripe' | 'payfast',
+        bookingId: booking.id,
+        createdAt: booking.created_at
+      }));
+      setPayments(bookingPayments);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // Fallback to mock data on error
-      setBookings(mockBookings.filter(b => b.renterId === user?.id) as any);
+      // Set empty state on error instead of mock data
+      setBookings([]);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -137,20 +135,39 @@ const RenterDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold text-white">Renter Dashboard</h2>
-          <p className="text-white/70">Welcome back, {user?.firstName}!</p>
+          <h2 className="text-xl lg:text-2xl font-bold text-white">Renter Dashboard</h2>
+          <p className="text-white/70 text-sm lg:text-base">Welcome back, {user?.firstName}!</p>
         </div>
-        <button
-          onClick={() => navigate('/search')}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          <Icon name="Search" size="sm" className="mr-2" />
-          Find Vehicles
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          <RealTimeBookingNotifications
+            userRole="renter"
+            userId={user?.id || '0'}
+            onNotificationClick={(notification) => {
+              console.log('Notification clicked:', notification);
+              if (notification.actionUrl) {
+                window.location.href = notification.actionUrl;
+              }
+            }}
+            onMarkAsRead={(notificationId) => {
+              console.log('Mark as read:', notificationId);
+            }}
+            onMarkAllAsRead={() => {
+              console.log('Mark all as read');
+            }}
+          />
+          <button
+            onClick={() => navigate('/search')}
+            className="flex items-center justify-center px-3 lg:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm lg:text-base"
+          >
+            <Icon name="Search" size="sm" className="mr-2" />
+            <span className="hidden sm:inline">Find Vehicles</span>
+            <span className="sm:hidden">Search</span>
+          </button>
+        </div>
       </div>
 
       {/* Navigation Tabs */}
@@ -159,14 +176,15 @@ const RenterDashboard: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center space-x-1 lg:space-x-2 px-2 lg:px-4 py-2 rounded-lg text-xs lg:text-sm font-medium transition-all ${
               activeTab === tab.id
                 ? 'bg-white/20 text-white'
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
             <Icon name={tab.icon} size="sm" />
-            <span>{tab.label}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
+            <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
           </button>
         ))}
       </div>
@@ -176,7 +194,7 @@ const RenterDashboard: React.FC = () => {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
               <GlassCard
                 title="Active Bookings"
                 subtitle="Current rentals"
@@ -203,7 +221,7 @@ const RenterDashboard: React.FC = () => {
                 icon="Heart"
                 className="text-center"
               >
-                <div className="text-3xl font-bold text-white mb-2">{mockRenterStats.savedVehicles}</div>
+                <div className="text-3xl font-bold text-white mb-2">0</div>
                 <div className="text-white/70 text-sm">Saved vehicles</div>
               </GlassCard>
             </div>
@@ -214,16 +232,16 @@ const RenterDashboard: React.FC = () => {
                   {bookings.slice(0, 3).map((booking) => (
                     <div key={booking.id} className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg">
                       <OptimizedImage 
-                        src={booking.vehicleImage} 
-                        alt={booking.vehicleTitle}
+                        src={booking.listing?.image_url || '/placeholder-car.jpg'} 
+                        alt={booking.listing?.title || 'Vehicle'}
                         width={48}
                         height={48}
                         className="w-12 h-12 rounded-lg object-cover"
                       />
                       <div className="flex-1">
-                        <h4 className="text-white font-medium">{booking.vehicleTitle}</h4>
+                        <h4 className="text-white font-medium">{booking.listing?.title || 'Vehicle'}</h4>
                         <p className="text-white/70 text-sm">
-                          {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
+                          {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
                         </p>
                       </div>
                       <StatusBadge status={booking.status} />
@@ -263,9 +281,7 @@ const RenterDashboard: React.FC = () => {
 
         {/* Account Tab */}
         {activeTab === 'account' && (
-          <Suspense fallback={<CardSkeleton />}>
           <ProfileSettings />
-          </Suspense>
         )}
 
         {/* Search & Browse Tab */}
@@ -338,64 +354,56 @@ const RenterDashboard: React.FC = () => {
         {/* Bookings Tab */}
         {activeTab === 'bookings' && (
           <div className="space-y-6">
-            <GlassCard title="Booking Management" icon="Calendar">
-              <div className="space-y-4">
-                {bookings.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Icon name="Calendar" size="lg" className="text-white/50 mx-auto mb-4" />
-                    <p className="text-white/70">No bookings yet</p>
-                    <button
-                      onClick={() => navigate('/search')}
-                      className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                    >
-                      Start Booking
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {bookings.map((booking) => (
+            <EnhancedBookingManagement
+              userRole="renter"
+              userId={user?.id || '0'}
+              onBookingAction={(bookingId, action, data) => {
+                console.log('Booking action:', { bookingId, action, data });
+                fetchDashboardData(); // Refresh data after action
+              }}
+              onRefresh={fetchDashboardData}
+            />
+            
+            {/* Workflow Tracker for Active Bookings */}
+            {bookings.filter(b => b.status === 'pending' || b.status === 'confirmed').length > 0 && (
+              <GlassCard title="Booking Workflow Status" icon="Clock">
+                <div className="space-y-4">
+                  {bookings
+                    .filter(b => b.status === 'pending' || b.status === 'confirmed')
+                    .slice(0, 2) // Show max 2 active bookings
+                    .map((booking) => (
                       <div key={booking.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start space-x-3">
-                            <OptimizedImage 
-                              src={booking.vehicleImage} 
-                              alt={booking.vehicleTitle}
-                              width={64}
-                              height={64}
-                              className="w-16 h-16 rounded-lg object-cover"
-                            />
-                            <div>
-                              <h4 className="text-white font-semibold">{booking.vehicleTitle}</h4>
-                              <p className="text-white/70 text-sm">
-                                {booking.vehicleMake} {booking.vehicleModel}
-                              </p>
-                              <p className="text-white/70 text-sm">
-                                {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
-                              </p>
-                              <p className="text-white/60 text-xs">
-                                Host: {booking.hostName}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <StatusBadge status={booking.status} />
-                            <p className="text-white font-semibold mt-2">R{booking.totalPrice.toLocaleString()}</p>
-                            <p className="text-white/60 text-xs mt-1">
-                              Payment: {booking.paymentStatus}
+                        <div className="flex items-center gap-3 mb-3">
+                          <OptimizedImage 
+                            src={booking.listing?.image_url || '/placeholder-car.jpg'} 
+                            alt={booking.listing?.title || 'Vehicle'}
+                            width={40}
+                            height={40}
+                            className="w-10 h-10 rounded-lg object-cover"
+                          />
+                          <div>
+                            <h4 className="text-white font-medium">{booking.listing?.title || 'Vehicle'}</h4>
+                            <p className="text-white/70 text-sm">
+                              {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
                             </p>
-                            {booking.status === 'confirmed' && (
-                              <button className="mt-2 px-3 py-1 bg-red-500/20 text-red-200 rounded-lg text-sm hover:bg-red-500/30 transition-colors">
-                                Cancel
-                              </button>
-                            )}
                           </div>
                         </div>
+                        <BookingWorkflowTracker
+                          bookingId={booking.id}
+                          userRole="renter"
+                          onStepComplete={(stepId, data) => {
+                            console.log('Step completed:', { stepId, data });
+                            fetchDashboardData();
+                          }}
+                          onStepError={(stepId, error) => {
+                            console.log('Step error:', { stepId, error });
+                          }}
+                        />
                       </div>
                     ))}
-                  </div>
-                )}
-              </div>
-            </GlassCard>
+                </div>
+              </GlassCard>
+            )}
           </div>
         )}
 
@@ -452,37 +460,29 @@ const RenterDashboard: React.FC = () => {
 
         {/* Communication Tab */}
         {activeTab === 'communication' && (
-          <Suspense fallback={<CardSkeleton />}>
           <RealTimeMessaging />
-          </Suspense>
         )}
 
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
-          <Suspense fallback={<CardSkeleton />}>
           <AnalyticsDashboard />
-          </Suspense>
         )}
 
         {/* Saved Vehicles Tab */}
         {activeTab === 'saved' && (
-          <Suspense fallback={<CardSkeleton />}>
           <SavedVehicles userId={user?.id || '0'} />
-          </Suspense>
         )}
 
         {/* Calculator Tab */}
         {activeTab === 'calculator' && (
           <div className="space-y-6">
             <GlassCard title="Rental Cost Calculator" icon="Calculator">
-              <Suspense fallback={<CardSkeleton />}>
               <RentalCalculator 
                 basePrice={500}
                 onCalculate={(total, breakdown) => {
                   console.log('Calculated total:', total, breakdown);
                 }}
               />
-              </Suspense>
             </GlassCard>
           </div>
         )}
@@ -490,16 +490,12 @@ const RenterDashboard: React.FC = () => {
         {/* Documents Tab */}
         {activeTab === 'documents' && (
           <div className="space-y-6">
-            <Suspense fallback={<CardSkeleton />}>
             <DocumentUpload 
               label="Upload Document"
               name="document"
               onChange={() => {}}
             />
-            </Suspense>
-            <Suspense fallback={<CardSkeleton />}>
             <DocumentExpiryReminder userId={user?.id || '0'} />
-            </Suspense>
             
             {/* Document Verification Request */}
             <GlassCard title="Document Verification" icon="FileText">
@@ -521,17 +517,13 @@ const RenterDashboard: React.FC = () => {
 
         {/* Promotions Tab */}
         {activeTab === 'promotions' && (
-          <Suspense fallback={<CardSkeleton />}>
           <Promotions userId={user?.id || '0'} />
-          </Suspense>
         )}
 
         {/* Approval Requests Tab */}
         {activeTab === 'approvals' && (
           <div className="space-y-6">
-            <Suspense fallback={<CardSkeleton />}>
             <ApprovalRequests userRole="renter" />
-            </Suspense>
             
             {/* Profile Verification Request */}
             <GlassCard title="Profile Verification" icon="User">
@@ -556,7 +548,6 @@ const RenterDashboard: React.FC = () => {
       {showApprovalForm && approvalFormType && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md">
-            <Suspense fallback={<CardSkeleton />}>
             <ApprovalRequestForm
               requestType={approvalFormType}
               entityId={parseInt(user?.id || '0')}
@@ -567,7 +558,6 @@ const RenterDashboard: React.FC = () => {
                 setApprovalFormType(null);
               }}
             />
-            </Suspense>
           </div>
         </div>
       )}

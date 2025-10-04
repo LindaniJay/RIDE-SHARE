@@ -37,38 +37,24 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ }) => {
   const fetchFinancialData = async () => {
     try {
       setLoading(true);
-      // Mock data for now - replace with actual API call
-      const mockData: FinancialData = {
-        totalRevenue: 125000,
-        monthlyRevenue: 15000,
-        commissionEarned: 18750,
-        pendingPayouts: 2500,
-        completedTransactions: 1250,
-        refundedAmount: 1200,
-        revenueByMonth: [
-          { month: 'Jan', revenue: 12000 },
-          { month: 'Feb', revenue: 15000 },
-          { month: 'Mar', revenue: 18000 },
-          { month: 'Apr', revenue: 16000 },
-          { month: 'May', revenue: 20000 },
-          { month: 'Jun', revenue: 15000 },
-        ],
-        topEarners: [
-          { name: 'John Smith', earnings: 2500 },
-          { name: 'Sarah Johnson', earnings: 2200 },
-          { name: 'Mike Wilson', earnings: 1800 },
-          { name: 'Lisa Brown', earnings: 1600 },
-        ],
-        recentTransactions: [
-          { id: '1', type: 'booking', amount: 500, description: 'Vehicle rental - BMW X3', date: '2024-01-15' },
-          { id: '2', type: 'commission', amount: 75, description: 'Commission earned', date: '2024-01-15' },
-          { id: '3', type: 'booking', amount: 300, description: 'Vehicle rental - Toyota Corolla', date: '2024-01-14' },
-          { id: '4', type: 'refund', amount: -150, description: 'Refund - Cancelled booking', date: '2024-01-14' },
-        ]
-      };
-      setFinancialData(mockData);
+      
+      const response = await fetch(`/api/financial?dateRange=${dateRange}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch financial data');
+      }
+      
+      const data = await response.json();
+      setFinancialData(data);
     } catch (error) {
       console.error('Error fetching financial data:', error);
+      // Set empty state on error instead of mock data
+      setFinancialData(null);
     } finally {
       setLoading(false);
     }

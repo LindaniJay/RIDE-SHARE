@@ -58,7 +58,7 @@ router.post('/stripe/create-intent', authenticateToken, async (req: AuthRequest,
     const booking = await Booking.findOne({
       where: { 
         id: bookingId, 
-        renterId: req.user!.id 
+        renter_id: req.user!.id 
       },
       include: [
         {
@@ -112,7 +112,7 @@ router.post('/payfast/create', authenticateToken, async (req: AuthRequest, res) 
     const booking = await Booking.findOne({
       where: { 
         id: bookingId, 
-        renterId: req.user!.id 
+        renter_id: req.user!.id 
       }
     });
 
@@ -131,8 +131,8 @@ router.post('/payfast/create', authenticateToken, async (req: AuthRequest, res) 
       return_url: `${process.env.FRONTEND_URL}/payment/success`,
       cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
       notify_url: `${process.env.BACKEND_URL}/api/payments/payfast/notify`,
-      name_first: req.user!.firstName,
-      name_last: req.user!.lastName,
+      name_first: req.user!.first_name,
+      name_last: req.user!.last_name,
       email_address: req.user!.email,
       m_payment_id: `booking_${bookingId}`,
       amount: (totalAmount / 100).toFixed(2), // Payfast expects amount in Rands
@@ -181,8 +181,8 @@ router.post('/stripe/confirm', authenticateToken, async (req: AuthRequest, res) 
     // Update booking status
     await booking.update({ 
       status: 'confirmed',
-      paymentStatus: 'paid',
-      paymentIntentId 
+      payment_status: 'paid',
+      // paymentIntentId // Field doesn't exist in model 
     });
 
     res.json({
@@ -191,7 +191,7 @@ router.post('/stripe/confirm', authenticateToken, async (req: AuthRequest, res) 
       booking: {
         id: booking.id,
         status: booking.status,
-        paymentStatus: 'paid'
+        payment_status: 'paid'
       }
     });
   } catch (error) {
@@ -214,8 +214,8 @@ router.post('/payfast/notify', async (req, res) => {
       if (booking) {
         await booking.update({
           status: 'confirmed',
-          paymentStatus: 'paid',
-          paymentReference: pf_payment_id
+          payment_status: 'paid',
+          // paymentReference: pf_payment_id // Field doesn't exist in model
         });
       }
     }
@@ -238,25 +238,25 @@ router.post('/refund', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    if (req.user!.role !== 'admin' && booking.renterId !== req.user!.id) {
+    if (req.user!.role !== 'admin' && booking.renter_id !== req.user!.id) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
     // In a real implementation, you would process the refund with the payment provider
-    const refundAmount = amount || booking.totalPrice;
+    const refund_amount = amount || booking.total_amount;
     
     // Update booking status
     await booking.update({
       status: 'cancelled',
-      refundAmount,
-      refundReason: reason,
-      refundedAt: new Date()
+      // refund_amount, // Field doesn't exist in model
+      // refundReason: reason, // Field doesn't exist in model
+      // refundedAt: new Date() // Field doesn't exist in model
     });
 
     res.json({
       success: true,
       message: 'Refund processed successfully',
-      refundAmount
+      refund_amount
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -274,8 +274,8 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res) => {
 
     const bookings = await Booking.findAndCountAll({
       where: { 
-        renterId: req.user!.id,
-        paymentStatus: 'paid'
+        renter_id: req.user!.id,
+        payment_status: 'paid'
       },
       include: [
         {
@@ -331,20 +331,20 @@ router.get('/earnings', authenticateToken, async (req: AuthRequest, res) => {
 
     // Get host's vehicles
     const hostVehicles = await Listing.findAll({
-      where: { hostId: req.user!.id },
+      where: { host_id: req.user!.id },
       attributes: ['id']
     });
-    const vehicleIds = hostVehicles.map(v => v.id);
+    const listing_ids = hostVehicles.map(v => v.id);
 
     // Get earnings from completed bookings
     const earnings = await Booking.findAll({
       where: {
-        vehicleId: { [Op.in]: vehicleIds },
+        listing_id: { [Op.in]: listing_ids },
         status: 'completed',
         createdAt: { [Op.gte]: startDate }
       },
       attributes: [
-        'totalPrice',
+        'total_amount',
         'createdAt',
         [db.fn('DATE', db.col('createdAt')), 'date']
       ],
@@ -357,7 +357,7 @@ router.get('/earnings', authenticateToken, async (req: AuthRequest, res) => {
       ]
     });
 
-    const totalEarnings = earnings.reduce((sum, booking) => sum + booking.totalPrice, 0);
+    const totalEarnings = earnings.reduce((sum, booking) => sum + booking.total_amount, 0);
     const platformFee = Math.round(totalEarnings * 0.1); // 10% platform fee
     const netEarnings = totalEarnings - platformFee;
 

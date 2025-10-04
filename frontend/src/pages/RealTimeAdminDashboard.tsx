@@ -1,3 +1,9 @@
+// Production Service Imports
+import { authService } from '../services/productionAuthService';
+import { bookingService } from '../services/productionBookingService';
+import { listingService } from '../services/productionListingService';
+import { apiClient } from '../services/productionApiClient';
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +15,9 @@ import SystemAdminPanel from '../components/admin/SystemAdminPanel';
 import ApprovalRequests from '../components/ApprovalRequests';
 import ApprovalAnalytics from '../components/ApprovalAnalytics';
 import Icon from '../components/Icon';
+import EnhancedBookingManagement from '../components/EnhancedBookingManagement';
+import RealTimeBookingNotifications from '../components/RealTimeBookingNotifications';
+import BookingWorkflowTracker from '../components/BookingWorkflowTracker';
 
 const RealTimeAdminDashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -144,6 +153,7 @@ const RealTimeAdminDashboard: React.FC = () => {
           <div className="flex space-x-1 bg-white/10 backdrop-blur-md rounded-lg p-1 border border-white/20">
             {[
               { id: 'overview', label: 'Overview', icon: 'bar-chart' },
+              { id: 'bookings', label: 'Bookings', icon: 'calendar' },
               { id: 'approvals', label: 'Approval Queue', icon: 'clock' },
               { id: 'users', label: 'User Approvals', icon: 'users' },
               { id: 'vehicles', label: 'Vehicle Approvals', icon: 'car' },
@@ -170,7 +180,25 @@ const RealTimeAdminDashboard: React.FC = () => {
         <div className="bg-white/10 backdrop-blur-md rounded-lg border border-white/20">
           {activeTab === 'overview' && (
             <div className="p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Platform Overview</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-white">Platform Overview</h2>
+                <RealTimeBookingNotifications
+                  userRole="admin"
+                  userId={user?.id || '0'}
+                  onNotificationClick={(notification) => {
+                    console.log('Admin notification clicked:', notification);
+                    if (notification.actionUrl) {
+                      window.location.href = notification.actionUrl;
+                    }
+                  }}
+                  onMarkAsRead={(notificationId) => {
+                    console.log('Mark as read:', notificationId);
+                  }}
+                  onMarkAllAsRead={() => {
+                    console.log('Mark all as read');
+                  }}
+                />
+              </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-medium text-white mb-3">Recent User Registrations</h3>
@@ -214,6 +242,22 @@ const RealTimeAdminDashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'bookings' && (
+            <div className="p-6">
+              <h2 className="text-xl font-semibold text-white mb-4">Booking Management</h2>
+              <EnhancedBookingManagement
+                userRole="admin"
+                userId={user?.id || '0'}
+                onBookingAction={(bookingId, action, data) => {
+                  console.log('Admin booking action:', { bookingId, action, data });
+                  // Refresh admin stats after booking action
+                  fetchStats();
+                }}
+                onRefresh={fetchStats}
+              />
             </div>
           )}
 

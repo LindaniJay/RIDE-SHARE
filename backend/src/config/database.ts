@@ -3,9 +3,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Use PostgreSQL in CI/CD, SQLite locally
-const isCI = process.env.CI === 'true';
+// Database configuration based on environment
 const isTest = process.env.NODE_ENV === 'test';
+const isProduction = process.env.NODE_ENV === 'production';
 const databaseUrl = process.env.DATABASE_URL;
 
 let sequelize: Sequelize;
@@ -27,17 +27,26 @@ if (isTest) {
       idle: 10000
     }
   });
-} else if (isCI && databaseUrl) {
-  // Use PostgreSQL in CI
+} else if (databaseUrl) {
+  // Use PostgreSQL when DATABASE_URL is provided (production, staging, or local with PostgreSQL)
   sequelize = new Sequelize(databaseUrl, {
-    logging: false,
+    logging: process.env.NODE_ENV === 'development' ? console.log : false,
     define: {
       timestamps: true,
       underscored: true,
     },
+    pool: {
+      max: 20,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
   });
+} else if (isProduction) {
+  // Production should always use PostgreSQL
+  throw new Error('DATABASE_URL must be set in production environment');
 } else {
-  // Use SQLite locally for development
+  // Use SQLite locally for development when no DATABASE_URL is provided
   sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: './database.sqlite',

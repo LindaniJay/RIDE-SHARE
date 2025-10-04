@@ -38,75 +38,27 @@ const SafetyIncidentTracker: React.FC = () => {
 
   const fetchIncidents = async () => {
     try {
-      // Mock data - replace with actual API call
-      const mockIncidents: SafetyIncident[] = [
-        {
-          id: 'INC001',
-          type: 'accident',
-          severity: 'high',
-          status: 'investigating',
-          title: 'Vehicle Collision - Minor Damage',
-          description: 'Renter reported minor collision with another vehicle. No injuries reported.',
-          location: 'Cape Town, Western Cape',
-          reportedBy: {
-            id: 'user123',
-            name: 'John Doe',
-            role: 'renter'
-          },
-          reportedAt: new Date().toISOString(),
-          assignedTo: 'Safety Team',
-          metadata: {
-            vehicleId: 'VH12345',
-            bookingId: 'BK12345',
-            witnesses: ['Jane Smith'],
-            damages: ['Front bumper scratch'],
-            insuranceClaim: true
-          }
-        },
-        {
-          id: 'INC002',
-          type: 'theft',
-          severity: 'critical',
-          status: 'reported',
-          title: 'Vehicle Theft Report',
-          description: 'Host reported vehicle stolen during rental period.',
-          location: 'Johannesburg, Gauteng',
-          reportedBy: {
-            id: 'user456',
-            name: 'Mike Johnson',
-            role: 'host'
-          },
-          reportedAt: new Date(Date.now() - 3600000).toISOString(),
-          metadata: {
-            vehicleId: 'VH67890',
-            bookingId: 'BK67890',
-            insuranceClaim: true
-          }
-        },
-        {
-          id: 'INC003',
-          type: 'safety_violation',
-          severity: 'medium',
-          status: 'resolved',
-          title: 'Speeding Violation',
-          description: 'Renter caught speeding multiple times during rental.',
-          location: 'Durban, KwaZulu-Natal',
-          reportedBy: {
-            id: 'user789',
-            name: 'Sarah Wilson',
-            role: 'admin'
-          },
-          reportedAt: new Date(Date.now() - 86400000).toISOString(),
-          resolution: 'Renter warned and account flagged for review.',
-          metadata: {
-            vehicleId: 'VH11111',
-            bookingId: 'BK11111'
-          }
+      const response = await fetch('/api/admin/safety-incidents', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
         }
-      ];
-      setIncidents(mockIncidents);
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setIncidents(data.incidents || []);
+      } else {
+        throw new Error(data.error || 'Failed to fetch incidents');
+      }
     } catch (error) {
       console.error('Error fetching incidents:', error);
+      setIncidents([]);
     } finally {
       setLoading(false);
     }
