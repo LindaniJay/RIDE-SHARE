@@ -24,6 +24,11 @@ export interface User {
   role: 'Renter' | 'Host' | 'admin';
   approvalStatus: 'pending' | 'approved' | 'rejected';
   createdAt: Date;
+  age?: number;
+  driversLicense?: boolean;
+  idVerified?: boolean;
+  addressVerified?: boolean;
+  insuranceVerified?: boolean;
 }
 
 export interface SignupData {

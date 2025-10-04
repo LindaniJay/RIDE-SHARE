@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
-import { CheckCircle, Camera, AlertCircle, ChevronRight } from 'lucide-react';
+import { CheckCircle, Camera, ChevronRight } from 'lucide-react';
 
-interface InspectionItem {
-  id: string;
-  title: string;
-  description: string;
-  required: boolean;
-  completed: boolean;
-  photos?: string[];
-}
 
 interface VisualInspectionWorkflowProps {
   type: 'pickup' | 'return';

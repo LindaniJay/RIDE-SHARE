@@ -1,27 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, 
-  Car, 
-  MapPin, 
-  Clock, 
   CheckCircle, 
-  AlertCircle, 
-  Phone, 
   MessageCircle, 
-  Camera, 
-  FileText, 
-  Key, 
-  CreditCard, 
-  Shield, 
-  Star, 
   ChevronRight, 
-  ChevronLeft,
   Play,
-  Pause,
-  RotateCcw,
-  Send,
-  ThumbsUp,
-  ThumbsDown
+  Send
 } from 'lucide-react';
 
 interface HandoverStep {
@@ -60,8 +44,6 @@ const VisualHandoverProcess: React.FC<VisualHandoverProcessProps> = ({
   handoverType,
   hostId,
   renterId,
-  vehicleId,
-  bookingId,
   onComplete,
   onCancel
 }) => {
@@ -193,7 +175,10 @@ const VisualHandoverProcess: React.FC<VisualHandoverProcessProps> = ({
   };
 
   useEffect(() => {
-    setSteps(handoverSteps[handoverType]);
+    setSteps(handoverSteps[handoverType].map(step => ({
+      ...step,
+      participants: [...step.participants] as ("renter" | "host")[]
+    })));
     setParticipantStatus({
       [hostId]: 'waiting',
       [renterId]: 'waiting'

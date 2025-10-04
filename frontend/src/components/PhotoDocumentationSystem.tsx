@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Camera, Upload, X, Eye, Download, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import { Camera, Upload, X, Download, RotateCcw } from 'lucide-react';
 
 interface PhotoDocument {
   id: string;
@@ -58,10 +58,10 @@ const PhotoDocumentationSystem: React.FC<PhotoDocumentationSystemProps> = ({
     setTimeout(() => {
       const newPhoto: PhotoDocument = {
         id: `photo_${Date.now()}`,
-        url: `https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=${categories[currentCategory]?.name}`,
+        url: `https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=${(categories as any)[currentCategory]?.name}`,
         timestamp: new Date(),
         category: currentCategory,
-        description: `${categories[currentCategory]?.name} - ${inspectionType}`,
+        description: `${(categories as any)[currentCategory]?.name} - ${inspectionType}`,
         metadata: {
           location: 'Cape Town, South Africa',
           vehicleId,
@@ -85,7 +85,7 @@ const PhotoDocumentationSystem: React.FC<PhotoDocumentationSystemProps> = ({
           url: e.target?.result as string,
           timestamp: new Date(),
           category: currentCategory,
-          description: `${categories[currentCategory]?.name} - ${inspectionType}`,
+          description: `${(categories as any)[currentCategory]?.name} - ${inspectionType}`,
           metadata: {
             location: 'Cape Town, South Africa',
             vehicleId,
@@ -110,7 +110,7 @@ const PhotoDocumentationSystem: React.FC<PhotoDocumentationSystemProps> = ({
 
   const isCategoryComplete = (category: string) => {
     const categoryPhotos = getPhotosByCategory(category);
-    const categoryInfo = categories[category];
+    const categoryInfo = (categories as any)[category];
     return categoryInfo?.required ? categoryPhotos.length > 0 : true;
   };
 
@@ -176,7 +176,7 @@ const PhotoDocumentationSystem: React.FC<PhotoDocumentationSystemProps> = ({
       <div className="mb-6">
         <div className="flex flex-wrap gap-2 mb-4">
           {requiredCategories.map(category => {
-            const categoryInfo = categories[category];
+            const categoryInfo = (categories as any)[category];
             const isComplete = isCategoryComplete(category);
             const photoCount = getPhotosByCategory(category).length;
             
@@ -209,7 +209,7 @@ const PhotoDocumentationSystem: React.FC<PhotoDocumentationSystemProps> = ({
       {/* Current Category Photos */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          {categories[currentCategory]?.name} Photos
+          {(categories as any)[currentCategory]?.name} Photos
         </h3>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -238,7 +238,7 @@ const PhotoDocumentationSystem: React.FC<PhotoDocumentationSystemProps> = ({
       {/* Photo Capture Controls */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <h4 className="font-medium text-gray-800 mb-3">
-          Add Photos for {categories[currentCategory]?.name}
+          Add Photos for {(categories as any)[currentCategory]?.name}
         </h4>
         
         <div className="flex gap-4">
@@ -287,7 +287,7 @@ const PhotoDocumentationSystem: React.FC<PhotoDocumentationSystemProps> = ({
               <div key={category} className="flex items-center gap-2 text-sm">
                 <div className={`w-3 h-3 rounded-full ${isComplete ? 'bg-green-500' : 'bg-gray-300'}`} />
                 <span className={isComplete ? 'text-green-700' : 'text-gray-600'}>
-                  {categories[category]?.name} ({photoCount})
+                  {(categories as any)[category]?.name} ({photoCount})
                 </span>
               </div>
             );

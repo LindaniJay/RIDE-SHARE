@@ -7,9 +7,7 @@ import {
   Users, 
   Clock, 
   ArrowRight,
-  Play,
-  Code,
-  Eye
+  Play
 } from 'lucide-react';
 
 // Import all the new components
@@ -35,6 +33,7 @@ const EnhancedFeaturesDemo: React.FC = () => {
       component: VisualInspectionWorkflow,
       props: {
         type: 'pickup',
+        userType: 'renter' as const,
         onComplete: (data: any) => {
           console.log('Inspection completed:', data);
           setDemoData({ ...demoData, inspection: data });
@@ -52,6 +51,7 @@ const EnhancedFeaturesDemo: React.FC = () => {
       props: {
         vehicleId: 'demo-vehicle-123',
         inspectionType: 'pickup',
+        userType: 'renter' as const,
         onPhotosComplete: (photos: any) => {
           console.log('Photos completed:', photos);
           setDemoData({ ...demoData, photos });
@@ -86,6 +86,7 @@ const EnhancedFeaturesDemo: React.FC = () => {
       component: InteractiveChecklist,
       props: {
         type: 'pre-departure',
+        userType: 'renter' as const,
         onComplete: (items: any) => {
           console.log('Checklist completed:', items);
           setDemoData({ ...demoData, checklist: items });
@@ -106,6 +107,7 @@ const EnhancedFeaturesDemo: React.FC = () => {
         bookingId: 'demo-booking-123',
         userId: 'demo-user-456',
         vehicleId: 'demo-vehicle-789',
+        userType: 'renter' as const,
         autoRefresh: true,
         refreshInterval: 3000
       }
@@ -118,7 +120,7 @@ const EnhancedFeaturesDemo: React.FC = () => {
       color: 'bg-indigo-600',
       component: EnhancedMobileUI,
       props: {
-        userType: 'renter',
+        userType: 'renter' as const,
         currentView: 'home',
         onViewChange: (view: string) => {
           console.log('View changed to:', view);
@@ -138,6 +140,7 @@ const EnhancedFeaturesDemo: React.FC = () => {
         renterId: 'demo-renter-456',
         vehicleId: 'demo-vehicle-789',
         bookingId: 'demo-booking-123',
+        userType: 'renter' as const,
         onComplete: (data: any) => {
           console.log('Handover completed:', data);
           setDemoData({ ...demoData, handover: data });

@@ -12,13 +12,6 @@ interface ChecklistItem {
   timestamp?: Date;
 }
 
-interface ChecklistCategory {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  items: ChecklistItem[];
-}
 
 interface InteractiveChecklistProps {
   type: 'pre-departure' | 'return' | 'safety' | 'maintenance';

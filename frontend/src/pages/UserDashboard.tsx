@@ -21,7 +21,7 @@ const UserDashboard: React.FC = () => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {

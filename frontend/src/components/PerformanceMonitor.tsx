@@ -25,14 +25,14 @@ const PerformanceMonitor: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       // Simulate real-time performance data
-      setMetrics(prev => ({
+      setMetrics({
         responseTime: Math.random() * 200 + 50, // 50-250ms
         uptime: 99.9 + Math.random() * 0.1, // 99.9-100%
         errorRate: Math.random() * 0.5, // 0-0.5%
         activeUsers: Math.floor(Math.random() * 100) + 50, // 50-150 users
         memoryUsage: 60 + Math.random() * 20, // 60-80%
         cpuUsage: 30 + Math.random() * 40 // 30-70%
-      }));
+      });
     }, 2000);
 
     return () => clearInterval(interval);

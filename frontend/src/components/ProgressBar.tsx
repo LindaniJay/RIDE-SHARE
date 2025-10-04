@@ -26,7 +26,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   variant = 'default',
   className = ''
 }) => {
-  const getStepIcon = (step: ProgressStep, index: number) => {
+  const getStepIcon = (step: ProgressStep) => {
     if (step.status === 'completed') {
       return <CheckCircle className="w-5 h-5 text-green-600" />;
     } else if (step.status === 'current') {
@@ -107,7 +107,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-1">
-                    {getStepIcon(step, index)}
+                    {getStepIcon(step)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">

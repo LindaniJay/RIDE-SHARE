@@ -125,7 +125,7 @@ class BookingWorkflowService {
   }
 
   // Get all workflow states for a user
-  getUserWorkflows(userId: string, userRole: 'renter' | 'host' | 'admin'): BookingWorkflowState[] {
+  getUserWorkflows(): BookingWorkflowState[] {
     // In a real implementation, this would filter by user role and associated bookings
     return Array.from(this.workflowStates.values());
   }

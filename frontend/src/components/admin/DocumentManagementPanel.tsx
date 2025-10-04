@@ -48,7 +48,7 @@ const DocumentManagementPanel: React.FC<DocumentManagementPanelProps> = ({ onRef
     documentType: 'all',
     search: ''
   });
-  const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
 
   useEffect(() => {
@@ -101,7 +101,7 @@ const DocumentManagementPanel: React.FC<DocumentManagementPanelProps> = ({ onRef
     }
   };
 
-  const handleDocumentAction = async (documentId: number, action: 'approve' | 'reject', reason?: string) => {
+  const handleDocumentAction = async (documentId: string, action: 'approve' | 'reject', reason?: string) => {
     try {
       setLoading(true);
       const response = await fetch(`/api/admin/documents/${documentId}/status`, {
@@ -142,7 +142,7 @@ const DocumentManagementPanel: React.FC<DocumentManagementPanelProps> = ({ onRef
     }
   };
 
-  const handleDocumentSelect = (documentId: number) => {
+  const handleDocumentSelect = (documentId: string) => {
     setSelectedDocuments(prev => 
       prev.includes(documentId) 
         ? prev.filter(id => id !== documentId)

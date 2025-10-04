@@ -76,7 +76,7 @@ const RenterDashboard: React.FC = () => {
       }
 
       // Get bookings from the booking service
-      const userBookings = await bookingService.getRenterBookings(user.id);
+      const userBookings = await bookingService.getRenterBookings();
       setBookings(userBookings);
       
       // Convert bookings to payments for display

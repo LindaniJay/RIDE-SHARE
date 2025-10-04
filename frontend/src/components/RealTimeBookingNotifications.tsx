@@ -5,13 +5,9 @@ import {
   CheckCircle, 
   XCircle, 
   AlertCircle, 
-  Clock, 
-  Car, 
-  User, 
   Calendar,
   X,
-  RefreshCw,
-  Settings
+  RefreshCw
 } from 'lucide-react';
 
 interface BookingNotification {

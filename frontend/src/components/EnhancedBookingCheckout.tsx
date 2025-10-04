@@ -85,8 +85,8 @@ const EnhancedBookingCheckout: React.FC<EnhancedBookingCheckoutProps> = ({
 
   const loadLoyaltyPoints = async () => {
     try {
-      const points = await paymentService.getLoyaltyPoints(user?.id || '');
-      setLoyaltyPoints(points);
+      const points = await paymentService.getLoyaltyPoints();
+      setLoyaltyPoints(typeof points === 'number' ? points : points.available);
     } catch (error) {
       console.error('Error loading loyalty points:', error);
     }
@@ -109,7 +109,7 @@ const EnhancedBookingCheckout: React.FC<EnhancedBookingCheckoutProps> = ({
     }
 
     // Check if user is old enough for vehicle category
-    if (vehicle.category === 'luxury' && user && user.age < 25) {
+    if (vehicle.category === 'luxury' && user && user.age && user.age < 25) {
       errors.age = 'Must be 25+ for luxury vehicles';
     }
 
@@ -233,7 +233,12 @@ const EnhancedBookingCheckout: React.FC<EnhancedBookingCheckoutProps> = ({
     // Process payment
     await paymentService.processPayment({
       ...paymentData,
-      bookingId: booking.id
+      bookingId: booking.id,
+      customerInfo: {
+        email: user?.email || '',
+        name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+        phone: user?.phoneNumber || ''
+      }
     });
 
     onSuccess(booking);
@@ -338,8 +343,8 @@ const EnhancedBookingCheckout: React.FC<EnhancedBookingCheckoutProps> = ({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-white/70">Age Verification:</span>
-                  <span className={`${user && user.age >= 18 ? 'text-green-400' : 'text-red-400'}`}>
-                    {user && user.age >= 18 ? '✓ Verified' : '✗ Required'}
+                  <span className={`${user && user.age && user.age >= 18 ? 'text-green-400' : 'text-red-400'}`}>
+                    {user && user.age && user.age >= 18 ? '✓ Verified' : '✗ Required'}
                   </span>
                 </div>
               </div>
@@ -382,7 +387,7 @@ const EnhancedBookingCheckout: React.FC<EnhancedBookingCheckoutProps> = ({
 
             <SAPaymentGateway
               amount={pricing.total}
-              onPaymentSuccess={(paymentId, method) => {
+              onPaymentSuccess={(_paymentId, method) => {
                 setPaymentMethod(method);
                 handleStepComplete('payment');
               }}

@@ -13,7 +13,7 @@ interface BookingModalProps {
 }
 
 const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBookingSuccess }) => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [bookingData, setBookingData] = useState({
     startDate: '',
     endDate: '',
@@ -29,7 +29,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
     const start = new Date(bookingData.startDate);
     const end = new Date(bookingData.endDate);
     const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return days * (car.price_per_day || car.pricePerDay || 0);
+    return days * (car.price_per_day || 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,8 +111,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
               />
               <div>
                 <h3 className="text-lg font-semibold text-white">{car.make} {car.model} ({car.year})</h3>
-                <p className="text-white/70">{car.location}</p>
-                <p className="text-green-400 font-semibold">R{car.price_per_day || car.pricePerDay}/day</p>
+                <p className="text-white/70">{car.location?.city}, {car.location?.province}</p>
+                <p className="text-green-400 font-semibold">R{car.price_per_day}/day</p>
               </div>
             </div>
           </div>
@@ -140,16 +140,16 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
 
             <GlassInput
               label="Pickup Location"
-              value={bookingData.pickupLocation}
-              onChange={(e) => setBookingData(prev => ({ ...prev, pickupLocation: e.target.value }))}
+              value={bookingData.pickupLocation?.city || ''}
+              onChange={(e) => setBookingData(prev => ({ ...prev, pickupLocation: { ...prev.pickupLocation, city: e.target.value } }))}
               placeholder="Enter pickup location"
               icon="MapPin"
             />
 
             <GlassInput
               label="Return Location"
-              value={bookingData.returnLocation}
-              onChange={(e) => setBookingData(prev => ({ ...prev, returnLocation: e.target.value }))}
+              value={bookingData.returnLocation?.city || ''}
+              onChange={(e) => setBookingData(prev => ({ ...prev, returnLocation: { ...prev.returnLocation, city: e.target.value } }))}
               placeholder="Enter return location"
               icon="MapPin"
             />
@@ -176,7 +176,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
                 </div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-white/70">Price per day:</span>
-                  <span className="text-white">R{car.price_per_day || car.pricePerDay}</span>
+                  <span className="text-white">R{car.price_per_day}</span>
                 </div>
                 <div className="border-t border-white/20 pt-2">
                   <div className="flex justify-between items-center">

@@ -81,7 +81,7 @@ class ProductionBookingService {
     }
   }
 
-  async getRenterBookings(userId: string): Promise<Booking[]> {
+  async getRenterBookings(): Promise<Booking[]> {
     try {
       const response = await apiClient.getMyBookings();
       
@@ -99,7 +99,7 @@ class ProductionBookingService {
     }
   }
 
-  async getHostBookings(userId: string): Promise<Booking[]> {
+  async getHostBookings(): Promise<Booking[]> {
     try {
       const response = await apiClient.getHostBookings();
       
@@ -198,7 +198,7 @@ class ProductionBookingService {
     return this.bookings.filter(booking => booking.renter_id === renterId);
   }
 
-  async getBookingsByHost(hostId: string): Promise<Booking[]> {
+  async getBookingsByHost(): Promise<Booking[]> {
     try {
       const response = await apiClient.getHostBookings();
       

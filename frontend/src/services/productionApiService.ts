@@ -1,4 +1,4 @@
-import ProductionApiClient from './productionApiClient';
+import { apiClient } from './productionApiClient';
 
 export interface Vehicle {
   id: string;
@@ -130,11 +130,7 @@ export interface AdminStats {
 }
 
 class ProductionApiService {
-  private apiClient: ProductionApiClient;
-
-  constructor() {
-    this.apiClient = new ProductionApiClient();
-  }
+  private apiClient = apiClient;
 
   // Authentication
   async login(email: string, password: string): Promise<{ user: User; token: string }> {

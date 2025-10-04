@@ -235,7 +235,15 @@ const HostingCheckout: React.FC<HostingCheckoutProps> = ({
     };
 
     // Process payment
-    await paymentService.processPayment(paymentData);
+    await paymentService.processPayment({
+      ...paymentData,
+      bookingId: `hosting_${Date.now()}`,
+      customerInfo: {
+        email: user?.email || '',
+        name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+        phone: user?.phoneNumber || ''
+      }
+    });
     
     // Create vehicle listing
     const listing = await createVehicleListing();
@@ -450,7 +458,7 @@ const HostingCheckout: React.FC<HostingCheckoutProps> = ({
 
             <SAPaymentGateway
               amount={pricing.total}
-              onPaymentSuccess={(paymentId, method) => {
+              onPaymentSuccess={(_paymentId, method) => {
                 setPaymentMethod(method);
                 handleStepComplete('payment');
               }}
