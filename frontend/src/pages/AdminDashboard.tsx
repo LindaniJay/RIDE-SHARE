@@ -30,6 +30,7 @@ const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+
   const fetchStats = async () => {
     try {
       setLoading(true);
@@ -114,7 +115,7 @@ const AdminDashboard: React.FC = () => {
     // Set up polling for real-time updates
     const interval = setInterval(fetchStats, 30000); // Update every 30 seconds
     return () => clearInterval(interval);
-  }, [user, navigateFunc]);
+  }, [user, navigate]);
 
   // Show loading while checking authentication or fetching data
   if (loading || !user) {
@@ -256,6 +257,8 @@ const AdminDashboard: React.FC = () => {
 
 // Overview Tab Component
 const OverviewTab: React.FC<{ stats: AdminStats | null }> = ({ stats }) => {
+  const navigate = useNavigate();
+  
   if (!stats) {
     return (
       <div className="text-center py-12">
@@ -422,7 +425,7 @@ const OverviewTab: React.FC<{ stats: AdminStats | null }> = ({ stats }) => {
         <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <button 
-            onClick={() => navigate('/admin-dashboard/users')}
+            onClick={() => (navigate as any)('/admin-dashboard/users')}
             className="flex items-center space-x-2 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
           >
             <Icon name="user-plus" className="h-5 w-5 text-blue-400" />
@@ -436,14 +439,14 @@ const OverviewTab: React.FC<{ stats: AdminStats | null }> = ({ stats }) => {
             <span className="text-white">Review Vehicles</span>
           </button>
           <button 
-            onClick={() => navigate('/admin-dashboard/bookings')}
+            onClick={() => (navigate as any)('/admin-dashboard/bookings')}
             className="flex items-center space-x-2 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
           >
             <Icon name="alert-triangle" className="h-5 w-5 text-yellow-400" />
             <span className="text-white">Handle Disputes</span>
           </button>
           <button 
-            onClick={() => navigate('/admin-dashboard/documents')}
+            onClick={() => (navigate as any)('/admin-dashboard/documents')}
             className="flex items-center space-x-2 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
           >
             <Icon name="file-text" className="h-5 w-5 text-purple-400" />
