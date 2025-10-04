@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, AlertTriangle, Info, Clock, CheckSquare, Square } from 'lucide-react';
+import { CheckCircle, AlertTriangle, CheckSquare, Square } from 'lucide-react';
 
 interface ChecklistItem {
   id: string;

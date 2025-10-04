@@ -116,7 +116,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="hidden md:flex items-center space-x-1">
             {user ? (
               <div className="flex items-center space-x-1">
-                <RealTimeNotifications userId={user.id} userRole={user.role} />
+                <RealTimeNotifications userId={user.id} userRole={user.role === 'Renter' ? 'renter' : user.role === 'Host' ? 'host' : 'admin'} />
                 <Link
                   to="/dashboard"
                   className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${

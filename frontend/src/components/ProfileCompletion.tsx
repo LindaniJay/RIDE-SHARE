@@ -49,7 +49,7 @@ export const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
     setProfileData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleDocumentUpload = (field: string, file: File | undefined) => {
+  const handleDocumentUpload = (field: string, file: File | null) => {
     setProfileData(prev => ({ ...prev, [field]: file }));
   };
 

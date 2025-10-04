@@ -2,20 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, 
   Clock, 
-  User, 
-  Car, 
   CheckCircle, 
   XCircle, 
   AlertCircle, 
   Eye, 
-  MessageCircle, 
-  Phone,
-  MapPin,
-  CreditCard,
   Star,
   MoreVertical,
   RefreshCw,
-  Filter,
   Search
 } from 'lucide-react';
 

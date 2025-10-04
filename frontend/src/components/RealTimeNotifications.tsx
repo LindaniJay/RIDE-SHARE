@@ -16,7 +16,7 @@ interface RealTimeNotificationsProps {
   userRole: 'renter' | 'host' | 'admin';
 }
 
-const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({ userId, userRole }) => {
+const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({ userRole }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);

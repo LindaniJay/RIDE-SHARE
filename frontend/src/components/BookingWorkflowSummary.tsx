@@ -5,11 +5,9 @@ import {
   XCircle, 
   AlertCircle, 
   TrendingUp, 
-  Users, 
   Calendar, 
   DollarSign,
   Activity,
-  BarChart3,
   RefreshCw
 } from 'lucide-react';
 

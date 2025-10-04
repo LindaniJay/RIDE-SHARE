@@ -1,24 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Menu, 
   X, 
   Search, 
-  Filter, 
   MapPin, 
   Calendar, 
-  Clock, 
   Star, 
   Heart, 
-  Share, 
-  Phone, 
-  MessageCircle,
-  ChevronDown,
-  ChevronUp,
   Plus,
-  Minus,
-  CheckCircle,
-  AlertCircle,
-  Info,
   Settings,
   User,
   Bell,
@@ -44,7 +33,7 @@ const EnhancedMobileUI: React.FC<EnhancedMobileUIProps> = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('home');
-  const [notifications, setNotifications] = useState(3);
+  const [notifications] = useState(3);
 
   const navigationItems = {
     renter: [

@@ -78,7 +78,7 @@ export const VehicleListingForm: React.FC<VehicleListingFormProps> = ({
     }));
   };
 
-  const handleDocumentUpload = (field: keyof NonNullable<VehicleForm['documents']>, file: File | undefined) => {
+  const handleDocumentUpload = (field: keyof NonNullable<VehicleForm['documents']>, file: File | null) => {
     setFormData(prev => ({
       ...prev,
       documents: {

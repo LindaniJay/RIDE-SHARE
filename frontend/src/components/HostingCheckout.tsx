@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { paymentService } from '../services/paymentService';
 import Icon from './Icon';
 import { SAPaymentGateway } from './SAPaymentGateway';
@@ -463,7 +463,7 @@ const HostingCheckout: React.FC<HostingCheckoutProps> = ({
         return (
           <div className="text-center space-y-6">
             <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-8">
-              <Icon name="CheckCircle" size="xl" className="text-green-400 mx-auto mb-4" />
+              <Icon name="CheckCircle" size="lg" className="text-green-400 mx-auto mb-4" />
               <h3 className="text-2xl font-semibold text-green-300 mb-2">Hosting Setup Complete!</h3>
               <p className="text-green-400/70">
                 Your vehicle has been submitted for review and will be listed once approved.

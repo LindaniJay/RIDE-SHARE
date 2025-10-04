@@ -9,7 +9,6 @@ import {
   BellOff,
   Wifi,
   WifiOff,
-  MapPin,
   Car,
   User,
   Calendar,
@@ -38,14 +37,12 @@ interface RealTimeStatusUpdatesProps {
 
 const RealTimeStatusUpdates: React.FC<RealTimeStatusUpdatesProps> = ({
   bookingId,
-  userId,
   vehicleId,
-  onStatusChange,
   autoRefresh = true,
   refreshInterval = 5000
 }) => {
   const [updates, setUpdates] = useState<StatusUpdate[]>([]);
-  const [isConnected, setIsConnected] = useState(true);
+  const [isConnected] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(false);
@@ -105,7 +102,7 @@ const RealTimeStatusUpdates: React.FC<RealTimeStatusUpdatesProps> = ({
     }, 1000);
   };
 
-  const getStatusIcon = (status: string, type: string) => {
+  const getStatusIcon = (status: string) => {
     const iconProps = { className: "w-5 h-5" };
     
     switch (status) {
@@ -256,7 +253,7 @@ const RealTimeStatusUpdates: React.FC<RealTimeStatusUpdatesProps> = ({
             >
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-1">
-                  {getStatusIcon(update.status, update.type)}
+                  {getStatusIcon(update.status)}
                 </div>
                 
                 <div className="flex-1 min-w-0">

@@ -6,12 +6,7 @@ import {
   AlertCircle, 
   User, 
   Car, 
-  CreditCard, 
-  Calendar,
-  MessageCircle,
-  Phone,
-  MapPin,
-  Star
+  CreditCard
 } from 'lucide-react';
 
 interface WorkflowStep {
@@ -362,7 +357,7 @@ const BookingWorkflowTracker: React.FC<BookingWorkflowTrackerProps> = ({
 
       {/* Workflow Steps */}
       <div className="space-y-4">
-        {workflowSteps.map((step, index) => (
+        {workflowSteps.map((step) => (
           <div
             key={step.id}
             className={`flex items-start gap-4 p-4 rounded-lg border transition-all ${

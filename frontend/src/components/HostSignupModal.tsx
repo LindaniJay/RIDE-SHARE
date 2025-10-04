@@ -95,7 +95,15 @@ const HostSignupModal: React.FC<HostSignupModalProps> = ({ isOpen, onClose, onSw
       password: '',
       confirmPassword: '',
       phoneNumber: '',
-      agreeToTerms: false
+      agreeToTerms: false,
+      documents: {
+        idDocument: null as File | null,
+        driverLicense: null as File | null,
+        proofOfAddress: null as File | null,
+        vehicleRegistration: null as File | null,
+        roadworthyCertificate: null as File | null,
+        insuranceCertificate: null as File | null
+      }
     });
     setError('');
     onClose();

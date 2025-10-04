@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminService, AdminUser, AdminVehicle } from '../services/adminService';
 import StatusBadge from './StatusBadge';
-import { useToastHelpers } from './Toast';
+import { useToast } from './ToastProvider';
 
 interface AdminApprovalPanelProps {
   type: 'users' | 'vehicles';
@@ -12,7 +12,7 @@ const AdminApprovalPanel: React.FC<AdminApprovalPanelProps> = ({ type, onRefresh
   const [items, setItems] = useState<AdminUser[] | AdminVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
-  const { success: showSuccess, error: showError } = useToastHelpers();
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchItems();
@@ -31,10 +31,10 @@ const AdminApprovalPanel: React.FC<AdminApprovalPanelProps> = ({ type, onRefresh
       if ((response as any).success) {
         setItems((response as any).data[type] || []);
       } else {
-        showError('Failed to fetch items', (response as any).message || 'Unknown error');
+        showToast('Failed to fetch items', 'error');
       }
     } catch (error: any) {
-      showError('Error fetching items', error.message || 'Unknown error');
+      showToast('Error fetching items', 'error');
     } finally {
       setLoading(false);
     }
@@ -51,14 +51,14 @@ const AdminApprovalPanel: React.FC<AdminApprovalPanelProps> = ({ type, onRefresh
       }
 
       if ((response as any).success) {
-        showSuccess('Item approved', `${type === 'users' ? 'User' : 'Vehicle'} has been approved`);
+        showToast(`${type === 'users' ? 'User' : 'Vehicle'} has been approved`, 'success');
         fetchItems();
         onRefresh?.();
       } else {
-        showError('Approval failed', (response as any).message || 'Unknown error');
+        showToast('Approval failed', 'error');
       }
     } catch (error: any) {
-      showError('Approval failed', error.message || 'Unknown error');
+      showToast('Approval failed', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -75,14 +75,14 @@ const AdminApprovalPanel: React.FC<AdminApprovalPanelProps> = ({ type, onRefresh
       }
 
       if ((response as any).success) {
-        showSuccess('Item rejected', `${type === 'users' ? 'User' : 'Vehicle'} has been rejected`);
+        showToast(`${type === 'users' ? 'User' : 'Vehicle'} has been rejected`, 'success');
         fetchItems();
         onRefresh?.();
       } else {
-        showError('Rejection failed', (response as any).message || 'Unknown error');
+        showToast('Rejection failed', 'error');
       }
     } catch (error: any) {
-      showError('Rejection failed', error.message || 'Unknown error');
+      showToast('Rejection failed', 'error');
     } finally {
       setActionLoading(null);
     }
