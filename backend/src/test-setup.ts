@@ -4,6 +4,10 @@ import { sequelize } from './config/database';
 // Setup database for tests
 beforeAll(async () => {
   try {
+    // Ensure JWT secrets exist for tests
+    process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
+    process.env.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'test-jwt-refresh-secret';
+
     await sequelize.authenticate();
     console.log('Test database connection established successfully.');
     

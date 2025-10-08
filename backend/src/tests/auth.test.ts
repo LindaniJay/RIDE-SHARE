@@ -18,9 +18,10 @@ describe('Auth API', () => {
   it('should register a new user', async () => {
     const userData = {
       email: 'test@example.com',
-      password: 'password123',
-      firstName: 'Test',
-      lastName: 'User',
+      // Must meet strong password policy (uppercase, lowercase, number, special char)
+      password: 'Password123!',
+      first_name: 'Test',
+      last_name: 'User',
       role: 'renter',
     };
 
@@ -41,9 +42,9 @@ describe('Auth API', () => {
     // First create a user
     const userData = {
       email: 'test@example.com',
-      password: 'password123',
-      firstName: 'Test',
-      lastName: 'User',
+      password: 'Password123!',
+      first_name: 'Test',
+      last_name: 'User',
       role: 'renter',
     };
 
@@ -54,7 +55,7 @@ describe('Auth API', () => {
     // Now try to login
     const loginData = {
       email: 'test@example.com',
-      password: 'password123',
+      password: 'Password123!',
     };
 
     const response = await request(app)
