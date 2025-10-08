@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { User } from '../models/User';
+import { User } from '../models';
 
 export const createTestUser = async (userData: Partial<any> = {}) => {
   const defaultUser = {
@@ -20,7 +20,7 @@ export const createTestUser = async (userData: Partial<any> = {}) => {
   return await User.create(defaultUser);
 };
 
-export const generateTestToken = (userId: number, role: string = 'host') => {
+export const generateTestToken = (userId: string, role: string = 'host') => {
   return jwt.sign(
     { userId, role },
     process.env.JWT_SECRET || 'test-jwt-secret',
