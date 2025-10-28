@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CreditCard, CheckCircle, Star, MapPin, Users, Car } from 'lucide-react';
+import { Calendar, CreditCard, CheckCircle, Star, MapPin, Car } from 'lucide-react';
 import GlassCard from './GlassCard';
 import GlassButton from './GlassButton';
-import { mockVehicles, mockBookings } from '../data/mockVehicles';
+import { mockVehicles } from '../data/mockVehicles';
 
 interface BookingDemoProps {
   className?: string;

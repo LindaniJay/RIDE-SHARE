@@ -4,7 +4,6 @@
 // import { apiClient } from '../services/productionApiClient';
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { AdminService, AdminStats } from '../services/adminService';
 import UserApprovalPanel from '../components/admin/UserApprovalPanel';
@@ -20,7 +19,6 @@ import RealTimeBookingNotifications from '../components/RealTimeBookingNotificat
 
 const RealTimeAdminDashboard: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
