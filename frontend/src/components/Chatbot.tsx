@@ -190,7 +190,7 @@ const Chatbot: React.FC = () => {
     
     if (hasRecentBooking) {
       return {
-        response: `I see you're interested in booking!\n\nI can help with:\n• Finding the right vehicle\n• Booking process\n• Payment options\n• Pickup locations\n\nWhat specific aspect would you like to know more about?`,
+        response: 'I see you\'re interested in booking!\n\nI can help with:\n• Finding the right vehicle\n• Booking process\n• Payment options\n• Pickup locations\n\nWhat specific aspect would you like to know more about?',
         followUp: ['What documents do I need?', 'How do I cancel?', 'What if there\'s a problem?']
       };
     }

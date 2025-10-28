@@ -39,6 +39,7 @@ export interface CreateBookingData {
 }
 
 class BookingService {
+  private readonly API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
   private storageKey = 'rideshare_bookings';
 
   private getStoredBookings(): Booking[] {
@@ -60,28 +61,101 @@ class BookingService {
   }
 
   async createBooking(bookingData: CreateBookingData): Promise<Booking> {
-    const newBooking: Booking = {
-      id: `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      ...bookingData,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      paymentStatus: 'pending'
-    };
+    try {
+      // Use unified booking API
+      const { authenticatedPost } = await import('../utils/apiClient');
+      const response = await authenticatedPost(`${this.API_BASE_URL}/bookings/unified`, {
+        vehicleId: bookingData.vehicleId,
+        startDate: bookingData.startDate,
+        endDate: bookingData.endDate,
+        totalPrice: bookingData.totalPrice,
+        specialRequests: bookingData.specialRequests
+      });
 
-    const existingBookings = this.getStoredBookings();
-    const updatedBookings = [...existingBookings, newBooking];
-    this.saveBookings(updatedBookings);
+      if (response.ok) {
+        const result = await response.json();
+        const apiBooking = result.data.booking;
+        
+        // Convert API booking to our format
+        const newBooking: Booking = {
+          id: apiBooking.id,
+          vehicleId: apiBooking.vehicleId,
+          vehicleTitle: apiBooking.listing?.make + ' ' + apiBooking.listing?.model || bookingData.vehicleTitle,
+          vehicleImage: apiBooking.listing?.images?.[0] || bookingData.vehicleImage,
+          vehicleMake: apiBooking.listing?.make || bookingData.vehicleMake,
+          vehicleModel: apiBooking.listing?.model || bookingData.vehicleModel,
+          hostId: apiBooking.hostId,
+          hostName: apiBooking.listing?.host?.firstName + ' ' + apiBooking.listing?.host?.lastName || bookingData.hostName,
+          renterId: apiBooking.renterId,
+          renterName: apiBooking.renter?.firstName + ' ' + apiBooking.renter?.lastName || bookingData.renterName,
+          startDate: apiBooking.startDate,
+          endDate: apiBooking.endDate,
+          totalDays: Math.ceil((new Date(apiBooking.endDate).getTime() - new Date(apiBooking.startDate).getTime()) / (1000 * 60 * 60 * 24)),
+          totalPrice: apiBooking.totalPrice,
+          status: apiBooking.status,
+          createdAt: apiBooking.createdAt,
+          paymentStatus: apiBooking.paymentStatus,
+          specialRequests: apiBooking.specialRequests
+        };
 
-    window.dispatchEvent(new CustomEvent('bookingCreated', { 
-      detail: newBooking 
-    }));
+        // Store in localStorage as backup
+        const existingBookings = this.getStoredBookings();
+        const updatedBookings = [...existingBookings, newBooking];
+        this.saveBookings(updatedBookings);
 
-    return newBooking;
+        window.dispatchEvent(new CustomEvent('bookingCreated', { 
+          detail: newBooking 
+        }));
+
+        return newBooking;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create booking via API');
+      }
+    } catch (error) {
+      console.error('Booking creation failed:', error);
+      
+      // Re-throw error instead of falling back to localStorage
+      // This ensures API issues are properly surfaced
+      throw new Error(error instanceof Error ? error.message : 'Failed to create booking');
+    }
   }
 
   async getRenterBookings(renterId: string): Promise<Booking[]> {
-    const allBookings = this.getStoredBookings();
-    return allBookings.filter(booking => booking.renterId === renterId);
+    try {
+      const { authenticatedGet } = await import('../utils/apiClient');
+      const response = await authenticatedGet(`${this.API_BASE_URL}/bookings/unified`);
+
+      if (response.ok) {
+        const result = await response.json();
+        return result.data.map((booking: any) => ({
+          id: booking.id,
+          vehicleId: booking.vehicleId,
+          vehicleTitle: booking.listing?.make + ' ' + booking.listing?.model || '',
+          vehicleImage: booking.listing?.images?.[0] || '',
+          vehicleMake: booking.listing?.make || '',
+          vehicleModel: booking.listing?.model || '',
+          hostId: booking.hostId,
+          hostName: booking.listing?.host?.firstName + ' ' + booking.listing?.host?.lastName || '',
+          renterId: booking.renterId,
+          renterName: booking.renter?.firstName + ' ' + booking.renter?.lastName || '',
+          startDate: booking.startDate,
+          endDate: booking.endDate,
+          totalDays: Math.ceil((new Date(booking.endDate).getTime() - new Date(booking.startDate).getTime()) / (1000 * 60 * 60 * 24)),
+          totalPrice: booking.totalPrice,
+          status: booking.status,
+          createdAt: booking.createdAt,
+          paymentStatus: booking.paymentStatus,
+          specialRequests: booking.specialRequests
+        }));
+      } else {
+        throw new Error('Failed to fetch bookings from API');
+      }
+    } catch (error) {
+      console.error('API fetch failed, falling back to localStorage:', error);
+      const allBookings = this.getStoredBookings();
+      return allBookings.filter(booking => booking.renterId === renterId);
+    }
   }
 
   async updatePaymentStatus(bookingId: string, paymentStatus: Booking['paymentStatus']): Promise<Booking | null> {

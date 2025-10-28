@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { authenticateToken, AuthRequest, requireRole } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest, requireRole } from '../middleware/auth';
 import { ApprovalRequest } from '../models/ApprovalRequest';
 import { User } from '../models/User';
 import { Op } from 'sequelize';
@@ -26,7 +26,7 @@ const updateApprovalRequestSchema = z.object({
 });
 
 // Create approval request (renter/host)
-router.post('/', approvalRequestRateLimit, authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', approvalRequestRateLimit, authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const validation = createApprovalRequestSchema.safeParse(req.body);
     if (!validation.success) {
@@ -39,7 +39,8 @@ router.post('/', approvalRequestRateLimit, authenticateToken, async (req: AuthRe
     const { requestType, entityId, submittedBy, reviewNotes } = validation.data;
 
     // Verify the user's role matches the submittedBy field
-    if (req.user!.role !== submittedBy && req.user!.role !== 'admin') {
+    const userRole = req.user!.role.toLowerCase();
+    if (userRole !== submittedBy && req.user!.role !== 'admin') {
       return res.status(403).json({ 
         error: 'You can only submit requests for your own role' 
       });
@@ -64,7 +65,7 @@ router.post('/', approvalRequestRateLimit, authenticateToken, async (req: AuthRe
       requestType,
       entityId,
       submittedBy,
-      submittedById: req.user!.id,
+      submittedById: req.user!.id.toString(),
       reviewNotes,
       status: 'Pending'
     });
@@ -99,7 +100,7 @@ router.post('/', approvalRequestRateLimit, authenticateToken, async (req: AuthRe
       action: wasAutoApproved ? 'AUTO_APPROVED' : 'CREATED',
       entityType: 'ApprovalRequest',
       entityId: approvalRequest.id,
-      userId: parseInt(req.user!.id),
+      userId: Number(req.user!.id) || 0,
       userRole: req.user!.role,
       newValues: { requestType, entityId, submittedBy, status: wasAutoApproved ? 'Approved' : 'Pending' },
       req
@@ -117,7 +118,7 @@ router.post('/', approvalRequestRateLimit, authenticateToken, async (req: AuthRe
 });
 
 // Get approval requests for current user (renter/host)
-router.get('/my-requests', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/my-requests', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { status, requestType, page = 1, limit = 10 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -158,7 +159,7 @@ router.get('/my-requests', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get all approval requests (admin only)
-router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { status, requestType, submittedBy, page = 1, limit = 10 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -198,7 +199,7 @@ router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthReque
 });
 
 // Get pending approval requests (admin only)
-router.get('/pending', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/pending', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -244,7 +245,7 @@ router.get('/pending', authenticateToken, requireRole(['admin']), async (req: Au
 });
 
 // Update approval request status (admin only)
-router.patch('/:id', approvalUpdateRateLimit, authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.patch('/:id', approvalUpdateRateLimit, authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const validation = updateApprovalRequestSchema.safeParse(req.body);
@@ -271,7 +272,7 @@ router.patch('/:id', approvalUpdateRateLimit, authenticateToken, requireRole(['a
 
     await approvalRequest.update({
       status,
-      reviewedById: req.user!.id,
+      reviewedById: req.user!.id.toString(),
       reviewedAt: new Date(),
       reviewNotes
     });
@@ -305,7 +306,7 @@ router.patch('/:id', approvalUpdateRateLimit, authenticateToken, requireRole(['a
       action: `APPROVAL_${status.toUpperCase()}`,
       entityType: 'ApprovalRequest',
       entityId: parseInt(id),
-      userId: parseInt(req.user!.id),
+      userId: Number(req.user!.id) || 0,
       userRole: req.user!.role,
       oldValues: { status: 'Pending' },
       newValues: { status, reviewNotes },
@@ -327,7 +328,7 @@ router.patch('/:id', approvalUpdateRateLimit, authenticateToken, requireRole(['a
 });
 
 // Get approval request by ID
-router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
@@ -343,7 +344,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Check if user can access this request
-    if (req.user!.role !== 'admin' && approvalRequest.submittedById !== req.user!.id) {
+    if (req.user!.role !== 'admin' && approvalRequest.submittedById !== req.user!.id.toString()) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -358,7 +359,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Bulk update approval requests (admin only)
-router.patch('/bulk', bulkApprovalRateLimit, authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.patch('/bulk', bulkApprovalRateLimit, authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { requestIds, status, reviewNotes } = req.body;
 
@@ -373,7 +374,7 @@ router.patch('/bulk', bulkApprovalRateLimit, authenticateToken, requireRole(['ad
     const updatedRequests = await ApprovalRequest.update(
       {
         status,
-        reviewedById: req.user!.id,
+        reviewedById: req.user!.id.toString(),
         reviewedAt: new Date(),
         reviewNotes
       },
@@ -398,7 +399,7 @@ router.patch('/bulk', bulkApprovalRateLimit, authenticateToken, requireRole(['ad
 });
 
 // Get approval statistics (admin only)
-router.get('/stats/overview', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/stats/overview', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const stats = await ApprovalRequest.findAll({
       attributes: [
@@ -432,3 +433,5 @@ router.get('/stats/overview', authenticateToken, requireRole(['admin']), async (
 });
 
 export default router;
+
+

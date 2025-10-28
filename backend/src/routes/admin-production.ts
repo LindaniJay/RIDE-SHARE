@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { authenticateToken, AuthRequest, requireRole } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest, requireRole } from '../middleware/auth';
 import { User, Listing, Booking, Payment, AdminLog } from '../models';
 import { Op } from 'sequelize';
 import { sequelize } from '../config/database';
@@ -8,13 +8,16 @@ import { sequelize } from '../config/database';
 const router = express.Router();
 
 // Get pending vehicles for approval
-router.get('/vehicles/pending', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/vehicles/pending', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     const { count, rows: vehicles } = await Listing.findAndCountAll({
-      where: { status: 'pending' },
+      where: { 
+        approved: false,
+        is_available: true
+      },
       include: [
         { 
           model: User, 
@@ -44,7 +47,7 @@ router.get('/vehicles/pending', authenticateToken, requireRole(['admin']), async
 });
 
 // Update vehicle approval status
-router.patch('/vehicles/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.patch('/vehicles/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = req.body;
@@ -77,7 +80,7 @@ router.patch('/vehicles/:id/status', authenticateToken, requireRole(['admin']), 
 });
 
 // Get safety incidents
-router.get('/safety-incidents', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/safety-incidents', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 20, status, severity } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -107,7 +110,7 @@ router.get('/safety-incidents', authenticateToken, requireRole(['admin']), async
 });
 
 // Get user behavior analytics
-router.get('/user-behavior-analytics', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/user-behavior-analytics', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { timeRange = 'month' } = req.query;
 
@@ -116,17 +119,17 @@ router.get('/user-behavior-analytics', authenticateToken, requireRole(['admin'])
     let startDate: Date;
     
     switch (timeRange) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case 'year':
-        startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    case 'week':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case 'month':
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case 'year':
+      startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
     // Get user statistics
@@ -138,33 +141,33 @@ router.get('/user-behavior-analytics', authenticateToken, requireRole(['admin'])
     });
     const newUsers = await User.count({
       where: {
-        createdAt: { [Op.gte]: startDate }
+        created_at: { [Op.gte]: startDate }
       }
     });
 
     // Get booking statistics
     const totalBookings = await Booking.count({
       where: {
-        createdAt: { [Op.gte]: startDate }
+        created_at: { [Op.gte]: startDate }
       }
     });
 
     // Calculate retention rate (simplified)
-    const retentionRate = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
+    const retentionRate = totalUsers > 0 ? (Number(activeUsers) / Number(totalUsers)) * 100 : 0;
 
     // User segments
     const frequentRenters = await User.count({
       where: {
         role: 'renter',
-        createdAt: { [Op.lte]: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) }
+        created_at: { [Op.lte]: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) }
       }
     });
 
     const userSegments = [
-      { segment: 'Frequent Renters', count: frequentRenters, percentage: (frequentRenters / totalUsers) * 100 },
-      { segment: 'Occasional Users', count: Math.floor(totalUsers * 0.3), percentage: 30 },
-      { segment: 'New Users', count: newUsers, percentage: (newUsers / totalUsers) * 100 },
-      { segment: 'Inactive Users', count: totalUsers - activeUsers, percentage: ((totalUsers - activeUsers) / totalUsers) * 100 }
+      { segment: 'Frequent Renters', count: frequentRenters, percentage: (Number(frequentRenters) / Number(totalUsers)) * 100 },
+      { segment: 'Occasional Users', count: Math.floor(Number(totalUsers) * 0.3), percentage: 30 },
+      { segment: 'New Users', count: newUsers, percentage: (Number(newUsers) / Number(totalUsers)) * 100 },
+      { segment: 'Inactive Users', count: Number(totalUsers) - Number(activeUsers), percentage: ((Number(totalUsers) - Number(activeUsers)) / Number(totalUsers)) * 100 }
     ];
 
     // Behavior metrics (mock data for now)
@@ -177,8 +180,8 @@ router.get('/user-behavior-analytics', authenticateToken, requireRole(['admin'])
 
     // Top actions (mock data for now)
     const topActions = [
-      { action: 'Search Vehicles', count: Math.floor(totalBookings * 1.5), percentage: 45.2 },
-      { action: 'View Vehicle Details', count: Math.floor(totalBookings * 1.2), percentage: 32.6 },
+      { action: 'Search Vehicles', count: Math.floor(Number(totalBookings) * 1.5), percentage: 45.2 },
+      { action: 'View Vehicle Details', count: Math.floor(Number(totalBookings) * 1.2), percentage: 32.6 },
       { action: 'Create Booking', count: totalBookings, percentage: 16.7 },
       { action: 'User Registration', count: newUsers, percentage: 5.5 }
     ];
@@ -215,7 +218,7 @@ router.get('/user-behavior-analytics', authenticateToken, requireRole(['admin'])
 });
 
 // Get real-time alerts
-router.get('/real-time-alerts', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/real-time-alerts', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     // Get pending bookings that need attention
     const pendingBookings = await Booking.count({
@@ -224,7 +227,7 @@ router.get('/real-time-alerts', authenticateToken, requireRole(['admin']), async
 
     // Get failed payments
     const failedPayments = await Payment.count({
-      where: { payment_status: 'failed' }
+      where: { status: 'failed' }
     });
 
     // Get pending vehicle approvals
@@ -249,7 +252,7 @@ router.get('/real-time-alerts', authenticateToken, requireRole(['admin']), async
       });
     }
 
-    if (failedPayments > 0) {
+    if (Number(failedPayments) > 0) {
       alerts.push({
         id: 'failed-payments',
         type: 'error',
@@ -288,7 +291,7 @@ router.get('/real-time-alerts', authenticateToken, requireRole(['admin']), async
 });
 
 // Get dashboard statistics
-router.get('/dashboard-stats', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/dashboard-stats', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const totalUsers = await User.count();
     const totalHosts = await User.count({ where: { role: 'host' } });
@@ -342,7 +345,7 @@ router.get('/dashboard-stats', authenticateToken, requireRole(['admin']), async 
 });
 
 // Get all users (admin only)
-router.get('/users', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/users', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 20, role, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -376,7 +379,7 @@ router.get('/users', authenticateToken, requireRole(['admin']), async (req: Auth
 });
 
 // Get all vehicles (admin only)
-router.get('/vehicles', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/vehicles', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 20, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -415,7 +418,7 @@ router.get('/vehicles', authenticateToken, requireRole(['admin']), async (req: A
 });
 
 // Get all bookings (admin only)
-router.get('/bookings', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/bookings', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 20, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -455,7 +458,7 @@ router.get('/bookings', authenticateToken, requireRole(['admin']), async (req: A
 });
 
 // Update user status (admin only)
-router.put('/users/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.put('/users/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = req.body;
@@ -472,7 +475,9 @@ router.put('/users/:id/status', authenticateToken, requireRole(['admin']), async
 
     // Log admin action
     await AdminLog.create({
-      user_id: req.user!.id,
+      adminId: Number(req.user!.id) || 0,
+      targetType: 'user',
+      targetId: Number(user.id) || 0,
       action: `user_${status}`,
       details: {
         target_user_id: user.id,
@@ -498,7 +503,7 @@ router.put('/users/:id/status', authenticateToken, requireRole(['admin']), async
 });
 
 // Update vehicle status (admin only)
-router.put('/vehicles/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.put('/vehicles/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = req.body;
@@ -516,7 +521,9 @@ router.put('/vehicles/:id/status', authenticateToken, requireRole(['admin']), as
 
     // Log admin action
     await AdminLog.create({
-      user_id: req.user!.id,
+      adminId: Number(req.user!.id) || 0,
+      targetType: 'listing',
+      targetId: vehicle.id,
       action: `vehicle_${status}`,
       details: {
         vehicle_id: vehicle.id,
@@ -544,3 +551,5 @@ router.put('/vehicles/:id/status', authenticateToken, requireRole(['admin']), as
 });
 
 export default router;
+
+

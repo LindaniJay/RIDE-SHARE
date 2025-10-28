@@ -28,7 +28,7 @@ interface CommissionManagementProps {
   className?: string;
 }
 
-export const CommissionManagement: React.FC<CommissionManagementProps> = ({ className = "" }) => {
+export const CommissionManagement: React.FC<CommissionManagementProps> = ({ className = '' }) => {
   const [commissionRules, setCommissionRules] = useState<CommissionRule[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,67 +69,9 @@ export const CommissionManagement: React.FC<CommissionManagementProps> = ({ clas
       }
     } catch (error) {
       console.error('Error fetching data:', error);
-      // Mock data for development
-      setCommissionRules([
-        {
-          id: '1',
-          name: 'Standard Commission',
-          type: 'percentage',
-          value: 15,
-          applicableTo: 'all',
-          isActive: true
-        },
-        {
-          id: '2',
-          name: 'New Host Bonus',
-          type: 'percentage',
-          value: 10,
-          applicableTo: 'new_hosts',
-          isActive: true
-        },
-        {
-          id: '3',
-          name: 'Premium Host Rate',
-          type: 'percentage',
-          value: 20,
-          applicableTo: 'premium_hosts',
-          isActive: true
-        }
-      ]);
-
-      setPayouts([
-        {
-          id: '1',
-          hostId: 'host1',
-          hostName: 'John M.',
-          amount: 5000,
-          commission: 750,
-          netAmount: 4250,
-          status: 'pending',
-          scheduledDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
-        },
-        {
-          id: '2',
-          hostId: 'host2',
-          hostName: 'Sarah K.',
-          amount: 3200,
-          commission: 480,
-          netAmount: 2720,
-          status: 'processing',
-          scheduledDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days from now
-        },
-        {
-          id: '3',
-          hostId: 'host3',
-          hostName: 'Mike D.',
-          amount: 1800,
-          commission: 270,
-          netAmount: 1530,
-          status: 'completed',
-          scheduledDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-          completedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) // 1 day ago
-        }
-      ]);
+      // Fallback to empty arrays instead of mock data
+      setCommissionRules([]);
+      setPayouts([]);
     } finally {
       setLoading(false);
     }

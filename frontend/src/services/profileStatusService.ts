@@ -37,6 +37,7 @@ class ProfileStatusService {
 
   // Set profile as completed
   setProfileCompleted(_profileData: any): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const status: ProfileStatus = {
       isCompleted: true,
       completionDate: new Date(),

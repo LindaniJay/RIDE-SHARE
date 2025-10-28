@@ -9,6 +9,8 @@ import {
   X,
   RefreshCw
 } from 'lucide-react';
+import { socketService } from '../services/socketService';
+import { apiClient } from '../api/client';
 
 interface BookingNotification {
   id: string;
@@ -47,119 +49,87 @@ const RealTimeBookingNotifications: React.FC<RealTimeBookingNotificationsProps> 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  // Mock notifications for demonstration
-  const mockNotifications: BookingNotification[] = [
-    {
-      id: 'notif-1',
-      type: 'booking_created',
-      title: 'New Booking Request',
-      message: 'John Smith has requested to book your Toyota Corolla for Dec 15-17',
-      bookingId: 'booking-1',
-      vehicleTitle: 'Toyota Corolla 2023',
-      renterName: 'John Smith',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
-      read: false,
-      priority: 'high',
-      actionRequired: true,
-      actionUrl: '/dashboard?tab=bookings'
-    },
-    {
-      id: 'notif-2',
-      type: 'booking_approved',
-      title: 'Booking Approved',
-      message: 'Your booking for BMW X3 has been approved by Sarah Johnson',
-      bookingId: 'booking-2',
-      vehicleTitle: 'BMW X3 2022',
-      hostName: 'Sarah Johnson',
-      timestamp: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
-      read: false,
-      priority: 'medium',
-      actionRequired: false,
-      actionUrl: '/dashboard?tab=bookings'
-    },
-    {
-      id: 'notif-3',
-      type: 'payment_received',
-      title: 'Payment Received',
-      message: 'Payment of R 1,200 received for Toyota Corolla booking',
-      bookingId: 'booking-1',
-      vehicleTitle: 'Toyota Corolla 2023',
-      amount: 1200,
-      timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-      read: true,
-      priority: 'medium',
-      actionRequired: false
-    },
-    {
-      id: 'notif-4',
-      type: 'booking_declined',
-      title: 'Booking Declined',
-      message: 'Your booking for Audi A4 has been declined by David Brown',
-      bookingId: 'booking-3',
-      vehicleTitle: 'Audi A4 2023',
-      hostName: 'David Brown',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      read: true,
-      priority: 'low',
-      actionRequired: false
-    },
-    {
-      id: 'notif-5',
-      type: 'booking_completed',
-      title: 'Booking Completed',
-      message: 'Your rental of BMW X3 has been completed successfully',
-      bookingId: 'booking-2',
-      vehicleTitle: 'BMW X3 2022',
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-      read: true,
-      priority: 'low',
-      actionRequired: false
-    }
-  ];
-
-  useEffect(() => {
-    fetchNotifications();
-    
-    // Set up real-time updates
-    const interval = setInterval(() => {
-      if (notificationsEnabled) {
-        fetchNotifications();
-      }
-    }, 30000); // Check every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [userId, notificationsEnabled]);
-
+  // Fetch real notifications from API
   const fetchNotifications = async () => {
-    setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      setLoading(true);
+      // Use apiClient so Firebase token is attached; relative path so baseURL (/api) applies
+      const { data } = await apiClient.get('notifications/booking', {
+        params: { userRole, userId }
+      });
       
-      // Filter notifications based on user role
-      let userNotifications = mockNotifications;
-      if (userRole === 'renter') {
-        userNotifications = mockNotifications.filter(n => 
-          n.type === 'booking_approved' || 
-          n.type === 'booking_declined' || 
-          n.type === 'booking_completed' ||
-          n.type === 'payment_failed'
-        );
-      } else if (userRole === 'host') {
-        userNotifications = mockNotifications.filter(n => 
-          n.type === 'booking_created' || 
-          n.type === 'payment_received'
-        );
+      if (data.success && data.notifications) {
+        setNotifications(data.notifications);
+      } else {
+        throw new Error(data.message || 'Failed to fetch notifications');
       }
-      // Admin sees all notifications
-      
-      setNotifications(userNotifications);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('Error fetching booking notifications:', error);
+      
+      // Show user-friendly error message
+      if (error instanceof Error) {
+        if (error.message.includes('Server unavailable')) {
+          console.warn('Server unavailable, notifications will retry automatically');
+        } else if (error.message.includes('authentication')) {
+          console.warn('Authentication failed, please log in again');
+        } else {
+          console.error(`Notification error: ${error.message}`);
+        }
+      }
+      
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchNotifications();
+    
+    // Set up Socket.io connection for real-time notifications
+    const setupSocketConnection = async () => {
+      try {
+        // Skip authentication for simple server
+        if (notificationsEnabled) {
+          await socketService.connect();
+          
+          // Listen for real-time notifications
+          socketService.onNotification((notification) => {
+            console.log('Real-time notification received:', notification);
+            setNotifications(prev => [notification, ...prev]);
+          });
+
+          socketService.onBookingUpdate((update) => {
+            console.log('Booking update received:', update);
+            // Refresh notifications when booking updates
+            fetchNotifications();
+          });
+
+          socketService.onError((error) => {
+            console.error('Socket error:', error);
+          });
+
+        }
+      } catch (error) {
+        console.error('Failed to connect to Socket.io:', error);
+        // Fallback to polling if Socket.io fails
+        const interval = setInterval(() => {
+          if (notificationsEnabled) {
+            fetchNotifications();
+          }
+        }, 30000); // Check every 30 seconds
+
+        return () => clearInterval(interval);
+      }
+    };
+
+    setupSocketConnection();
+    
+    // Cleanup on unmount
+    return () => {
+      socketService.removeAllListeners();
+    };
+  }, [userId, notificationsEnabled]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -197,9 +167,14 @@ const RealTimeBookingNotifications: React.FC<RealTimeBookingNotificationsProps> 
     }
   };
 
-  const formatTimeAgo = (timestamp: Date) => {
+  const formatTimeAgo = (timestamp: Date | string | undefined) => {
+    if (!timestamp) return 'Unknown time';
+    
+    const timestampDate = timestamp instanceof Date ? timestamp : new Date(timestamp);
+    if (isNaN(timestampDate.getTime())) return 'Invalid time';
+    
     const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
+    const diff = now.getTime() - timestampDate.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -343,7 +318,7 @@ const RealTimeBookingNotifications: React.FC<RealTimeBookingNotificationsProps> 
                           </span>
                           {notification.amount && (
                             <span className="text-xs font-medium text-green-600">
-                              R {notification.amount.toLocaleString()}
+                              R {(notification.amount || 0).toLocaleString()}
                             </span>
                           )}
                         </div>

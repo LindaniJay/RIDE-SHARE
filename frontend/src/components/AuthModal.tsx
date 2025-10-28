@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import Icon from './Icon';
 import GlassCard from './GlassCard';
 import GlassButton from './GlassButton';
+import DocumentUpload from './DocumentUpload';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -33,6 +34,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     role: 'Renter' as 'Renter' | 'Host'
   });
 
+  // Document upload state
+  const [documents, setDocuments] = useState({
+    idDocument: null as File | null,
+    driverLicense: null as File | null,
+    proofOfAddress: null as File | null
+  });
+
   // Reset form data when modal opens/closes or mode changes
   useEffect(() => {
     if (isOpen) {
@@ -60,6 +68,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
       [name]: value
     }));
     setError('');
+  };
+
+  // Handle document upload
+  const handleDocumentUpload = (documentType: string, file: File | null) => {
+    setDocuments(prev => ({
+      ...prev,
+      [documentType]: file
+    }));
   };
 
   // Handle login submission
@@ -97,6 +113,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
       return;
     }
 
+    // Check for required documents based on role
+    if (signupData.role === 'Host' && (!documents.idDocument || !documents.driverLicense)) {
+      setError('Please upload required documents to complete your registration');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (signupData.role === 'Renter' && !documents.driverLicense) {
+      setError('Please upload your driver\'s license to complete your registration');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       await signup(
         signupData.email,
@@ -127,6 +156,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
       lastName: '',
       phone: '',
       role: 'Renter'
+    });
+    setDocuments({
+      idDocument: null,
+      driverLicense: null,
+      proofOfAddress: null
     });
     onClose();
   };
@@ -345,26 +379,104 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                 />
               </div>
 
-              <div>
-                <label htmlFor="signup-role" className="block text-sm font-medium text-white/70 mb-2">
-                  I want to
-                </label>
-                <select
-                  id="signup-role"
-                  name="role"
-                  required
-                  value={signupData.role}
-                  onChange={handleSignupChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                >
-                  <option value="Renter" className="bg-gray-800 text-white">
-                    Rent vehicles from others
-                  </option>
-                  <option value="Host" className="bg-gray-800 text-white">
-                    Rent out my vehicles
-                  </option>
-                </select>
-              </div>
+               <div>
+                 <label htmlFor="signup-role" className="block text-sm font-medium text-white/70 mb-2">
+                   I want to
+                 </label>
+                 <select
+                   id="signup-role"
+                   name="role"
+                   required
+                   value={signupData.role}
+                   onChange={handleSignupChange}
+                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                 >
+                   <option value="Renter" className="bg-gray-800 text-white">
+                     Rent vehicles from others
+                   </option>
+                   <option value="Host" className="bg-gray-800 text-white">
+                     Rent out my vehicles
+                   </option>
+                 </select>
+               </div>
+
+               {/* Document Upload Section for Host Role */}
+               {signupData.role === 'Host' && (
+                 <div className="mt-6 p-6 bg-white/5 rounded-xl border border-white/10">
+                   <div className="flex items-center space-x-3 mb-4">
+                     <Icon name="FileText" size="md" className="text-blue-400" />
+                     <h3 className="text-lg font-semibold text-white">Required Documents</h3>
+                   </div>
+                   <p className="text-white/70 text-sm mb-6">
+                     Please upload the required documents to complete your registration. These documents help us verify your identity and ensure platform safety.
+                   </p>
+                   
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div>
+                       <label className="block text-sm font-medium text-white/80 mb-2">
+                         ID Document *
+                       </label>
+                       <p className="text-white/60 text-xs mb-3">
+                         South African ID, passport, or driver's license
+                       </p>
+                       <DocumentUpload
+                         label=""
+                         name="idDocument"
+                         onChange={(file) => handleDocumentUpload('idDocument', file)}
+                         acceptedTypes={['image/*', 'application/pdf']}
+                         maxSize={5}
+                       />
+                     </div>
+                     
+                     <div>
+                       <label className="block text-sm font-medium text-white/80 mb-2">
+                         Driver's License *
+                       </label>
+                       <p className="text-white/60 text-xs mb-3">
+                         Valid South African driver's license
+                       </p>
+                       <DocumentUpload
+                         label=""
+                         name="driverLicense"
+                         onChange={(file) => handleDocumentUpload('driverLicense', file)}
+                         acceptedTypes={['image/*', 'application/pdf']}
+                         maxSize={5}
+                       />
+                     </div>
+                   </div>
+                 </div>
+               )}
+
+               {/* Document Upload Section for Renter Role */}
+               {signupData.role === 'Renter' && (
+                 <div className="mt-6 p-6 bg-white/5 rounded-xl border border-white/10">
+                   <div className="flex items-center space-x-3 mb-4">
+                     <Icon name="FileText" size="md" className="text-green-400" />
+                     <h3 className="text-lg font-semibold text-white">Driver Verification</h3>
+                   </div>
+                   <p className="text-white/70 text-sm mb-6">
+                     Please upload your driver's license to verify your driving eligibility. This helps ensure a safe and secure rental experience.
+                   </p>
+                   
+                   <div className="grid grid-cols-1 gap-6">
+                     <div>
+                       <label className="block text-sm font-medium text-white/80 mb-2">
+                         Driver's License *
+                       </label>
+                       <p className="text-white/60 text-xs mb-3">
+                         Valid South African driver's license (front and back)
+                       </p>
+                       <DocumentUpload
+                         label=""
+                         name="driverLicense"
+                         onChange={(file) => handleDocumentUpload('driverLicense', file)}
+                         acceptedTypes={['image/*', 'application/pdf']}
+                         maxSize={5}
+                       />
+                     </div>
+                   </div>
+                 </div>
+               )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -424,7 +536,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-white/60 text-sm">
-              {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
+              {mode === 'login' ? 'Don\'t have an account? ' : 'Already have an account? '}
               <button
                 onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
                 className="text-blue-400 hover:text-blue-300 font-medium transition-colors"

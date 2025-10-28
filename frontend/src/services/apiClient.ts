@@ -1,200 +1,101 @@
-import { ApiResponse, PaginatedResponse, AppError } from '../types';
-import { errorHandler, isNetworkError, isAuthError } from '../utils/errorHandler';
-
-interface RequestConfig extends RequestInit {
-  timeout?: number;
-  retries?: number;
-}
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { auth } from '../config/firebase';
 
 class ApiClient {
+  private client: AxiosInstance;
   private baseURL: string;
-  private defaultTimeout: number = 10000;
-  private defaultRetries: number = 3;
 
-  constructor(baseURL: string = import.meta.env.VITE_API_URL || 'http://localhost:5001/api') {
-    this.baseURL = baseURL;
-  }
-
-  private async request<T>(
-    endpoint: string,
-    config: RequestConfig = {}
-  ): Promise<ApiResponse<T>> {
-    const {
-      timeout = this.defaultTimeout,
-      retries = this.defaultRetries,
-      ...requestConfig
-    } = config;
-
-    const url = `${this.baseURL}${endpoint}`;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    const defaultHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
-
-    const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
-    if (token) {
-      defaultHeaders['Authorization'] = `Bearer ${token}`;
-    }
-
-    const requestOptions: RequestInit = {
-      ...requestConfig,
+  constructor() {
+    this.baseURL = import.meta.env.VITE_API_URL || '/api';
+    
+    this.client = axios.create({
+      baseURL: this.baseURL,
+      timeout: 10000,
       headers: {
-        ...defaultHeaders,
-        ...requestConfig.headers,
+        'Content-Type': 'application/json',
       },
-      signal: controller.signal,
-    };
+    });
 
-    let lastError: AppError | null = null;
-
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        const response = await fetch(url, requestOptions);
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    // Add request interceptor to attach auth token
+    this.client.interceptors.request.use(
+      async (config) => {
+        try {
+          const user = auth.currentUser;
+          if (user) {
+            const token = await user.getIdToken();
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } catch (error) {
+          console.error('Error getting auth token:', error);
+          // Don't fail the request if auth fails in development
+          if (import.meta.env.DEV) {
+            console.log('Continuing without authentication in development mode');
+          }
         }
-
-        const data = await response.json();
-        return {
-          success: true,
-          data,
-        };
-      } catch (error) {
-        lastError = errorHandler.handleError(error, `API Request: ${endpoint}`);
-        
-        // Don't retry on auth errors or client errors
-        if (isAuthError(lastError) || (error as any)?.status < 500) {
-          break;
-        }
-
-        // Don't retry on network errors if we've tried enough
-        if (isNetworkError(lastError) && attempt >= retries) {
-          break;
-        }
-
-        // Wait before retrying (exponential backoff)
-        if (attempt < retries) {
-          await this.delay(Math.pow(2, attempt) * 1000);
-        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
       }
+    );
+
+    // Add response interceptor for error handling
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        console.error('API Error:', error.response?.data || error.message);
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  // Generic request method
+  async request<T>(config: AxiosRequestConfig): Promise<T> {
+    try {
+      const response: AxiosResponse<T> = await this.client.request(config);
+      return response.data;
+    } catch (error: any) {
+      console.error('API Request failed:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Request failed');
     }
-
-    clearTimeout(timeoutId);
-    return {
-      success: false,
-      data: null as T,
-      message: lastError?.message || 'Request failed',
-      errors: [lastError?.message || 'Unknown error'],
-    };
   }
 
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  // GET request
+  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'GET', url });
   }
 
-  // HTTP Methods
-  async get<T>(endpoint: string, config?: RequestConfig): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { ...config, method: 'GET' });
+  // POST request
+  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'POST', url, data });
   }
 
-  async post<T>(endpoint: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      ...config,
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    });
+  // PUT request
+  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'PUT', url, data });
   }
 
-  async put<T>(endpoint: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      ...config,
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    });
+  // PATCH request
+  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'PATCH', url, data });
   }
 
-  async patch<T>(endpoint: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      ...config,
-      method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
-
-  async delete<T>(endpoint: string, config?: RequestConfig): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { ...config, method: 'DELETE' });
-  }
-
-  // File upload
-  async uploadFile<T>(
-    endpoint: string,
-    file: File,
-    additionalData?: Record<string, any>,
-    config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    if (additionalData) {
-      Object.entries(additionalData).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-    }
-
-    const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    return this.request<T>(endpoint, {
-      ...config,
-      method: 'POST',
-      body: formData,
-      headers: {
-        ...headers,
-        ...config?.headers,
-      },
-    });
-  }
-
-  // Paginated requests
-  async getPaginated<T>(
-    endpoint: string,
-    params?: Record<string, any>,
-    config?: RequestConfig
-  ): Promise<ApiResponse<PaginatedResponse<T>>> {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          searchParams.append(key, value.toString());
-        }
-      });
-    }
-
-    const queryString = searchParams.toString();
-    const fullEndpoint = queryString ? `${endpoint}?${queryString}` : endpoint;
-    
-    return this.get<PaginatedResponse<T>>(fullEndpoint, config);
+  // DELETE request
+  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'DELETE', url });
   }
 
   // Health check
-  async healthCheck(): Promise<boolean> {
-    try {
-      const response = await this.get('/health');
-      return response.success;
-    } catch {
-      return false;
-    }
+  async healthCheck(): Promise<{ status: string; timestamp: string }> {
+    return this.get<{ status: string; timestamp: string }>('/health');
+  }
+
+  // Get base URL
+  getBaseURL(): string {
+    return this.baseURL;
   }
 }
 
+// Export singleton instance
 export const apiClient = new ApiClient();
 export default apiClient;

@@ -1,38 +1,17 @@
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const axios = require('axios');
 
 async function testAPI() {
   try {
-    console.log('Testing API endpoints...');
+    console.log('🧪 Testing API...');
+    const response = await axios.get('http://localhost:5001/api/vehicles');
+    console.log('✅ API Response:', response.data);
+    console.log('📊 Vehicles count:', response.data.vehicles?.length || 0);
     
-    // Test health endpoint
-    console.log('\n1. Testing health endpoint...');
-    const healthResponse = await fetch('http://localhost:5001/api/health');
-    const healthData = await healthResponse.json();
-    console.log('Health:', healthData);
-    
-    // Test vehicles endpoint
-    console.log('\n2. Testing vehicles endpoint...');
-    const vehiclesResponse = await fetch('http://localhost:5001/api/vehicles');
-    const vehiclesData = await vehiclesResponse.json();
-    console.log('Vehicles:', vehiclesData);
-    
-    // Test auth endpoint
-    console.log('\n3. Testing auth endpoint...');
-    const authResponse = await fetch('http://localhost:5001/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: 'admin@rentza.co.za',
-        password: 'password123'
-      })
-    });
-    const authData = await authResponse.json();
-    console.log('Auth:', authData);
-    
+    if (response.data.vehicles && response.data.vehicles.length > 0) {
+      console.log('🚗 First vehicle:', response.data.vehicles[0].make, response.data.vehicles[0].model);
+    }
   } catch (error) {
-    console.error('Error testing API:', error);
+    console.error('❌ API Error:', error.message);
   }
 }
 

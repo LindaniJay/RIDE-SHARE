@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from './ToastProvider';
+import { useAuth } from '../context/AuthContext';
+import websocketService from '../services/websocketService';
 import Icon from './Icon';
 
 interface Notification {
@@ -16,88 +18,131 @@ interface RealTimeNotificationsProps {
   userRole: 'renter' | 'host' | 'admin';
 }
 
-const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({ userRole }) => {
+const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({ userId, userRole }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const { showToast } = useToast();
+  const { user } = useAuth();
 
+  // Fetch initial notifications from API
   useEffect(() => {
-    // Simulate real-time notifications
-    const interval = setInterval(() => {
+    const fetchNotifications = async () => {
+      try {
+        const { apiClient } = await import('../api/client');
+        // Use relative path so axios baseURL (VITE_API_URL or /api) applies
+        const response = await apiClient.get('notifications');
+
+        if (response.data.success) {
+          setNotifications(response.data.notifications || []);
+          setUnreadCount(response.data.pagination?.total || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    // Add a small delay to ensure Firebase auth is ready
+    const timer = setTimeout(() => {
+      fetchNotifications();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [userId]);
+
+  // Set up WebSocket connection for real-time notifications
+  useEffect(() => {
+    if (!user) return;
+
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    // Connect to WebSocket
+    websocketService.connect(token);
+
+    // Subscribe to real-time notifications
+    websocketService.subscribeToNotifications((notification: any) => {
       const newNotification: Notification = {
-        id: Math.random().toString(36).substr(2, 9),
-        title: getRandomNotificationTitle(userRole),
-        message: getRandomNotificationMessage(userRole),
-        type: getRandomNotificationType(),
-        timestamp: new Date(),
+        id: notification.id || Math.random().toString(36).substr(2, 9),
+        title: notification.title,
+        message: notification.message,
+        type: notification.type || 'info',
+        timestamp: new Date(notification.timestamp || Date.now()),
         read: false
       };
 
-      setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
+      setNotifications(prev => [newNotification, ...prev.slice(0, 19)]);
       setUnreadCount(prev => prev + 1);
       
       // Show toast notification
       showToast(newNotification.message, newNotification.type);
-    }, 30000); // Every 30 seconds for demo
+    });
 
-    return () => clearInterval(interval);
-  }, [userRole, showToast]);
+    // Subscribe to role-specific updates
+    if (userRole === 'admin') {
+      websocketService.subscribeToAdminUpdates((update: any) => {
+        const adminNotification: Notification = {
+          id: `admin_${Date.now()}`,
+          title: update.title || 'Admin Update',
+          message: update.message || 'System update received',
+          type: 'info',
+          timestamp: new Date(),
+          read: false
+        };
 
-  const getRandomNotificationTitle = (role: string) => {
-    const titles = {
-      renter: ['New Booking Confirmed', 'Payment Received', 'Vehicle Available', 'Booking Reminder'],
-      host: ['New Booking Request', 'Payment Received', 'Vehicle Approved', 'Booking Completed'],
-      admin: ['New User Registration', 'Vehicle Pending Approval', 'System Alert', 'Revenue Update']
+        setNotifications(prev => [adminNotification, ...prev.slice(0, 19)]);
+        setUnreadCount(prev => prev + 1);
+        showToast(adminNotification.message, adminNotification.type);
+      });
+    }
+
+    // Check connection status
+    const checkConnection = () => {
+      setIsConnected(websocketService.socket?.connected || false);
     };
-    const roleTitles = titles[role as keyof typeof titles] || titles.admin;
-    return roleTitles[Math.floor(Math.random() * roleTitles.length)];
-  };
 
-  const getRandomNotificationMessage = (role: string) => {
-    const messages = {
-      renter: [
-        'Your booking has been confirmed!',
-        'Payment of R1,200 has been processed.',
-        'New vehicles matching your preferences are available.',
-        'Your booking starts tomorrow at 9:00 AM.'
-      ],
-      host: [
-        'You have a new booking request for your Toyota Corolla.',
-        'Payment of R800 has been received.',
-        'Your vehicle listing has been approved!',
-        'Booking completed successfully. Great job!'
-      ],
-      admin: [
-        'New user John Doe has registered as a host.',
-        '5 vehicles are pending approval.',
-        'System performance is optimal.',
-        'Monthly revenue: R45,000'
-      ]
+    checkConnection();
+    const interval = setInterval(checkConnection, 5000);
+
+    return () => {
+      clearInterval(interval);
+      // Don't disconnect WebSocket service as it's used by other components
     };
-    const roleMessages = messages[role as keyof typeof messages] || messages.admin;
-    return roleMessages[Math.floor(Math.random() * roleMessages.length)];
+  }, [user, userRole, showToast]);
+
+  const markAsRead = async (id: string) => {
+    try {
+      const { apiClient } = await import('../api/client');
+      // Use relative path so baseURL applies
+      await apiClient.put('notifications/mark-read', {
+        notification_ids: [id]
+      });
+
+      setNotifications(prev => 
+        prev.map(notif => 
+          notif.id === id ? { ...notif, read: true } : notif
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
-  const getRandomNotificationType = (): 'info' | 'success' | 'warning' | 'error' => {
-    const types: ('info' | 'success' | 'warning' | 'error')[] = ['info', 'success', 'warning', 'error'];
-    return types[Math.floor(Math.random() * types.length)];
-  };
+  const markAllAsRead = async () => {
+    try {
+      const { apiClient } = await import('../api/client');
+      // Use relative path so baseURL applies
+      await apiClient.put('notifications/mark-all-read');
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notif => 
-        notif.id === id ? { ...notif, read: true } : notif
-      )
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notif => ({ ...notif, read: true }))
-    );
-    setUnreadCount(0);
+      setNotifications(prev => 
+        prev.map(notif => ({ ...notif, read: true }))
+      );
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
   };
 
   return (
@@ -111,6 +156,9 @@ const RealTimeNotifications: React.FC<RealTimeNotificationsProps> = ({ userRole 
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
+        )}
+        {!isConnected && (
+          <span className="absolute -bottom-1 -right-1 bg-yellow-500 text-white text-xs rounded-full h-3 w-3" title="Disconnected"></span>
         )}
       </button>
 

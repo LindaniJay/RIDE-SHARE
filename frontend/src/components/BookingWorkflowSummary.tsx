@@ -56,59 +56,24 @@ const BookingWorkflowSummary: React.FC<BookingWorkflowSummaryProps> = ({
   const fetchWorkflowSummary = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data based on user role
-      const mockSummary: WorkflowSummary = {
-        totalBookings: userRole === 'admin' ? 156 : userRole === 'host' ? 23 : 8,
-        pendingBookings: userRole === 'admin' ? 12 : userRole === 'host' ? 3 : 1,
-        confirmedBookings: userRole === 'admin' ? 45 : userRole === 'host' ? 8 : 2,
-        completedBookings: userRole === 'admin' ? 89 : userRole === 'host' ? 12 : 5,
-        cancelledBookings: userRole === 'admin' ? 10 : userRole === 'host' ? 0 : 0,
-        averageCompletionTime: 2.5, // days
-        successRate: 89.5,
-        revenue: userRole === 'admin' ? 125000 : userRole === 'host' ? 18500 : 0,
-        recentActivity: [
-          {
-            id: 'activity-1',
-            type: 'booking_created',
-            message: 'New booking created for Toyota Corolla',
-            timestamp: new Date(Date.now() - 5 * 60 * 1000),
-            bookingId: 'booking-1'
-          },
-          {
-            id: 'activity-2',
-            type: 'booking_approved',
-            message: 'Booking approved for BMW X3',
-            timestamp: new Date(Date.now() - 15 * 60 * 1000),
-            bookingId: 'booking-2'
-          },
-          {
-            id: 'activity-3',
-            type: 'payment_processed',
-            message: 'Payment received for Audi A4',
-            timestamp: new Date(Date.now() - 30 * 60 * 1000),
-            bookingId: 'booking-3'
-          },
-          {
-            id: 'activity-4',
-            type: 'booking_completed',
-            message: 'Rental completed for Mercedes C-Class',
-            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-            bookingId: 'booking-4'
-          }
-        ],
-        bottlenecks: [
-          { step: 'Host Approval', count: 5, averageTime: 4.2 },
-          { step: 'Payment Processing', count: 2, averageTime: 1.8 },
-          { step: 'Vehicle Preparation', count: 1, averageTime: 6.5 }
-        ]
-      };
-      
-      setSummary(mockSummary);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/workflow/summary?userRole=${userRole}&userId=${userId}&timeRange=${timeRange}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSummary(data.summary);
+      } else {
+        console.error('Failed to fetch workflow summary');
+        setSummary(null);
+      }
     } catch (error) {
       console.error('Error fetching workflow summary:', error);
+      setSummary(null);
     } finally {
       setLoading(false);
     }

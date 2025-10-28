@@ -167,7 +167,7 @@ export interface EventRental {
 }
 
 class SocialService {
-  private readonly API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:5001/api';
+  private readonly API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
   /**
    * Get user profile

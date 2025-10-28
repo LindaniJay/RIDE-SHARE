@@ -25,6 +25,7 @@ export interface PaymentRequest {
     lastName: string;
     email: string;
     phone?: string;
+    name?: string;
     address?: {
       street: string;
       city: string;
@@ -54,8 +55,22 @@ export interface PaymentErrorData {
   suggestedAction?: string;
 }
 
+export interface LoyaltyPoints {
+  total: number;
+  available: number;
+  used: number;
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  nextTierPoints: number;
+  history: Array<{
+    date: string;
+    points: number;
+    description: string;
+    type: 'earned' | 'redeemed' | 'expired';
+  }>;
+}
+
 class EnhancedPaymentService {
-  private readonly API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:5001/api';
+  private readonly API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
   private retryAttempts = 3;
   private retryDelay = 1000; // 1 second
 
@@ -502,6 +517,98 @@ class EnhancedPaymentService {
 
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Get loyalty points
+   */
+  async getLoyaltyPoints(): Promise<LoyaltyPoints> {
+    try {
+      const response = await fetch(`${this.API_BASE_URL}/loyalty/points`, {
+        headers: {
+          'Authorization': `Bearer ${this.getAuthToken()}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result.data || this.getDefaultLoyaltyPoints();
+    } catch (error) {
+      console.error('Error getting loyalty points:', error);
+      return this.getDefaultLoyaltyPoints();
+    }
+  }
+
+  /**
+   * Get default loyalty points
+   */
+  private getDefaultLoyaltyPoints(): LoyaltyPoints {
+    return {
+      total: 0,
+      available: 0,
+      used: 0,
+      tier: 'bronze',
+      nextTierPoints: 100,
+      history: []
+    };
+  }
+
+  /**
+   * Earn loyalty points
+   */
+  async earnLoyaltyPoints(amount: number, description: string): Promise<void> {
+    try {
+      await fetch(`${this.API_BASE_URL}/loyalty/earn`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getAuthToken()}`
+        },
+        body: JSON.stringify({
+          amount,
+          description
+        })
+      });
+    } catch (error) {
+      console.error('Error earning loyalty points:', error);
+    }
+  }
+
+  /**
+   * Redeem loyalty points
+   */
+  async redeemLoyaltyPoints(points: number, description: string): Promise<PaymentResponse> {
+    try {
+      const response = await fetch(`${this.API_BASE_URL}/loyalty/redeem`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getAuthToken()}`
+        },
+        body: JSON.stringify({
+          points,
+          description
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      throw new PaymentError(
+        'REDEEM_FAILED',
+        'Failed to redeem loyalty points',
+        error instanceof Error ? error.message : 'Unknown error',
+        true,
+        'Please try again later'
+      );
+    }
   }
 }
 

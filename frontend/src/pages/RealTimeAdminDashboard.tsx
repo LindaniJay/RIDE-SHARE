@@ -1,5 +1,4 @@
 // Production Service Imports - commented out as not currently used
-// import { authService } from '../services/productionAuthService';
 // import { bookingService } from '../services/productionBookingService';
 // import { listingService } from '../services/productionListingService';
 // import { apiClient } from '../services/productionApiClient';
@@ -50,10 +49,15 @@ const RealTimeAdminDashboard: React.FC = () => {
 
   const handleLogout = async () => {
     try {
+      console.log('RealTimeAdminDashboard: Starting logout process');
       await logout();
-      navigate('/');
+      console.log('RealTimeAdminDashboard: Logout successful, navigating to home');
+      // Force navigation to home page
+      window.location.href = '/';
     } catch (error) {
       console.error('Error logging out:', error);
+      // Even if logout fails, try to navigate away
+      window.location.href = '/';
     }
   };
 
@@ -250,8 +254,8 @@ const RealTimeAdminDashboard: React.FC = () => {
               <h2 className="text-xl font-semibold text-white mb-4">Booking Management</h2>
               <EnhancedBookingManagement
                 userRole="admin"
-                userId={user?.id || '0'}
-                onBookingAction={(bookingId, action, data) => {
+                userId={parseInt(user?.id || '0')}
+                onBookingAction={(bookingId: number, action: string, data: any) => {
                   console.log('Admin booking action:', { bookingId, action, data });
                   // Refresh admin stats after booking action
                   fetchStats();

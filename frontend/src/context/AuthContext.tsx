@@ -48,18 +48,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (user) {
         // User is logged in - check role and navigate accordingly
         if (user.role?.toLowerCase() === 'admin') {
-          console.log('AuthContext: Admin user detected, navigating to admin dashboard');
-          navigate('/admin-dashboard');
+          console.log('AuthContext: Admin user detected');
+          // Only navigate to admin dashboard if not already on an admin page and not on home page
+          if (!location.pathname.startsWith('/admin') && !location.pathname.startsWith('/admin-dashboard') && location.pathname !== '/') {
+            console.log('AuthContext: Navigating admin user to admin dashboard');
+            navigate('/admin-dashboard', { replace: true });
+          }
         } else if (!location.pathname.startsWith('/admin') && !location.pathname.includes('admin')) {
           console.log('AuthContext: Navigating regular user to dashboard');
-          navigate('/dashboard');
+          if (!location.pathname.startsWith('/dashboard')) {
+            navigate('/dashboard', { replace: true });
+          }
         } else if (location.pathname.startsWith('/admin')) {
           console.log('AuthContext: Admin route detected, not redirecting');
         }
       } else {
-        // User is logged out - navigate to home page
+        // User is logged out - navigate to home page only if not already there
         console.log('AuthContext: User logged out, navigating to home');
-        navigate('/', { replace: true });
+        if (location.pathname !== '/') {
+          navigate('/', { replace: true });
+        }
       }
     });
 

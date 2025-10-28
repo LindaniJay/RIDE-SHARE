@@ -10,7 +10,7 @@ interface RentalCalculatorProps {
 export const RentalCalculator: React.FC<RentalCalculatorProps> = ({ 
   basePrice, 
   onCalculate, 
-  className = "" 
+  className = '' 
 }) => {
   const [rentalType, setRentalType] = useState<'hourly' | 'daily' | 'weekly'>('daily');
   const [duration, setDuration] = useState(1);
@@ -43,8 +43,8 @@ export const RentalCalculator: React.FC<RentalCalculatorProps> = ({
     // Add selected add-ons
     let addOnTotal = 0;
     const selectedAddOns = Object.entries(addOns)
-      .filter(([_, selected]) => selected)
-      .map(([addOn, _]) => ({ name: addOn, price: addOnPrices[addOn as keyof typeof addOnPrices] }));
+      .filter(([, selected]) => selected)
+      .map(([addOn]) => ({ name: addOn, price: addOnPrices[addOn as keyof typeof addOnPrices] }));
 
     addOnTotal = selectedAddOns.reduce((sum, addOn) => sum + addOn.price, 0);
 
@@ -154,7 +154,7 @@ export const RentalCalculator: React.FC<RentalCalculatorProps> = ({
             <span className="text-white/70">Base ({rentalType}):</span>
             <span className="text-white">R{basePrice} × {duration}</span>
           </div>
-          {Object.entries(addOns).filter(([_, selected]) => selected).map(([addOn, _]) => (
+          {Object.entries(addOns).filter(([, selected]) => selected).map(([addOn]) => (
             <div key={addOn} className="flex justify-between">
               <span className="text-white/70 capitalize">{addOn.replace(/([A-Z])/g, ' $1')}:</span>
               <span className="text-white">R{addOnPrices[addOn as keyof typeof addOnPrices]}</span>

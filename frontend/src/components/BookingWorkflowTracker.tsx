@@ -412,7 +412,26 @@ const BookingWorkflowTracker: React.FC<BookingWorkflowTrackerProps> = ({
             {step.status === 'current' && userRole === step.actor && (
               <div className="flex-shrink-0">
                 <button
-                  onClick={() => onStepComplete?.(step.id)}
+                  onClick={async () => {
+                    try {
+                      // Make API call to complete the step
+                      const response = await fetch(`/api/bookings/${bookingId}/workflow/${step.id}/complete`, {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                          'Content-Type': 'application/json'
+                        }
+                      });
+                      
+                      if (response.ok) {
+                        onStepComplete?.(step.id);
+                      } else {
+                        console.error('Failed to complete step');
+                      }
+                    } catch (error) {
+                      console.error('Error completing step:', error);
+                    }
+                  }}
                   className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
                 >
                   Complete
@@ -429,13 +448,50 @@ const BookingWorkflowTracker: React.FC<BookingWorkflowTrackerProps> = ({
           {userRole === 'host' && currentStep.actor === 'host' && (
             <>
               <button
-                onClick={() => onStepComplete?.(currentStep.id, { action: 'approve' })}
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/bookings/${bookingId}/approve`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                        'Content-Type': 'application/json'
+                      }
+                    });
+                    
+                    if (response.ok) {
+                      onStepComplete?.(currentStep.id, { action: 'approve' });
+                    } else {
+                      console.error('Failed to approve booking');
+                    }
+                  } catch (error) {
+                    console.error('Error approving booking:', error);
+                  }
+                }}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 Approve Booking
               </button>
               <button
-                onClick={() => onStepError?.(currentStep.id, 'Booking declined')}
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/bookings/${bookingId}/decline`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ reason: 'Booking declined by host' })
+                    });
+                    
+                    if (response.ok) {
+                      onStepError?.(currentStep.id, 'Booking declined');
+                    } else {
+                      console.error('Failed to decline booking');
+                    }
+                  } catch (error) {
+                    console.error('Error declining booking:', error);
+                  }
+                }}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 Decline Booking
@@ -445,7 +501,25 @@ const BookingWorkflowTracker: React.FC<BookingWorkflowTrackerProps> = ({
           
           {userRole === 'renter' && currentStep.actor === 'renter' && (
             <button
-              onClick={() => onStepComplete?.(currentStep.id)}
+              onClick={async () => {
+                try {
+                  const response = await fetch(`/api/bookings/${bookingId}/workflow/${currentStep.id}/complete`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                      'Content-Type': 'application/json'
+                    }
+                  });
+                  
+                  if (response.ok) {
+                    onStepComplete?.(currentStep.id);
+                  } else {
+                    console.error('Failed to complete step');
+                  }
+                } catch (error) {
+                  console.error('Error completing step:', error);
+                }
+              }}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Mark as Complete
@@ -455,13 +529,51 @@ const BookingWorkflowTracker: React.FC<BookingWorkflowTrackerProps> = ({
           {userRole === 'admin' && (
             <div className="flex gap-2">
               <button
-                onClick={() => onStepComplete?.(currentStep.id, { action: 'admin_override' })}
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/admin/bookings/${bookingId}/override`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ action: 'approve', reason: 'Admin override' })
+                    });
+                    
+                    if (response.ok) {
+                      onStepComplete?.(currentStep.id, { action: 'admin_override' });
+                    } else {
+                      console.error('Failed to override booking');
+                    }
+                  } catch (error) {
+                    console.error('Error overriding booking:', error);
+                  }
+                }}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 Admin Override
               </button>
               <button
-                onClick={() => onStepError?.(currentStep.id, 'Admin intervention required')}
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/admin/bookings/${bookingId}/flag`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ reason: 'Admin intervention required' })
+                    });
+                    
+                    if (response.ok) {
+                      onStepError?.(currentStep.id, 'Admin intervention required');
+                    } else {
+                      console.error('Failed to flag booking');
+                    }
+                  } catch (error) {
+                    console.error('Error flagging booking:', error);
+                  }
+                }}
                 className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
               >
                 Flag Issue

@@ -387,7 +387,7 @@ export interface BusinessIntelligenceReport {
 }
 
 class BusinessIntelligenceService {
-  private readonly API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:5001/api';
+  private readonly API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
   /**
    * Revenue Analytics

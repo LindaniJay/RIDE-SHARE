@@ -8,8 +8,15 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:5173'],
-    credentials: true
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:5173',
+      'http://localhost:4173'
+    ],
+    methods: ['GET', 'POST'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
   }
 });
 const PORT = 5001;
@@ -17,8 +24,16 @@ const PORT = 5001;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173',
+    'http://localhost:4173'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Session-ID'],
+  exposedHeaders: ['X-Total-Count', 'X-Page-Count']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -402,6 +417,351 @@ app.get('/api/payments', (req, res) => {
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
+});
+
+// Additional API endpoints for frontend compatibility
+app.get('/api/listings', (req, res) => {
+  try {
+    const { approved_only } = req.query;
+    let filteredVehicles = vehicles;
+    
+    if (approved_only === 'true') {
+      filteredVehicles = vehicles.filter(v => v.status === 'approved');
+    }
+    
+    res.json({
+      success: true,
+      listings: filteredVehicles.map(vehicle => ({
+        id: vehicle.id,
+        make: vehicle.make,
+        model: vehicle.model,
+        year: vehicle.year,
+        type: vehicle.type,
+        category: vehicle.category,
+        pricePerDay: vehicle.pricePerDay,
+        pricePerWeek: vehicle.pricePerWeek,
+        pricePerMonth: vehicle.pricePerMonth,
+        location: vehicle.location,
+        images: vehicle.images,
+        status: vehicle.status,
+        features: vehicle.features,
+        description: vehicle.description,
+        hostName: vehicle.hostName,
+        hostId: 'mock-host-id',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching listings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/listings/host', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      listings: vehicles.map(vehicle => ({
+        id: vehicle.id,
+        make: vehicle.make,
+        model: vehicle.model,
+        year: vehicle.year,
+        location: vehicle.location,
+        pricePerDay: vehicle.pricePerDay,
+        status: vehicle.status,
+        totalBookings: Math.floor(Math.random() * 10),
+        rating: (Math.random() * 2 + 3).toFixed(1)
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching host listings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/listings/host/:hostId', (req, res) => {
+  try {
+    const { hostId } = req.params;
+    res.json({
+      success: true,
+      vehicles: vehicles.map(vehicle => ({
+        id: vehicle.id,
+        make: vehicle.make,
+        model: vehicle.model,
+        year: vehicle.year,
+        location: vehicle.location,
+        pricePerDay: vehicle.pricePerDay,
+        status: vehicle.status,
+        totalBookings: Math.floor(Math.random() * 10),
+        rating: (Math.random() * 2 + 3).toFixed(1)
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching host vehicles:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST endpoint for creating new listings
+app.post('/api/listings', (req, res) => {
+  try {
+    const listingData = req.body;
+    console.log('Creating new listing:', listingData);
+    
+    // Generate a new ID
+    const newId = (vehicles.length + 1).toString();
+    
+    // Create new vehicle object
+    const newVehicle = {
+      id: newId,
+      make: listingData.make,
+      model: listingData.model,
+      year: listingData.year,
+      type: listingData.vehicle_type,
+      category: listingData.category,
+      pricePerDay: listingData.price_per_day,
+      pricePerWeek: Math.floor(listingData.price_per_day * 7 * 0.8), // 20% discount for weekly
+      pricePerMonth: Math.floor(listingData.price_per_day * 30 * 0.7), // 30% discount for monthly
+      location: listingData.location?.city || listingData.location?.address || 'Cape Town',
+      images: listingData.images || ['/images/vehicle-placeholder.jpg'],
+      status: 'pending', // New listings are pending approval
+      features: listingData.features || [],
+      description: listingData.description || `${listingData.make} ${listingData.model} - Perfect for your next adventure`,
+      hostName: 'Current User', // This would come from auth in real implementation
+      totalBookings: 0,
+      rating: 0
+    };
+    
+    // Add to vehicles array
+    vehicles.push(newVehicle);
+    
+    res.json({
+      success: true,
+      message: 'Vehicle listing created successfully',
+      listing: {
+        id: newVehicle.id,
+        make: newVehicle.make,
+        model: newVehicle.model,
+        year: newVehicle.year,
+        status: newVehicle.status,
+        pricePerDay: newVehicle.pricePerDay,
+        location: newVehicle.location
+      }
+    });
+  } catch (error) {
+    console.error('Error creating listing:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to create vehicle listing'
+    });
+  }
+});
+
+app.get('/api/bookings/host', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      bookings: bookings.map(booking => ({
+        id: booking.id,
+        vehicle: {
+          make: booking.vehicleName?.split(' ')[0] || 'Unknown',
+          model: booking.vehicleName?.split(' ').slice(1).join(' ') || 'Unknown',
+          location: 'Cape Town',
+          images: ['/images/vehicle.jpg']
+        },
+        renter: {
+          name: booking.renterName,
+          email: 'renter@example.com'
+        },
+        host: {
+          name: booking.hostName,
+          email: 'host@example.com',
+          avatar: '/images/avatar.jpg'
+        },
+        startDate: booking.pickupDate,
+        endDate: booking.returnDate,
+        totalDays: Math.ceil((new Date(booking.returnDate) - new Date(booking.pickupDate)) / (1000 * 60 * 60 * 24)),
+        totalPrice: booking.totalAmount,
+        status: booking.status,
+        paymentStatus: booking.status === 'completed' ? 'paid' : 'pending',
+        createdAt: booking.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching host bookings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/host/earnings', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      earnings: {
+        totalEarnings: 15000,
+        thisMonth: 3500,
+        lastMonth: 4200,
+        pendingPayouts: 1200,
+        completedBookings: 8,
+        averagePerBooking: 1875
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching earnings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/host/analytics', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      analytics: {
+        views: 1250,
+        bookings: 8,
+        conversionRate: 0.64,
+        averageRating: 4.7,
+        responseTime: '2 hours',
+        occupancyRate: 0.75
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/host/financial', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      financial: {
+        totalRevenue: 15000,
+        platformFees: 2250,
+        netEarnings: 12750,
+        pendingPayouts: 1200,
+        completedPayouts: 11550
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching financial data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/notifications/:userId', (req, res) => {
+  try {
+    const { userId } = req.params;
+    res.json({
+      success: true,
+      notifications: [
+        {
+          id: '1',
+          type: 'booking_request',
+          title: 'New Booking Request',
+          message: 'You have a new booking request for your Toyota Corolla',
+          read: false,
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: '2',
+          type: 'payment_received',
+          title: 'Payment Received',
+          message: 'Payment of R700 has been received for booking #123',
+          read: false,
+          createdAt: new Date().toISOString()
+        }
+      ]
+    });
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/notifications/booking', (req, res) => {
+  try {
+    const { userRole, userId } = req.query;
+    res.json({
+      success: true,
+      notifications: [
+        {
+          id: '1',
+          type: 'booking_request',
+          title: 'New Booking Request',
+          message: 'You have a new booking request',
+          read: false,
+          createdAt: new Date().toISOString()
+        }
+      ]
+    });
+  } catch (error) {
+    console.error('Error fetching booking notifications:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Fleet management endpoints
+app.get('/api/hosts/:hostId/fleet', (req, res) => {
+  try {
+    const { hostId } = req.params;
+    res.json({
+      success: true,
+      fleet: {
+        totalVehicles: vehicles.length,
+        activeVehicles: vehicles.filter(v => v.status === 'approved').length,
+        pendingVehicles: vehicles.filter(v => v.status === 'pending').length,
+        totalBookings: bookings.length,
+        totalEarnings: bookings.reduce((sum, booking) => sum + (booking.totalAmount || 0), 0),
+        vehicles: vehicles.map(vehicle => ({
+          id: vehicle.id,
+          make: vehicle.make,
+          model: vehicle.model,
+          year: vehicle.year,
+          status: vehicle.status,
+          pricePerDay: vehicle.pricePerDay,
+          location: vehicle.location,
+          totalBookings: Math.floor(Math.random() * 10),
+          rating: (Math.random() * 2 + 3).toFixed(1),
+          lastBooking: bookings.length > 0 ? bookings[0].pickupDate : null
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching fleet data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/hosts/:hostId/fleet/analytics', (req, res) => {
+  try {
+    const { hostId } = req.params;
+    res.json({
+      success: true,
+      analytics: {
+        utilizationRate: 0.75,
+        averageRating: 4.7,
+        totalRevenue: 15000,
+        monthlyRevenue: 3500,
+        bookingTrends: [
+          { month: 'Jan', bookings: 5, revenue: 2500 },
+          { month: 'Feb', bookings: 8, revenue: 4000 },
+          { month: 'Mar', bookings: 6, revenue: 3000 }
+        ],
+        popularVehicles: vehicles.slice(0, 3).map(v => ({
+          id: v.id,
+          name: `${v.make} ${v.model}`,
+          bookings: Math.floor(Math.random() * 10),
+          revenue: Math.floor(Math.random() * 5000)
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching fleet analytics:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Socket.IO connection handling

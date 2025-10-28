@@ -184,7 +184,7 @@ const VisualInspectionWorkflow: React.FC<VisualInspectionWorkflowProps> = ({
                     <button
                       onClick={() => {
                         // Simulate photo capture
-                        const photoUrl = `https://via.placeholder.com/300x200/4F46E5/FFFFFF?text=${item.title}`;
+                        const photoUrl = `/images/vehicle-placeholder.png`;
                         handlePhotoCapture(currentStepData.id, item.id, photoUrl);
                       }}
                       className="flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"

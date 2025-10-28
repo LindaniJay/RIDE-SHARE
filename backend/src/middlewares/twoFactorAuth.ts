@@ -2,10 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import { User } from '../models';
-import { AuthRequest } from './auth';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 // Generate 2FA secret for user
-export const generate2FASecret = async (req: AuthRequest, res: Response) => {
+export const generate2FASecret = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = req.user!;
     
@@ -17,8 +17,8 @@ export const generate2FASecret = async (req: AuthRequest, res: Response) => {
     
     // Store secret temporarily (in production, store in database)
     await user.update({ 
-      twoFactorSecret: secret.base32,
-      twoFactorEnabled: false // Not enabled until verified
+      two_factor_secret: secret.base32,
+      two_factor_enabled: false // Not enabled until verified
     });
     
     // Generate QR code
@@ -37,17 +37,17 @@ export const generate2FASecret = async (req: AuthRequest, res: Response) => {
 };
 
 // Verify 2FA token
-export const verify2FAToken = async (req: AuthRequest, res: Response) => {
+export const verify2FAToken = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { token } = req.body;
     const user = req.user!;
     
-    if (!user.twoFactorSecret) {
+    if (!user.two_factor_secret) {
       return res.status(400).json({ error: '2FA not set up for this user' });
     }
     
     const verified = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
+      secret: user.two_factor_secret,
       encoding: 'base32',
       token: token,
       window: 2 // Allow 2 time steps (60 seconds) of tolerance
@@ -55,7 +55,7 @@ export const verify2FAToken = async (req: AuthRequest, res: Response) => {
     
     if (verified) {
       // Enable 2FA for the user
-      await user.update({ twoFactorEnabled: true });
+      await user.update({ two_factor_enabled: true });
       res.json({ success: true, message: '2FA enabled successfully' });
     } else {
       res.status(400).json({ error: 'Invalid 2FA token' });
@@ -67,7 +67,7 @@ export const verify2FAToken = async (req: AuthRequest, res: Response) => {
 };
 
 // Disable 2FA
-export const disable2FA = async (req: AuthRequest, res: Response) => {
+export const disable2FA = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { password } = req.body;
     const user = req.user!;
@@ -82,8 +82,8 @@ export const disable2FA = async (req: AuthRequest, res: Response) => {
     
     // Disable 2FA
     await user.update({ 
-      twoFactorEnabled: false,
-      twoFactorSecret: undefined
+      two_factor_enabled: false,
+      two_factor_secret: undefined
     });
     
     res.json({ success: true, message: '2FA disabled successfully' });
@@ -94,7 +94,7 @@ export const disable2FA = async (req: AuthRequest, res: Response) => {
 };
 
 // Middleware to require 2FA for admin actions
-export const require2FA = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const require2FA = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const user = req.user!;
   
   // Skip 2FA for non-admin users
@@ -103,7 +103,7 @@ export const require2FA = (req: AuthRequest, res: Response, next: NextFunction) 
   }
   
   // Check if 2FA is enabled
-  if (!user.twoFactorEnabled) {
+  if (!user.two_factor_enabled) {
     return res.status(403).json({
       error: '2FA required',
       message: 'Two-factor authentication is required for admin actions'
@@ -122,7 +122,7 @@ export const require2FA = (req: AuthRequest, res: Response, next: NextFunction) 
   
   try {
     const verified = speakeasy.totp.verify({
-      secret: user.twoFactorSecret!,
+      secret: user.two_factor_secret!,
       encoding: 'base32',
       token: twoFactorToken,
       window: 2
@@ -140,7 +140,7 @@ export const require2FA = (req: AuthRequest, res: Response, next: NextFunction) 
 };
 
 // Backup codes for 2FA
-export const generateBackupCodes = async (req: AuthRequest, res: Response) => {
+export const generateBackupCodes = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = req.user!;
     
@@ -156,7 +156,7 @@ export const generateBackupCodes = async (req: AuthRequest, res: Response) => {
     );
     
     await user.update({ 
-      backupCodes: JSON.stringify(hashedCodes)
+      backup_codes: JSON.stringify(hashedCodes)
     });
     
     res.json({
@@ -171,16 +171,16 @@ export const generateBackupCodes = async (req: AuthRequest, res: Response) => {
 };
 
 // Verify backup code
-export const verifyBackupCode = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const verifyBackupCode = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { backupCode } = req.body;
     const user = req.user!;
     
-    if (!user.backupCodes) {
+    if (!user.backup_codes) {
       return res.status(400).json({ error: 'No backup codes available' });
     }
     
-    const storedCodes = JSON.parse(user.backupCodes);
+    const storedCodes = JSON.parse(user.backup_codes);
     const bcrypt = require('bcryptjs');
     
     // Check if backup code matches any stored code
@@ -198,7 +198,7 @@ export const verifyBackupCode = async (req: AuthRequest, res: Response, next: Ne
     
     // Remove used backup code
     storedCodes.splice(matchedIndex, 1);
-    await user.update({ backupCodes: JSON.stringify(storedCodes) });
+    await user.update({ backup_codes: JSON.stringify(storedCodes) });
     
     next();
   } catch (error) {

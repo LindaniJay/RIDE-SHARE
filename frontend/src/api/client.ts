@@ -3,36 +3,29 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 // Create axios instance
 const createApiClient = (): AxiosInstance => {
   const client = axios.create({
-    baseURL: import.meta.env?.VITE_API_URL || 'http://localhost:5001/api',
+    // In development, always use Vite proxy at /api. In production, use VITE_API_URL if provided.
+    baseURL: '/api',
     timeout: 10000,
     headers: {
       'Content-Type': 'application/json',
     },
   });
 
-  // Request interceptor to add auth token
+  // Request interceptor to add Firebase auth token
   client.interceptors.request.use(
     async (config) => {
-      const authMethod = localStorage.getItem('authMethod') || 'jwt';
-      
-      if (authMethod === 'firebase') {
-        // For Firebase, we'll get the token dynamically
-        try {
-          const { auth } = await import('../config/firebase');
-          const user = auth.currentUser;
-          if (user) {
-            const token = await user.getIdToken();
-            config.headers.Authorization = `Bearer ${token}`;
-          }
-        } catch (error) {
-          console.error('Error getting Firebase token:', error);
-        }
-      } else {
-        // For Express JWT
-        const token = localStorage.getItem('accessToken');
-        if (token) {
+      try {
+        const { auth } = await import('../config/firebase');
+        const user = auth.currentUser;
+        if (user) {
+          const token = await user.getIdToken();
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('API Request with token:', config.url, 'Token length:', token.length);
+        } else {
+          console.log('API Request without user:', config.url);
         }
+      } catch (error) {
+        console.error('Error getting Firebase token:', error);
       }
       return config;
     },
@@ -49,29 +42,22 @@ const createApiClient = (): AxiosInstance => {
     async (error) => {
       const originalRequest = error.config;
 
-      // Handle token refresh
+      // Handle authentication errors
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
 
         try {
-          const refreshToken = localStorage.getItem('refreshToken');
-          if (refreshToken) {
-            const response = await axios.post(
-              `${import.meta.env?.VITE_API_URL || 'http://localhost:5001/api'}/auth/refresh`,
-              { refreshToken }
-            );
-
-            const { accessToken } = response.data;
-            localStorage.setItem('accessToken', accessToken);
-            
-            // Retry original request with new token
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          // For Firebase, try to refresh the token
+          const { auth } = await import('../config/firebase');
+          const user = auth.currentUser;
+          if (user) {
+            const token = await user.getIdToken(true); // Force refresh
+            originalRequest.headers.Authorization = `Bearer ${token}`;
             return client(originalRequest);
           }
         } catch (refreshError) {
           // Refresh failed, redirect to login
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
+          console.error('Token refresh failed:', refreshError);
           window.location.href = '/login';
         }
       }
@@ -88,11 +74,8 @@ export const apiClient = createApiClient();
 // API endpoints
 export const apiEndpoints = {
   auth: {
-    login: '/auth/login',
-    register: '/auth/register',
-    refresh: '/auth/refresh',
-    logout: '/auth/logout',
-    profile: '/auth/profile',
+    verifyFirebaseToken: '/auth/verify-firebase',
+    profile: '/auth/me',
   },
   vehicles: {
     list: '/vehicles',
@@ -123,12 +106,13 @@ export const apiEndpoints = {
     delete: (id: string) => `/reviews/${id}`,
   },
   payments: {
-    createCheckout: '/payments/create-checkout',
-    webhook: '/payments/webhook',
+    createCheckout: '/payments/stripe/create-intent',
+    webhook: '/payments/payfast/notify',
   },
   dashboard: {
-    stats: '/dashboard/stats',
-    recent: '/dashboard/recent',
+    renter: '/dashboard/renter',
+    host: '/dashboard/host',
+    admin: '/dashboard/admin',
   },
 };
 

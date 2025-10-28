@@ -103,7 +103,7 @@ const RealTimeStatusUpdates: React.FC<RealTimeStatusUpdatesProps> = ({
   };
 
   const getStatusIcon = (status: string) => {
-    const iconProps = { className: "w-5 h-5" };
+    const iconProps = { className: 'w-5 h-5' };
     
     switch (status) {
       case 'confirmed':
@@ -123,7 +123,7 @@ const RealTimeStatusUpdates: React.FC<RealTimeStatusUpdatesProps> = ({
   };
 
   const getTypeIcon = (type: string) => {
-    const iconProps = { className: "w-4 h-4" };
+    const iconProps = { className: 'w-4 h-4' };
     
     switch (type) {
       case 'booking':

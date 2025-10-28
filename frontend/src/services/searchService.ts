@@ -246,7 +246,7 @@ class SearchService {
   async searchByRoute(
     startLocation: string,
     endLocation: string,
-    _waypoints?: string[]
+    _waypoints?: string[] // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<RouteSearchResult> {
     try {
       // Calculate route distance and time

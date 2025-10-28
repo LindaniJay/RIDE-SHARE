@@ -1,14 +1,15 @@
 import React, { useState, Suspense, lazy } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { AdminAuthProvider } from '../context/AdminAuthContext';
 import Icon from '../components/Icon';
 import RealTimeNotifications from '../components/RealTimeNotifications';
+import GlassButton from '../components/GlassButton';
+import { navVariants, mobileMenuVariants, backdropVariants } from '../utils/motionVariants';
 
 // Lazy load heavy components
 const Chatbot = lazy(() => import('../components/Chatbot'));
-const AuthModal = lazy(() => import('../components/AuthModal'));
-const AdminLoginModal = lazy(() => import('../components/AdminLoginModal'));
+import AuthModal from '../components/AuthModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,7 +19,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isAdminLoginModalOpen, setIsAdminLoginModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const location = useLocation();
 
@@ -35,13 +35,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsAuthModalOpen(false);
   };
 
-  const handleAdminLoginModalOpen = () => {
-    setIsAdminLoginModalOpen(true);
-  };
-
-  const handleAdminLoginModalClose = () => {
-    setIsAdminLoginModalOpen(false);
-  };
 
 
   const navItems = [
@@ -56,96 +49,141 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen">
       {/* Header with Logo and Navbar */}
-      <header className="fixed top-2 sm:top-4 left-0 right-0 z-50 w-full px-2 sm:px-4">
+      <motion.header 
+        className="fixed top-2 sm:top-4 left-0 right-0 z-50 w-full px-2 sm:px-4"
+        variants={navVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <div className="flex items-center justify-between max-w-6xl mx-auto h-14 sm:h-16 relative">
           {/* Logo - Left side */}
-          <Link 
-            to="/" 
-            className="flex items-center hover:opacity-80 transition-all duration-300 h-full z-10"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className="flex items-center bg-white/20 backdrop-blur-md rounded-lg h-full px-2 sm:px-3 lg:px-6 shadow-xl border border-white/40 hover:bg-white/30 hover:shadow-2xl transition-all duration-300">
-              <div className="ml-1 sm:ml-2 lg:ml-3">
-                <div className="text-white font-bold text-xs sm:text-sm lg:text-lg transition-all duration-300">RideShare</div>
-                <div className="text-white/80 text-xs font-medium">South Africa</div>
+            <Link 
+              to="/" 
+              className="flex items-center h-full z-10"
+            >
+              <div className="flex items-center glass-3 rounded-xl h-full px-2 sm:px-3 lg:px-6 shadow-glass border border-white/20 hover:shadow-glass-lg hover:border-white/30 transition-all duration-300 relative overflow-hidden">
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 -top-2 -left-2 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 -translate-x-full hover:translate-x-full" />
+                
+                <div className="ml-1 sm:ml-2 lg:ml-3 relative z-10">
+                  <div className="text-white font-bold text-xs sm:text-sm lg:text-lg transition-all duration-300 font-heading text-shadow-sm">RideShare</div>
+                  <div className="text-white/80 text-xs font-medium font-body text-shadow-sm">South Africa</div>
+                </div>
+                
+                {/* Reflection highlight */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
               </div>
-            </div>
-          </Link>
+            </Link>
+          </motion.div>
 
           {/* Desktop Navigation - Centered */}
           <nav className="hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2">
-            <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-full shadow-xl px-2 lg:px-4 py-2">
-              <div className="flex items-center justify-center h-[40px] px-2 lg:px-4">
+            <div className="glass-4 rounded-full shadow-glass px-2 lg:px-4 py-2 relative overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 -top-2 -left-2 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 -translate-x-full hover:translate-x-full" />
+              
+              <div className="flex items-center justify-center h-[40px] px-2 lg:px-4 relative z-10">
                 <div className="flex items-center space-x-1">
-                  {navItems.map((item) => {
+                  {navItems.map((item, index) => {
                     // Special handling for Host button - show auth modal if not logged in
                     if (item.name === 'Host' && !user) {
                       return (
-                        <button
+                        <motion.button
                           key={item.path}
                           onClick={() => handleAuthModalOpen('signup')}
-                          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 glass-button text-white/80 hover:text-white"
+                          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 text-white/80 hover:text-white hover:bg-white/10 font-body"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          initial={{ opacity: 0, y: -20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
                         >
                           <Icon name={item.icon} size="sm" />
                           <span>{item.name}</span>
-                        </button>
+                        </motion.button>
                       );
                     }
                     
                     // Regular navigation for other items or authenticated users
                     return (
-                      <Link
+                      <motion.div
                         key={item.path}
-                        to={item.path}
-                        className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                          isActive(item.path)
-                            ? 'glass-button-primary text-white'
-                            : 'glass-button text-white/80 hover:text-white'
-                        }`}
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
                       >
-                        <Icon name={item.icon} size="sm" />
-                        <span>{item.name}</span>
-                      </Link>
+                        <Link
+                          to={item.path}
+                          className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 font-body ${
+                            isActive(item.path)
+                              ? 'bg-primary-500/20 text-white border border-primary-500/30 shadow-glow'
+                              : 'text-white/80 hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          <Icon name={item.icon} size="sm" />
+                          <span>{item.name}</span>
+                        </Link>
+                      </motion.div>
                     );
                   })}
                 </div>
               </div>
+              
+              {/* Reflection highlight */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
             </div>
           </nav>
 
           {/* Right side actions - Desktop */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center space-x-2">
             {user ? (
-              <div className="flex items-center space-x-1">
+              <motion.div 
+                className="flex items-center space-x-2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
                 <RealTimeNotifications userId={user.id} userRole={user.role === 'Renter' ? 'renter' : user.role === 'Host' ? 'host' : 'admin'} />
-                <Link
-                  to="/dashboard"
-                  className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    isActive('/dashboard') || location.pathname.startsWith('/dashboard')
-                      ? 'glass-button-primary text-white'
-                      : 'glass-button text-white/80 hover:text-white'
-                  }`}
+                <GlassButton
+                  onClick={() => window.location.href = '/dashboard'}
+                  variant={isActive('/dashboard') || location.pathname.startsWith('/dashboard') ? 'primary' : 'secondary'}
+                  size="sm"
+                  icon={<Icon name="User" size="sm" />}
+                  className="hidden sm:flex"
                 >
-                  <Icon name="User" size="sm" />
                   <span className="hidden sm:block">Dashboard</span>
-                </Link>
-                <button
+                </GlassButton>
+                <GlassButton
                   onClick={logout}
-                  className="glass-button flex items-center space-x-1 px-2.5 py-1.5 text-white/80 hover:text-white transition-all duration-300"
+                  variant="ghost"
+                  size="sm"
+                  icon={<Icon name="Logout" size="sm" />}
+                  className="hidden sm:flex"
                 >
-                  <Icon name="Logout" size="sm" />
                   <span className="hidden sm:block">Logout</span>
-                </button>
-              </div>
+                </GlassButton>
+              </motion.div>
             ) : (
-              <div className="flex items-center space-x-1">
-                <button
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <GlassButton
                   onClick={() => handleAuthModalOpen('signup')}
-                  className="glass-button-primary flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300"
+                  variant="primary"
+                  size="sm"
+                  icon={<Icon name="Plus" size="sm" />}
+                  glow
                 >
-                  <Icon name="Plus" size="sm" />
                   <span className="hidden sm:block">Get Started</span>
-                </button>
-              </div>
+                </GlassButton>
+              </motion.div>
             )}
           </div>
 
@@ -191,36 +229,52 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
               
         </div>
-      </header>
+      </motion.header>
       
       {/* Mobile Navigation Menu */}
-      {isMobileMenuOpen && (
-        <>
-          {/* Backdrop overlay */}
-          <div 
-            className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          
-          {/* Mobile menu */}
-          <div className="md:hidden fixed top-16 sm:top-18 left-2 right-2 sm:left-4 sm:right-4 z-50 bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl px-3 sm:px-4 py-4 max-h-[75vh] overflow-y-auto">
-            {/* Header with close button */}
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/20">
-              <h3 className="text-white font-semibold text-base sm:text-lg">Menu</h3>
-              <button
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="glass-button p-1.5 sm:p-2 text-white/80 hover:text-white transition-all duration-300"
-              >
-                <Icon name="X" size="sm" />
-              </button>
-            </div>
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop overlay */}
+            <motion.div 
+              className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+              onClick={() => setIsMobileMenuOpen(false)}
+              variants={backdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            />
             
-            {/* Enhanced readability overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/5 rounded-inherit pointer-events-none" />
-            <div className="space-y-2 relative z-10">
-              {/* Navigation Items */}
-              <div className="space-y-1">
-                {navItems.map((item) => {
+            {/* Mobile menu */}
+            <motion.div 
+              className="md:hidden fixed top-16 sm:top-18 left-2 right-2 sm:left-4 sm:right-4 z-50 glass-4 rounded-2xl shadow-glass-lg px-3 sm:px-4 py-4 max-h-[75vh] overflow-y-auto relative overflow-hidden"
+              variants={mobileMenuVariants}
+              initial="closed"
+              animate="open"
+              exit="closed"
+            >
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 -top-2 -left-2 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 -translate-x-full hover:translate-x-full" />
+              
+              {/* Header with close button */}
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/20 relative z-10">
+                <h3 className="text-white font-semibold text-base sm:text-lg font-heading text-shadow-sm">Menu</h3>
+                <motion.button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="glass-2 p-1.5 sm:p-2 text-white/80 hover:text-white transition-all duration-300 rounded-lg"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Icon name="X" size="sm" />
+                </motion.button>
+              </div>
+              
+              {/* Enhanced readability overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/5 rounded-inherit pointer-events-none" />
+              <div className="space-y-2 relative z-10">
+                {/* Navigation Items */}
+                <div className="space-y-1">
+                  {navItems.map((item) => {
                   // Special handling for Host button - show auth modal if not logged in
                   if (item.name === 'Host' && !user) {
                     return (
@@ -254,8 +308,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       <span>{item.name}</span>
                     </Link>
                   );
-                })}
-              </div>
+                  })}
+                </div>
               
               {/* User Authentication Section */}
               <div className="pt-3 border-t border-white/20">
@@ -315,10 +369,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-        </>
-      )}
+              </div>
+              
+              {/* Reflection highlight */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
       
       {/* Main content with top padding to account for fixed header */}
       <main className="pt-16 sm:pt-20">{children}</main>
@@ -366,15 +424,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                 </svg>
               </a>
-              <button
-                onClick={handleAdminLoginModalOpen}
-                className="text-gray-400 hover:text-white transition-colors text-xs flex items-center space-x-1 whitespace-nowrap"
-                title="Admin Login"
-              >
-                <Icon name="Settings" size="sm" />
-                <span className="hidden sm:inline">Admin Login</span>
-                <span className="sm:hidden">Admin</span>
-              </button>
             </div>
           </div>
         </div>
@@ -386,23 +435,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </Suspense>
       
       {/* Auth Modal */}
-      <Suspense fallback={null}>
-        <AuthModal 
-          isOpen={isAuthModalOpen}
-          onClose={handleAuthModalClose}
-          initialMode={authModalMode}
-        />
-      </Suspense>
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={handleAuthModalClose}
+        initialMode={authModalMode}
+      />
       
-      {/* Admin Login Modal */}
-      <AdminAuthProvider>
-        <Suspense fallback={null}>
-          <AdminLoginModal 
-            isOpen={isAdminLoginModalOpen}
-            onClose={handleAdminLoginModalClose}
-          />
-        </Suspense>
-      </AdminAuthProvider>
     </div>
   );
 };

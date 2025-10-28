@@ -193,6 +193,14 @@ export interface VehicleForm {
   description: string;
   features: VehicleFeature[];
   images: File[];
+  imageCategories?: {
+    exterior?: File[];
+    interior?: File[];
+    engine?: File[];
+    license?: File[];
+    wheels?: File[];
+    dashboard?: File[];
+  };
   documents?: {
     registration?: File;
     roadworthy?: File;

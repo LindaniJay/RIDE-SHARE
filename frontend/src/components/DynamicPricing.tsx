@@ -27,7 +27,7 @@ export const DynamicPricing: React.FC<DynamicPricingProps> = ({
   vehicleId, 
   basePrice, 
   onPriceUpdate, 
-  className = "" 
+  className = '' 
 }) => {
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [currentPrice, setCurrentPrice] = useState(basePrice);

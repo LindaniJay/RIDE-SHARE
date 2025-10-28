@@ -21,7 +21,7 @@ export interface User {
   lastName: string;
   phone?: string;
   phoneNumber?: string;
-  role: 'Renter' | 'Host' | 'admin';
+  role: 'Renter' | 'Host' | 'admin' | 'Admin';
   approvalStatus: 'pending' | 'approved' | 'rejected';
   createdAt: Date;
   age?: number;
@@ -29,6 +29,9 @@ export interface User {
   idVerified?: boolean;
   addressVerified?: boolean;
   insuranceVerified?: boolean;
+  // Firebase user methods
+  getIdToken: () => Promise<string>;
+  name?: string;
 }
 
 export interface SignupData {
@@ -94,13 +97,36 @@ class FirebaseAuthService {
         phoneNumber: data.phone || '',
         role: data.role,
         approvalStatus: 'pending',
-        createdAt: new Date()
+        createdAt: new Date(),
+        getIdToken: () => firebaseUser.getIdToken(),
+        name: `${data.firstName} ${data.lastName}`
       };
       
       await setDoc(doc(db, 'users', firebaseUser.uid), {
         ...userData,
         createdAt: serverTimestamp()
       });
+      
+      // Register user in backend database
+      try {
+        const token = await firebaseUser.getIdToken();
+        const response = await fetch('http://localhost:5001/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            firebaseToken: token,
+            role: data.role.toLowerCase()
+          })
+        });
+        
+        if (!response.ok) {
+          console.warn('Failed to register user in backend:', await response.text());
+        }
+      } catch (error) {
+        console.warn('Error registering user in backend:', error);
+      }
       
       this.currentUser = userData;
       return userData;
@@ -126,8 +152,29 @@ class FirebaseAuthService {
       
       // Get user data from Firestore
       const userData = await this.getUserRole(firebaseUser.uid);
-      this.currentUser = userData;
       
+      // Ensure user is registered in backend database
+      try {
+        const token = await firebaseUser.getIdToken();
+        const response = await fetch('http://localhost:5001/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            firebaseToken: token,
+            role: userData.role.toLowerCase()
+          })
+        });
+        
+        if (!response.ok) {
+          console.warn('Failed to login user in backend:', await response.text());
+        }
+      } catch (error) {
+        console.warn('Error logging in user in backend:', error);
+      }
+      
+      this.currentUser = userData;
       return userData;
     } catch (error: any) {
       console.error('Login error:', error);
@@ -167,6 +214,8 @@ class FirebaseAuthService {
       }
       
       const userData = userDoc.data();
+      const firebaseUser = auth.currentUser;
+      
       return {
         uid: userData.uid,
         id: userData.uid,
@@ -177,7 +226,9 @@ class FirebaseAuthService {
         phoneNumber: userData.phone || '',
         role: userData.role,
         approvalStatus: userData.approvalStatus || 'pending',
-        createdAt: userData.createdAt?.toDate() || new Date()
+        createdAt: userData.createdAt?.toDate() || new Date(),
+        getIdToken: () => firebaseUser?.getIdToken() || Promise.reject('No Firebase user'),
+        name: `${userData.firstName || ''} ${userData.lastName || ''}`.trim()
       };
     } catch (error: any) {
       console.error('Error fetching user role:', error);
@@ -198,6 +249,22 @@ class FirebaseAuthService {
         this.authStateListeners.splice(index, 1);
       }
     };
+  }
+
+  /**
+   * Get current user's ID token
+   */
+  async getCurrentUserToken(): Promise<string | null> {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        return await user.getIdToken();
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting user token:', error);
+      return null;
+    }
   }
 
   /**

@@ -1,91 +1,72 @@
-import { sequelize } from '../config/database';
 import { User } from './User';
-import { Booking } from './Booking';
-import { Review } from './Review';
 import { Listing } from './Listing';
-import { Payment } from './Payment';
-import { AdminLog } from './AdminLog';
+import { Booking } from './Booking';
 import { Notification } from './Notification';
+import { Image } from './Image';
+import { Payment } from './Payment';
+import { Review } from './Review';
+import { Document } from './Document';
+import { AdminLog } from './AdminLog';
 import { Checkpoint } from './Checkpoint';
 import { CheckpointItem } from './CheckpointItem';
 import { CheckpointImage } from './CheckpointImage';
+import { EnhancedVehicle } from './EnhancedVehicle';
 import { ApprovalRequest } from './ApprovalRequest';
-import Document from './Document';
+import { AuditLog } from './AuditLog';
 
-// Define associations after all models are imported
+// Define associations
+User.hasMany(Listing, { foreignKey: 'hostId', as: 'listings' });
+Listing.belongsTo(User, { foreignKey: 'hostId', as: 'host' });
 
-// User associations
-User.hasMany(Listing, { foreignKey: 'host_id', as: 'listings' });
-User.hasMany(Booking, { foreignKey: 'renter_id', as: 'bookings' });
-User.hasMany(Payment, { foreignKey: 'renter_id', as: 'payments' });
-User.hasMany(Review, { foreignKey: 'reviewer_id', as: 'reviews_given' });
-User.hasMany(Review, { foreignKey: 'reviewee_id', as: 'reviews_received' });
-User.hasMany(AdminLog, { foreignKey: 'admin_id', as: 'admin_logs' });
-User.hasMany(AdminLog, { foreignKey: 'target_user_id', as: 'targeted_logs' });
-User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
-User.hasMany(ApprovalRequest, { foreignKey: 'submittedById', as: 'submittedRequests' });
-User.hasMany(ApprovalRequest, { foreignKey: 'reviewedById', as: 'reviewedRequests' });
+User.hasMany(Booking, { foreignKey: 'renterId', as: 'bookings' });
+Booking.belongsTo(User, { foreignKey: 'renterId', as: 'renter' });
+
+Listing.hasMany(Booking, { foreignKey: 'listingId', as: 'bookings' });
+Booking.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
+
+User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
+Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+Listing.hasMany(Image, { foreignKey: 'listingId', as: 'imageList' });
+Image.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
+
+Booking.hasMany(Payment, { foreignKey: 'bookingId', as: 'payments' });
+Payment.belongsTo(Booking, { foreignKey: 'bookingId', as: 'booking' });
+
+Booking.hasMany(Review, { foreignKey: 'bookingId', as: 'reviews' });
+Review.belongsTo(Booking, { foreignKey: 'bookingId', as: 'booking' });
+
 User.hasMany(Document, { foreignKey: 'userId', as: 'documents' });
+Document.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-// Listing associations
-Listing.belongsTo(User, { foreignKey: 'host_id', as: 'host' });
-Listing.hasMany(Booking, { foreignKey: 'listing_id', as: 'bookings' });
-Listing.hasMany(Review, { foreignKey: 'listing_id', as: 'reviews' });
+User.hasMany(AdminLog, { foreignKey: 'adminId', as: 'adminLogs' });
+AdminLog.belongsTo(User, { foreignKey: 'adminId', as: 'admin' });
 
-// Booking associations
-Booking.belongsTo(User, { foreignKey: 'renter_id', as: 'renter' });
-Booking.belongsTo(Listing, { foreignKey: 'listing_id', as: 'listing' });
-Booking.hasMany(Payment, { foreignKey: 'booking_id', as: 'payments' });
-Booking.hasMany(Review, { foreignKey: 'booking_id', as: 'reviews' });
-Booking.hasMany(Checkpoint, { foreignKey: 'booking_id', as: 'checkpoints' });
+Booking.hasMany(Checkpoint, { foreignKey: 'bookingId', as: 'checkpoints' });
+Checkpoint.belongsTo(Booking, { foreignKey: 'bookingId', as: 'booking' });
 
-// Payment associations
-Payment.belongsTo(Booking, { foreignKey: 'booking_id', as: 'booking' });
-Payment.belongsTo(User, { foreignKey: 'renter_id', as: 'renter' });
+Checkpoint.hasMany(CheckpointItem, { foreignKey: 'checkpointId', as: 'items' });
+CheckpointItem.belongsTo(Checkpoint, { foreignKey: 'checkpointId', as: 'checkpoint' });
 
-// Review associations
-Review.belongsTo(Booking, { foreignKey: 'booking_id', as: 'booking' });
-Review.belongsTo(User, { foreignKey: 'reviewer_id', as: 'reviewer' });
-Review.belongsTo(User, { foreignKey: 'reviewee_id', as: 'reviewee' });
-Review.belongsTo(Listing, { foreignKey: 'listing_id', as: 'listing' });
+Checkpoint.hasMany(CheckpointImage, { foreignKey: 'checkpointId', as: 'images' });
+CheckpointImage.belongsTo(Checkpoint, { foreignKey: 'checkpointId', as: 'checkpoint' });
 
-// AdminLog associations
-AdminLog.belongsTo(User, { foreignKey: 'admin_id', as: 'admin' });
-AdminLog.belongsTo(User, { foreignKey: 'target_user_id', as: 'target_user' });
+// Enhanced Vehicle associations
+User.hasMany(EnhancedVehicle, { foreignKey: 'hostId', as: 'enhancedVehicles' });
+EnhancedVehicle.belongsTo(User, { foreignKey: 'hostId', as: 'host' });
 
-// Notification associations
-Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
-
-// Checkpoint associations
-Checkpoint.belongsTo(Booking, { foreignKey: 'booking_id', as: 'booking' });
-Checkpoint.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
-Checkpoint.hasMany(CheckpointItem, { foreignKey: 'checkpoint_id', as: 'items' });
-Checkpoint.hasMany(CheckpointImage, { foreignKey: 'checkpoint_id', as: 'images' });
-
-// CheckpointItem associations
-CheckpointItem.belongsTo(Checkpoint, { foreignKey: 'checkpoint_id', as: 'checkpoint' });
-
-// CheckpointImage associations
-CheckpointImage.belongsTo(Checkpoint, { foreignKey: 'checkpoint_id', as: 'checkpoint' });
-CheckpointImage.belongsTo(User, { foreignKey: 'uploaded_by', as: 'uploader' });
-
-// ApprovalRequest associations
+// Approval Request associations
+User.hasMany(ApprovalRequest, { foreignKey: 'submittedById', as: 'submittedRequests' });
 ApprovalRequest.belongsTo(User, { foreignKey: 'submittedById', as: 'submittedByUser' });
+
+User.hasMany(ApprovalRequest, { foreignKey: 'reviewedById', as: 'reviewedRequests' });
 ApprovalRequest.belongsTo(User, { foreignKey: 'reviewedById', as: 'reviewedByUser' });
 
-export { 
-  User, 
-  Booking, 
-  Review, 
-  Listing, 
-  Payment, 
-  AdminLog, 
-  Notification,
-  Checkpoint,
-  CheckpointItem,
-  CheckpointImage,
-  ApprovalRequest,
-  Document,
-  sequelize 
-};
+// Audit Log associations
+User.hasMany(AuditLog, { foreignKey: 'userId', as: 'auditLogs' });
+AuditLog.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+export { User, Listing, Booking, Notification, Image, Payment, Review, Document, AdminLog, Checkpoint, CheckpointItem, CheckpointImage, EnhancedVehicle, ApprovalRequest, AuditLog };
+// Additional models can be added here as needed
+// Additional models can be added here as needed
+// Additional models can be added here as needed

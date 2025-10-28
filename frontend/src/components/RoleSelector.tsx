@@ -2,24 +2,24 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import GlassCard from './GlassCard';
 import Icon from './Icon';
-import HostAuthModal from './HostAuthModal';
+import AuthModal from './AuthModal';
 
 interface RoleSelectorProps {
   className?: string;
 }
 
 const RoleSelector: React.FC<RoleSelectorProps> = ({ className = '' }) => {
-  const [hostModalOpen, setHostModalOpen] = useState(false);
-  const [hostModalMode, setHostModalMode] = useState<'login' | 'signup'>('login');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
 
   const handleHostLogin = () => {
-    setHostModalMode('login');
-    setHostModalOpen(true);
+    setAuthModalMode('login');
+    setAuthModalOpen(true);
   };
 
   const handleHostSignup = () => {
-    setHostModalMode('signup');
-    setHostModalOpen(true);
+    setAuthModalMode('signup');
+    setAuthModalOpen(true);
   };
 
   const roles = [
@@ -158,11 +158,11 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ className = '' }) => {
         </p>
       </div>
 
-      {/* Host Authentication Modal */}
-      <HostAuthModal
-        isOpen={hostModalOpen}
-        onClose={() => setHostModalOpen(false)}
-        initialMode={hostModalMode}
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authModalMode}
       />
     </div>
   );

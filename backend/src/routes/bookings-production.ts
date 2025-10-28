@@ -1,15 +1,15 @@
 import express from 'express';
 import { z } from 'zod';
 import { Booking, Listing, User, Payment, Review } from '../models';
-import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
 
 // Validation schemas
 const createBookingSchema = z.object({
-  listing_id: z.string().uuid(),
-  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+  listingId: z.string().uuid(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
   pickup_location: z.object({
     address: z.string(),
     city: z.string(),
@@ -39,7 +39,7 @@ const createBookingSchema = z.object({
 });
 
 const updateBookingSchema = z.object({
-  status: z.enum(['pending', 'confirmed', 'approved', 'declined', 'cancelled', 'completed', 'disputed']).optional(),
+  status: z.enum(['pending', 'approved', 'active', 'completed', 'cancelled']).optional(),
   payment_status: z.enum(['pending', 'paid', 'failed', 'refunded', 'partially_refunded']).optional(),
   host_notes: z.string().optional(),
   renter_notes: z.string().optional(),
@@ -51,13 +51,13 @@ const updateBookingSchema = z.object({
 });
 
 // Create booking
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const { listing_id, start_date, end_date, pickup_location, return_location, pickup_time, return_time, special_requests, add_ons } = createBookingSchema.parse(req.body);
+    const { listingId, startDate: startDateStr, endDate: endDateStr, pickup_location, return_location, pickup_time, return_time, special_requests, add_ons } = createBookingSchema.parse(req.body);
 
     // Validate dates
-    const startDate = new Date(start_date);
-    const endDate = new Date(end_date);
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -76,7 +76,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Get listing details
-    const listing = await Listing.findByPk(listing_id, {
+    const listing = await Listing.findByPk(listingId, {
       include: [{ model: User, as: 'host' }]
     });
 
@@ -97,14 +97,14 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     // Check for date conflicts
     const existingBookings = await Booking.findAll({
       where: {
-        listing_id,
+        listingId,
         status: ['confirmed', 'approved', 'completed']
       }
     });
 
     const hasConflict = existingBookings.some(booking => {
-      const bookingStart = new Date(booking.start_date);
-      const bookingEnd = new Date(booking.end_date);
+      const bookingStart = new Date(booking.startDate);
+      const bookingEnd = new Date(booking.endDate);
       return (startDate < bookingEnd && endDate > bookingStart);
     });
 
@@ -117,7 +117,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 
     // Calculate pricing
     const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const subtotal = totalDays * listing.price_per_day;
+    const subtotal = totalDays * (listing.price_per_day || 0);
     const serviceFee = Math.round(subtotal * 0.1); // 10% service fee
     const insuranceFee = Math.round(subtotal * 0.05); // 5% insurance fee
     const addOnsTotal = add_ons ? add_ons.reduce((sum, addon) => sum + addon.price, 0) : 0;
@@ -125,24 +125,21 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 
     // Create booking
     const booking = await Booking.create({
-      renter_id: req.user!.id,
-      listing_id,
-      start_date: startDate,
-      end_date: endDate,
-      total_days: totalDays,
-      price_per_day: listing.price_per_day,
-      subtotal,
-      service_fee: serviceFee,
-      insurance_fee: insuranceFee,
-      total_amount: totalAmount,
+      booking_id: `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      renterId: Number(req.user!.id) || 0,
+      hostId: listing.host_id || 0,
+      vehicleId: parseInt(listingId),
+      listingId: parseInt(listingId),
+      startDate: startDate,
+      endDate: endDate,
+      totalPrice: totalAmount,
       status: 'pending',
-      payment_status: 'pending',
-      pickup_location,
-      return_location,
+      paymentStatus: 'pending',
+      pickup_location: pickup_location ? JSON.stringify(pickup_location) : undefined,
+      return_location: return_location ? JSON.stringify(return_location) : undefined,
       pickup_time: pickup_time ? new Date(pickup_time) : undefined,
       return_time: return_time ? new Date(return_time) : undefined,
-      special_requests,
-      add_ons: add_ons || []
+      specialRequests: special_requests
     });
 
     // Fetch the created booking with relations
@@ -179,7 +176,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get user's bookings
-router.get('/my-bookings', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/my-bookings', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { status, page = 1, limit = 10 } = req.query;
     
@@ -226,7 +223,7 @@ router.get('/my-bookings', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get host's bookings
-router.get('/host-bookings', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/host-bookings', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     // Verify user is a host
     const user = await User.findByPk(req.user!.id);
@@ -284,7 +281,7 @@ router.get('/host-bookings', authenticateToken, async (req: AuthRequest, res) =>
 });
 
 // Get single booking
-router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
@@ -318,7 +315,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     const hasAccess = 
-      booking.renter_id === user.id || 
+      booking.renterId === Number(user.id) || 
       (user.role === 'host' && (booking as any).listing?.host_id === user.id) ||
       user.role === 'admin';
 
@@ -341,7 +338,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Update booking
-router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const updateData = updateBookingSchema.parse(req.body);
@@ -363,7 +360,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
       });
     }
 
-    const listing = await Listing.findByPk(booking.listing_id);
+    const listing = await Listing.findByPk(booking.listingId);
     if (!listing) {
       return res.status(404).json({
         error: 'Listing not found',
@@ -372,8 +369,8 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     const canUpdate = 
-      booking.renter_id === user.id || 
-      (user.role === 'host' && listing.host_id === user.id) ||
+      booking.renterId === Number(user.id) || 
+      (user.role === 'host' && listing.host_id === Number(user.id)) ||
       user.role === 'admin';
 
     if (!canUpdate) {
@@ -421,7 +418,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Cancel booking
-router.post('/:id/cancel', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/:id/cancel', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const { reason } = req.body;
@@ -459,7 +456,7 @@ router.post('/:id/cancel', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     const canCancel = 
-      booking.renter_id === user.id || 
+      booking.renterId === Number(user.id) || 
       user.role === 'admin';
 
     if (!canCancel) {
@@ -470,17 +467,17 @@ router.post('/:id/cancel', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Calculate cancellation fee based on how close to start date
-    const startDate = new Date(booking.start_date);
+    const startDate = new Date(booking.startDate);
     const now = new Date();
     const daysUntilStart = Math.ceil((startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
     let cancellationFee = 0;
     if (daysUntilStart < 1) {
-      cancellationFee = booking.total_amount * 0.5; // 50% fee for same-day cancellation
+      cancellationFee = (booking.totalPrice || 0) * 0.5; // 50% fee for same-day cancellation
     } else if (daysUntilStart < 3) {
-      cancellationFee = booking.total_amount * 0.25; // 25% fee for cancellation within 3 days
+      cancellationFee = (booking.totalPrice || 0) * 0.25; // 25% fee for cancellation within 3 days
     } else if (daysUntilStart < 7) {
-      cancellationFee = booking.total_amount * 0.1; // 10% fee for cancellation within a week
+      cancellationFee = (booking.totalPrice || 0) * 0.1; // 10% fee for cancellation within a week
     }
 
     // Update booking
@@ -505,3 +502,4 @@ router.post('/:id/cancel', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 export default router;
+

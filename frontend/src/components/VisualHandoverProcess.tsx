@@ -177,7 +177,7 @@ const VisualHandoverProcess: React.FC<VisualHandoverProcessProps> = ({
   useEffect(() => {
     setSteps(handoverSteps[handoverType].map(step => ({
       ...step,
-      participants: [...step.participants] as ("renter" | "host")[]
+      participants: [...step.participants] as ('renter' | 'host')[]
     })));
     setParticipantStatus({
       [hostId]: 'waiting',

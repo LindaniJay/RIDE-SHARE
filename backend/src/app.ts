@@ -1,162 +1,167 @@
 import express from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
+import cors from 'cors';
 import compression from 'compression';
-import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
+import morgan from 'morgan';
+import { env } from './config/env';
 import { sequelize } from './config/database';
 import { initializeFirebaseAdmin } from './config/firebase';
-import { 
-  securityHeaders, 
-  apiRateLimit, 
-  ipBlocking,
-  requestSizeLimit 
-} from './middlewares/security';
-import { sanitizeRequestBody } from './middlewares/sanitization';
-// Production routes
-import authRoutes from './routes/auth';
-import listingRoutes from './routes/listings-production';
-import bookingRoutes from './routes/bookings-production';
-import paymentRoutes from './routes/payments-production';
-import checkpointRoutes from './routes/checkpoints-production';
-import adminProductionRoutes from './routes/admin-production';
+import { apiRateLimit, authRateLimit } from './middleware/rateLimiter';
+import { sanitizeInput } from './utils/sanitizer';
+import { errorHandler, notFound } from './middleware/errorHandler';
+import { logger, morganStream } from './utils/logger';
 
-// Legacy routes (for backward compatibility) - Consolidated
-import reviewRoutes from './routes/reviews';
-import userRoutes from './routes/users';
-import messageRoutes from './routes/messages';
-import analyticsRoutes from './routes/analytics';
-import earningsRoutes from './routes/earnings';
+// Import routes
+import authRoutes from './routes/auth.routes';
+import adminAuthRoutes from './routes/admin-auth';
+import listingRoutes from './routes/listings.routes';
+import bookingRoutes from './routes/bookings.routes';
+import paymentRoutes from './routes/payments.routes';
+import vehicleRoutes from './routes/vehicles';
 import notificationRoutes from './routes/notifications';
-import documentRoutes from './routes/documents';
-import approvalRequestRoutes from './routes/approval-requests';
-import firestoreAuthRoutes from './routes/firestore-auth';
-import { errorHandler } from './middlewares/errorHandler';
 
-dotenv.config();
+// Import models to initialize associations
+import './models';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Enhanced security middleware
+// Security middleware
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+      defaultSrc: ['\'self\''],
+      styleSrc: ['\'self\'', '\'unsafe-inline\''],
+      scriptSrc: ['\'self\''],
+      imgSrc: ['\'self\'', 'data:', 'https:'],
+      connectSrc: ['\'self\''],
+      fontSrc: ['\'self\''],
+      objectSrc: ['\'none\''],
+      mediaSrc: ['\'self\''],
+      frameSrc: ['\'none\''],
     },
   },
   crossOriginEmbedderPolicy: false
 }));
 
-// Security headers
-app.use(securityHeaders);
-
-// IP blocking
-app.use(ipBlocking);
-
-// Enhanced rate limiting
-app.use(apiRateLimit);
-
-// Request size limiting
-app.use(requestSizeLimit('10mb'));
-
-// Compression middleware
-app.use(compression());
-
-// CORS with enhanced security
+// CORS configuration
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL!] 
-    : ['http://localhost:3000', 'http://localhost:3001'],
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173',
+    'http://localhost:4173'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Session-ID'],
   exposedHeaders: ['X-Total-Count', 'X-Page-Count']
 }));
 
-// Enhanced logging
+// Compression
+app.use(compression());
+
+// Logging
 app.use(morgan('combined', {
+  stream: morganStream,
   skip: (req, res) => res.statusCode < 400
 }));
 
-// Body parsing with enhanced security
+// Body parsing
 app.use(express.json({ 
   limit: '10mb',
   verify: (req, res, buf) => {
-    // Additional security checks can be added here
     if (buf.length > 10 * 1024 * 1024) {
       throw new Error('Request too large');
     }
   }
 }));
+
 app.use(express.urlencoded({ 
   extended: true, 
   limit: '10mb' 
 }));
 
+// Rate limiting
+app.use(apiRateLimit);
+
 // Input sanitization
-app.use(sanitizeRequestBody);
+app.use(sanitizeInput);
 
-// Production API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/listings', listingRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/checkpoints', checkpointRoutes);
-app.use('/api/admin', adminProductionRoutes);
-
-// Legacy routes (for backward compatibility) - Consolidated
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/earnings', earningsRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/documents', documentRoutes);
-app.use('/api/approval-requests', approvalRequestRoutes);
-app.use('/api/firestore-auth', firestoreAuthRoutes);
+// Serve static files
+const uploadsPath = env.UPLOADS_PATH;
+app.use('/uploads', express.static(uploadsPath));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: env.NODE_ENV,
+    version: process.env.npm_package_version || '1.0.0'
+  });
 });
 
-// Error handling
+// Test endpoint without authentication
+app.get('/api/test', (req, res) => {
+  console.log('Test endpoint hit!', new Date().toISOString());
+  res.json({ 
+    message: 'Backend is working!',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// API routes (temporarily without auth for testing)
+app.use('/api/auth', authRateLimit, authRoutes);
+app.use('/api/admin-auth', adminAuthRoutes);
+app.use('/api/listings', listingRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+// Admin routes
+import adminRoutes from './routes/admin';
+import dashboardRoutes from './routes/dashboard';
+import approvalRequestRoutes from './routes/approval-requests';
+import adminProductionRoutes from './routes/admin-production';
+app.use('/api/admin', adminRoutes);
+app.use('/api/admin', dashboardRoutes);
+app.use('/api/admin', approvalRequestRoutes);
+app.use('/api/admin', adminProductionRoutes);
+
+// 404 handler
+app.use(notFound);
+
+// Error handler
 app.use(errorHandler);
 
-// Database connection and server start
-const startServer = async () => {
+// Database connection and server initialization
+export const initializeApp = async () => {
   try {
-    // Initialize Firebase Admin SDK
-    initializeFirebaseAdmin();
+    // Initialize Firebase Admin SDK (non-blocking)
+    try {
+      initializeFirebaseAdmin();
+      logger.info('Firebase Admin SDK initialized successfully');
+    } catch (firebaseError) {
+      logger.warn('Firebase Admin SDK initialization failed (continuing without Firebase):', firebaseError);
+    }
     
+    // Test database connection
     await sequelize.authenticate();
-    console.log('Database connection established successfully.');
+    logger.info('Database connection established successfully');
     
-    await sequelize.sync({ force: false });
-    console.log('Database synchronized.');
-    
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    // Sync database (create tables if they don't exist) - non-blocking
+    sequelize.sync({ force: false }).then(() => {
+      logger.info('Database synchronized');
+    }).catch((syncError) => {
+      logger.error('Database sync failed:', syncError);
     });
+    
+    return app;
   } catch (error) {
-    console.error('Unable to start server:', error);
-    process.exit(1);
+    logger.error('Unable to initialize app:', error);
+    throw error;
   }
 };
-
-// Only start server if not in test environment
-if (process.env.NODE_ENV !== 'test') {
-  startServer();
-}
 
 export default app;

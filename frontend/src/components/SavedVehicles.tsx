@@ -7,7 +7,7 @@ interface SavedVehiclesProps {
   className?: string;
 }
 
-export const SavedVehicles: React.FC<SavedVehiclesProps> = ({ userId, className = "" }) => {
+export const SavedVehicles: React.FC<SavedVehiclesProps> = ({ userId, className = '' }) => {
   const [savedVehicles, setSavedVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,34 +31,8 @@ export const SavedVehicles: React.FC<SavedVehiclesProps> = ({ userId, className 
       }
     } catch (error) {
       console.error('Error fetching saved vehicles:', error);
-      // Mock data for development
-      setSavedVehicles([
-        {
-          id: '1',
-          hostId: 'host1',
-          make: 'Toyota',
-          model: 'Hilux',
-          year: 2022,
-          type: 'bakkie',
-          pricePerDay: 250,
-          dailyRate: 250,
-          location: 'Cape Town',
-          images: ['https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400'],
-          features: [],
-          status: 'approved',
-          approvalStatus: 'approved',
-          description: 'Perfect for your South African adventure!',
-          fuelType: 'petrol',
-          transmission: 'manual',
-          seats: 5,
-          doors: 4,
-          isAvailable: true,
-          rating: 4.8,
-          reviewCount: 24,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      ]);
+      // Fallback to empty array instead of mock data
+      setSavedVehicles([]);
     } finally {
       setLoading(false);
     }

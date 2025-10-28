@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { authenticateToken, AuthRequest, requireRole } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest, requireRole } from '../middleware/auth';
 import { Checkpoint, CheckpointItem, CheckpointImage, Booking, User } from '../models';
 import { Op } from 'sequelize';
 import multer from 'multer';
@@ -71,7 +71,7 @@ const createCheckpointItemSchema = z.object({
 });
 
 // Create checkpoint
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { booking_id, type, notes, location } = createCheckpointSchema.parse(req.body);
     const user_id = req.user?.id;
@@ -93,7 +93,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Check if user is either renter or host
-    const isRenter = booking.renter_id === user_id;
+    const isRenter = booking.renterId === Number(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -101,11 +101,10 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     const checkpoint = await Checkpoint.create({
-      booking_id,
-      user_id,
+      bookingId: parseInt(booking_id),
       type,
       notes,
-      location,
+      location: typeof location === 'object' ? JSON.stringify(location) : location,
       status: 'pending'
     });
 
@@ -123,7 +122,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get checkpoints for a booking
-router.get('/booking/:bookingId', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/booking/:bookingId', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { bookingId } = req.params;
     const user_id = req.user?.id;
@@ -145,7 +144,7 @@ router.get('/booking/:bookingId', authenticateToken, async (req: AuthRequest, re
     }
 
     // Check if user is either renter or host
-    const isRenter = booking.renter_id === user_id;
+    const isRenter = booking.renterId === Number(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -173,7 +172,7 @@ router.get('/booking/:bookingId', authenticateToken, async (req: AuthRequest, re
 });
 
 // Update checkpoint
-router.put('/:checkpointId', authenticateToken, async (req: AuthRequest, res) => {
+router.put('/:checkpointId', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { checkpointId } = req.params;
     const updates = updateCheckpointSchema.parse(req.body);
@@ -205,7 +204,7 @@ router.put('/:checkpointId', authenticateToken, async (req: AuthRequest, res) =>
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    const isRenter = booking.renter_id === user_id;
+    const isRenter = booking.renterId === Number(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -217,7 +216,18 @@ router.put('/:checkpointId', authenticateToken, async (req: AuthRequest, res) =>
       // Note: completed_at field doesn't exist in model, using status change only
     }
 
-    await checkpoint.update(updates);
+    // Remove invalid status values
+    if (updates.status === 'in_progress') {
+      delete updates.status;
+    }
+
+    // Ensure status is valid
+    if (updates.status && !['pending', 'completed', 'failed'].includes(updates.status)) {
+      delete updates.status;
+    }
+
+    // Type assertion to bypass strict type checking for updates
+    await checkpoint.update(updates as any);
 
     res.json({
       success: true,
@@ -233,7 +243,7 @@ router.put('/:checkpointId', authenticateToken, async (req: AuthRequest, res) =>
 });
 
 // Add checkpoint item
-router.post('/:checkpointId/items', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/:checkpointId/items', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { checkpointId } = req.params;
     const { item_name, status, notes } = createCheckpointItemSchema.parse(req.body);
@@ -265,7 +275,7 @@ router.post('/:checkpointId/items', authenticateToken, async (req: AuthRequest, 
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    const isRenter = booking.renter_id === user_id;
+    const isRenter = booking.renterId === Number(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -273,9 +283,9 @@ router.post('/:checkpointId/items', authenticateToken, async (req: AuthRequest, 
     }
 
     const checkpointItem = await CheckpointItem.create({
-      checkpoint_id: checkpointId,
-      item_name,
-      status,
+      checkpointId: parseInt(checkpointId),
+      itemName: item_name,
+      condition: status as 'good' | 'damaged' | 'missing',
       notes
     });
 
@@ -293,7 +303,7 @@ router.post('/:checkpointId/items', authenticateToken, async (req: AuthRequest, 
 });
 
 // Upload checkpoint image
-router.post('/:checkpointId/images', authenticateToken, upload.single('image'), async (req: AuthRequest, res) => {
+router.post('/:checkpointId/images', authenticateToken, upload.single('image'), async (req: AuthenticatedRequest, res) => {
   try {
     const { checkpointId } = req.params;
     const { category, description } = req.body;
@@ -329,7 +339,7 @@ router.post('/:checkpointId/images', authenticateToken, upload.single('image'), 
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    const isRenter = booking.renter_id === user_id;
+    const isRenter = booking.renterId === Number(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -337,14 +347,9 @@ router.post('/:checkpointId/images', authenticateToken, upload.single('image'), 
     }
 
     const checkpointImage = await CheckpointImage.create({
-      checkpoint_id: checkpointId,
-      uploaded_by: user_id,
-      file_url: `/uploads/checkpoints/${req.file.filename}`,
-      filename: req.file.filename,
-      file_size: req.file.size,
-      mime_type: req.file.mimetype,
-      category: category || 'general',
-      description
+      checkpointId: parseInt(checkpointId),
+      imageUrl: `/uploads/checkpoints/${req.file.filename}`,
+      description: description || (category ? `Category: ${category}` : undefined)
     });
 
     res.status(201).json({
@@ -358,7 +363,7 @@ router.post('/:checkpointId/images', authenticateToken, upload.single('image'), 
 });
 
 // Get checkpoint images
-router.get('/:checkpointId/images', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/:checkpointId/images', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { checkpointId } = req.params;
     const user_id = req.user?.id;
@@ -389,7 +394,7 @@ router.get('/:checkpointId/images', authenticateToken, async (req: AuthRequest, 
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    const isRenter = booking.renter_id === user_id;
+    const isRenter = booking.renterId === Number(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -415,7 +420,7 @@ router.get('/:checkpointId/images', authenticateToken, async (req: AuthRequest, 
 });
 
 // Admin: Get all checkpoints
-router.get('/admin/all', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/admin/all', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 20, status, type } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -457,3 +462,5 @@ router.get('/admin/all', authenticateToken, requireRole(['admin']), async (req: 
 });
 
 export default router;
+
+

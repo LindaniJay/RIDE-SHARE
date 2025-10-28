@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RideShare SA - Business Model Canvas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #7f8c8d;
+        }
+
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            margin: 30px 0;
+            min-height: 600px;
+        }
+
+        .canvas-block {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            background: white;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .canvas-block:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+
+        .canvas-block h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+
+        .canvas-block p {
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .canvas-block ul {
+            margin-top: 10px;
+            padding-left: 20px;
+            font-size: 0.85em;
+        }
+
+        .canvas-block li {
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .customer-segments { grid-column: 1; grid-row: 1; }
+        .value-propositions { grid-column: 2; grid-row: 1; background: #f8f9fa; border: 3px solid #3498db; }
+        .channels { grid-column: 3; grid-row: 1; }
+        .customer-relationships { grid-column: 4; grid-row: 1; }
+        .revenue-streams { grid-column: 5; grid-row: 1; }
+        .key-resources { grid-column: 1; grid-row: 2; }
+        .key-activities { grid-column: 2; grid-row: 2; }
+        .key-partners { grid-column: 3; grid-row: 2; }
+
+        .cost-structure {
+            grid-column: 4;
+            grid-row: 2;
+            background: #fff5f5;
+            border: 2px solid #e74c3c;
+        }
+
+
+        .highlight {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .metric {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .print-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s;
+        }
+
+        .print-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .print-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>RideShare SA</h1>
+            <p>Business Model Canvas - South Africa's Local Peer-to-Peer Vehicle Rental Platform</p>
+        </div>
+
+        <div class="canvas-grid">
+            <!-- 1. Customer Segments -->
+            <div class="canvas-block customer-segments">
+                <h3>1. Customer Segments</h3>
+                <p><strong>Multi-Sided Platform</strong></p>
+                <ul>
+                    <li><strong>Vehicle Owners (Hosts):</strong>
+                        <ul>
+                            <li>Individual car owners</li>
+                            <li>Fleet operators</li>
+                            <li>Dealerships</li>
+                            <li>Rental companies</li>
+                        </ul>
+                    </li>
+                    <li><strong>Renters:</strong>
+                        <ul>
+                            <li>Tourists and travelers</li>
+                            <li>Business professionals</li>
+                            <li>Students and young adults</li>
+                            <li>Families needing extra vehicles</li>
+                        </ul>
+                    </li>
+                    <li><strong>Business Customers:</strong>
+                        <ul>
+                            <li>Corporate fleets</li>
+                            <li>Event organizers</li>
+                            <li>Delivery services</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 2. Value Propositions -->
+            <div class="canvas-block value-propositions">
+                <h3>2. Value Propositions</h3>
+                <p><strong>For Vehicle Owners (Hosts):</strong></p>
+                <ul>
+                    <li><strong>Passive Income:</strong> Turn idle vehicles into revenue streams</li>
+                    <li><strong>Smart Analytics:</strong> Earnings tracking and optimization</li>
+                    <li><strong>Full Protection:</strong> Comprehensive insurance coverage</li>
+                    <li><strong>Easy Management:</strong> Intuitive dashboard and mobile app</li>
+                </ul>
+                
+                <p><strong>For Renters:</strong></p>
+                <ul>
+                    <li><strong>Security:</strong> Verified hosts and vehicles with comprehensive insurance</li>
+                    <li><strong>Instant Booking:</strong> Real-time availability and instant confirmation</li>
+                    <li><strong>Easy Booking:</strong> Simple, user-friendly booking process</li>
+                    <li><strong>Affordable Access:</strong> Cost-effective vehicle rental</li>
+                    <li><strong>Smart Search:</strong> Advanced filtering and recommendations</li>
+                </ul>
+
+                <div class="highlight">
+                    <strong>South African Focus:</strong> Local payment methods, ZAR pricing, provincial coverage, local regulations compliance
+                </div>
+            </div>
+
+            <!-- 3. Channels -->
+            <div class="canvas-block channels">
+                <h3>3. Channels</h3>
+                <p><strong>Multi-Channel Distribution</strong></p>
+                <ul>
+                    <li><strong>Web Platform:</strong> Primary booking and management</li>
+                    <li><strong>Mobile Apps:</strong> iOS and Android applications</li>
+                    <li><strong>Progressive Web App:</strong> Mobile-optimized web experience</li>
+                    <li><strong>Social Media:</strong> Facebook, Instagram, Twitter marketing</li>
+                    <li><strong>Digital Marketing:</strong> Google Ads, SEO, content marketing</li>
+                    <li><strong>Partnership Channels:</strong> Travel sites, tourism boards</li>
+                    <li><strong>Referral Program:</strong> User-to-user recommendations</li>
+                    <li><strong>Direct Sales:</strong> Corporate partnerships</li>
+                </ul>
+            </div>
+
+            <!-- 4. Customer Relationships -->
+            <div class="canvas-block customer-relationships">
+                <h3>4. Customer Relationships</h3>
+                <p><strong>Multi-Channel Engagement</strong></p>
+                <ul>
+                    <li><strong>AI Chatbot:</strong> Automated customer interaction and support</li>
+                    <li><strong>Self-Service Platform:</strong> Automated booking and management</li>
+                    <li><strong>Personal Assistance:</strong> Dedicated support for complex issues</li>
+                    <li><strong>Community Building:</strong> User forums, feedback systems</li>
+                    <li><strong>Automated Services:</strong> AI-powered recommendations</li>
+                    <li><strong>Real-time Communication:</strong> In-app messaging between users</li>
+                    <li><strong>24/7 Support:</strong> Live chat, phone, WhatsApp</li>
+                </ul>
+            </div>
+
+            <!-- 5. Revenue Streams -->
+            <div class="canvas-block revenue-streams">
+                <h3>5. Revenue Streams</h3>
+                <p><strong>Multi-Source Revenue Model</strong></p>
+                <ul>
+                    <li><strong>Commission-Based Revenue:</strong>
+                        <ul>
+                            <li>Host commission (10-15% of booking value)</li>
+                            <li>Renter service fee (5-8% of booking value)</li>
+                            <li>Premium listing fees for hosts</li>
+                        </ul>
+                    </li>
+                    <li><strong>Subscription Services:</strong>
+                        <ul>
+                            <li>Host premium plans (R299-999/month)</li>
+                            <li>Business fleet management (R1,999/month)</li>
+                            <li>Advanced analytics packages</li>
+                        </ul>
+                    </li>
+                    <li><strong>Value-Added Services:</strong>
+                        <ul>
+                            <li>Insurance products and coverage</li>
+                            <li>Vehicle maintenance services</li>
+                            <li>Premium customer support</li>
+                            <li>Marketing and promotion tools</li>
+                        </ul>
+                    </li>
+                    <li><strong>Partnership Revenue:</strong>
+                        <ul>
+                            <li>Affiliate commissions from partners</li>
+                            <li>Data insights and analytics sales</li>
+                            <li>White-label platform licensing</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <div class="highlight">
+                    <strong>Revenue Projections:</strong><br>
+                    Year 1: R2.5M | Year 2: R8.5M | Year 3: R25M
+                </div>
+            </div>
+
+            <!-- 6. Key Resources -->
+            <div class="canvas-block key-resources">
+                <h3>6. Key Resources</h3>
+                <p><strong>Essential Assets</strong></p>
+                <ul>
+                    <li><strong>Technology Platform:</strong> React, Node.js, Firebase, PostgreSQL</li>
+                    <li><strong>Development Team:</strong> Full-stack developers, designers</li>
+                    <li><strong>User Base:</strong> Network of hosts and renters</li>
+                    <li><strong>Data & Analytics:</strong> User behavior, market insights</li>
+                    <li><strong>Brand & Reputation:</strong> Trust and recognition</li>
+                    <li><strong>Financial Capital:</strong> Operating funds, investment</li>
+                    <li><strong>Legal Framework:</strong> Terms, policies, compliance</li>
+                    <li><strong>Partnership Network:</strong> Insurance, payment, verification</li>
+                </ul>
+            </div>
+
+            <!-- 7. Key Activities -->
+            <div class="canvas-block key-activities">
+                <h3>7. Key Activities</h3>
+                <p><strong>Core Platform Operations</strong></p>
+                <ul>
+                    <li><strong>Platform Development:</strong> React/TypeScript frontend, Node.js backend</li>
+                    <li><strong>User Onboarding:</strong> Registration, verification, profile setup</li>
+                    <li><strong>Vehicle Management:</strong> Listing, approval, maintenance tracking</li>
+                    <li><strong>Booking Processing:</strong> Real-time availability, instant booking</li>
+                    <li><strong>Payment Processing:</strong> Secure transactions, escrow system</li>
+                    <li><strong>Customer Support:</strong> 24/7 help, dispute resolution</li>
+                    <li><strong>Safety & Security:</strong> Background checks, insurance management</li>
+                    <li><strong>Analytics & Optimization:</strong> Performance tracking, AI recommendations</li>
+                </ul>
+            </div>
+
+            <!-- 8. Key Partners -->
+            <div class="canvas-block key-partners">
+                <h3>8. Key Partners</h3>
+                <p><strong>Strategic Alliances & Suppliers</strong></p>
+                <ul>
+                    <li><strong>Insurance Companies:</strong> Comprehensive coverage for vehicles and users</li>
+                    <li><strong>Payment Processors:</strong> PayFast, Stripe, South African banks</li>
+                    <li><strong>Technology Partners:</strong> Firebase, Google Cloud, AWS</li>
+                    <li><strong>Verification Services:</strong> MIE (Managed Integrity Evaluation), Identity and document verification</li>
+                    <li><strong>Automotive Industry:</strong> Dealerships, maintenance services</li>
+                    <li><strong>Government Agencies:</strong> Transport department, licensing</li>
+                    <li><strong>Marketing Partners:</strong> Digital agencies, influencers</li>
+                </ul>
+            </div>
+
+            <!-- 9. Cost Structure -->
+            <div class="canvas-block cost-structure">
+                <h3>9. Cost Structure</h3>
+            <p><strong>Lean Startup Cost Model</strong></p>
+            <ul>
+                <li><strong>Technology Infrastructure:</strong>
+                    <ul>
+                        <li>Firebase hosting (free tier initially) - <span class="metric">R0-2,000/month</span></li>
+                        <li>Database and storage - <span class="metric">R500-1,500/month</span></li>
+                        <li>Domain and basic services - <span class="metric">R49/month</span></li>
+                    </ul>
+                </li>
+                <li><strong>Development & Maintenance:</strong>
+                    <ul>
+                        <li>Freelance developers (sourced for free) - <span class="metric">R0/month</span></li>
+                        <li>Third-party tools and APIs - <span class="metric">R1,000-3,000/month</span></li>
+                    </ul>
+                </li>
+                <li><strong>Operations:</strong>
+                    <ul>
+                        <li>Customer support (founder initially) - <span class="metric">R0/month</span></li>
+                        <li>Payment processing fees - <span class="metric">2.9% of transactions</span></li>
+                        <li>Legal and compliance - <span class="metric">R2,000-5,000/month</span></li>
+                    </ul>
+                </li>
+                <li><strong>Marketing & Growth:</strong>
+                    <ul>
+                        <li>Organic marketing (social media, content) - <span class="metric">R0-3,000/month</span></li>
+                        <li>Google Ads (small budget) - <span class="metric">R0-5,000/month</span></li>
+                        <li>User acquisition (referral programs) - <span class="metric">R0-2,000/month</span></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <div class="highlight">
+                <strong>Total Monthly Costs:</strong> R2,000-12,000 (Startup Phase)<br>
+                <strong>Break-even:</strong> ~20-50 bookings/month
+            </div>
+            </div>
+        </div>
+
+        <button class="print-btn" onclick="window.print()">Print Business Model Canvas</button>
+    </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

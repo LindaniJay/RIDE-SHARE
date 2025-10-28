@@ -21,7 +21,7 @@ interface VehicleNotification {
 
 export const VehicleApprovalNotification: React.FC<VehicleApprovalNotificationProps> = ({
   hostId,
-  className = ""
+  className = ''
 }) => {
   const [notifications, setNotifications] = useState<VehicleNotification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,50 +33,79 @@ export const VehicleApprovalNotification: React.FC<VehicleApprovalNotificationPr
 
   const fetchNotifications = async () => {
     try {
-      // Mock data - in real implementation, fetch from API
-      const mockNotifications: VehicleNotification[] = [
-        {
-          id: '1',
-          vehicleId: 'vehicle-1',
-          vehicleName: '2020 Toyota Corolla',
-          status: 'approved',
-          message: 'Your vehicle listing has been approved and is now visible to renters.',
-          adminNotes: 'Great condition, all documents verified.',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-          read: false
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/notifications/vehicle-approvals/${hostId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        {
-          id: '2',
-          vehicleId: 'vehicle-2',
-          vehicleName: '2019 BMW X3',
-          status: 'rejected',
-          message: 'Your vehicle listing requires some updates before approval.',
-          rejectionReason: 'Insurance certificate is expired. Please upload a current certificate.',
-          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-          read: true
-        }
-      ];
-      
-      setNotifications(mockNotifications);
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const vehicleNotifications: VehicleNotification[] = data.notifications.map((notif: any) => ({
+          id: notif.id,
+          vehicleId: notif.vehicle_id,
+          vehicleName: notif.vehicle_name,
+          status: notif.status,
+          message: notif.message,
+          adminNotes: notif.admin_notes,
+          rejectionReason: notif.rejection_reason,
+          timestamp: new Date(notif.timestamp),
+          read: notif.read
+        }));
+        
+        setNotifications(vehicleNotifications);
+      } else {
+        console.error('Failed to fetch vehicle approval notifications');
+        setNotifications([]);
+      }
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const markAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(notif => 
-        notif.id === notificationId ? { ...notif, read: true } : notif
-      )
-    );
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      await fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setNotifications(prev => 
+        prev.map(notif => 
+          notif.id === notificationId ? { ...notif, read: true } : notif
+        )
+      );
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notif => ({ ...notif, read: true }))
-    );
+  const markAllAsRead = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      await fetch(`/api/notifications/vehicle-approvals/${hostId}/mark-all-read`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setNotifications(prev => 
+        prev.map(notif => ({ ...notif, read: true }))
+      );
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
   };
 
   const getStatusIcon = (status: string) => {

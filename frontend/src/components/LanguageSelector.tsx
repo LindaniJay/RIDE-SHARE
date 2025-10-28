@@ -14,7 +14,7 @@ interface LanguageSelectorProps {
 
 export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   onLanguageChange,
-  className = ""
+  className = ''
 }) => {
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [isOpen, setIsOpen] = useState(false);

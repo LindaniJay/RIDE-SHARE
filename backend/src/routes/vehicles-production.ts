@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { authenticateToken, AuthRequest, requireRole } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest, requireRole } from '../middleware/auth';
 import { Listing, User, AdminLog } from '../models';
 import { Op } from 'sequelize';
 import multer from 'multer';
@@ -24,6 +24,22 @@ const storage = multer.diskStorage({
   }
 });
 
+// Configure multer for vehicle document uploads
+const documentStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = 'uploads/vehicles/documents';
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req: any, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const docType = file.fieldname || 'document';
+    cb(null, `vehicle-${docType}-${req.user?.id || 'unknown'}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
 const upload = multer({
   storage,
   limits: {
@@ -38,6 +54,24 @@ const upload = multer({
       return cb(null, true);
     } else {
       cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
+const documentUpload = multer({
+  storage: documentStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for documents
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|pdf/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only JPG, PNG, and PDF files are allowed for documents'));
     }
   }
 });
@@ -109,8 +143,8 @@ router.get('/', async (req, res) => {
 
     const offset = (page - 1) * limit;
     const whereClause: any = {
-      status: 'approved', // Only show approved vehicles
-      approval_status: 'approved'
+      approved: true, // Only show approved vehicles
+      is_available: true
     };
 
     // Search by query
@@ -177,10 +211,11 @@ router.get('/', async (req, res) => {
       images: vehicle.images,
       features: vehicle.features,
       host: (vehicle as any).host,
-      status: vehicle.status,
-      rating: vehicle.rating || 4.5,
-      total_bookings: vehicle.total_bookings || 0,
-      created_at: vehicle.createdAt
+      approved: vehicle.approved,
+      is_available: vehicle.is_available,
+      rating: vehicle.rating_average || 4.5,
+      total_bookings: vehicle.rating_count || 0,
+      created_at: vehicle.created_at
     }));
 
     res.json({
@@ -226,7 +261,7 @@ router.get('/:id', async (req, res) => {
     }
 
     // Only show approved vehicles to public
-    if (vehicle.status !== 'approved' || vehicle.approval_status !== 'approved') {
+    if (!vehicle.approved) {
       return res.status(404).json({ error: 'Vehicle not found' });
     }
 
@@ -251,7 +286,7 @@ router.get('/:id', async (req, res) => {
         status: vehicle.status,
         rating: vehicle.rating || 4.5,
         total_bookings: vehicle.total_bookings || 0,
-        created_at: vehicle.createdAt
+        created_at: vehicle.created_at
       }
     });
   } catch (error) {
@@ -261,7 +296,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/vehicles - Create vehicle listing (host only)
-router.post('/', authenticateToken, upload.array('images', 5), async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, upload.array('images', 5), async (req: AuthenticatedRequest, res) => {
   try {
     console.log('Vehicle creation request received');
     console.log('Request body:', req.body);
@@ -312,28 +347,28 @@ router.post('/', authenticateToken, upload.array('images', 5), async (req: AuthR
     const imageUrls = uploadedFiles.map(file => `/uploads/vehicles/${file.filename}`);
 
     const vehicle = await Listing.create({
-      host_id: user_id,
+      hostId: Number(user_id) || 0,
       title: validatedData.title,
       description: validatedData.description,
       make: validatedData.make,
       model: validatedData.model,
       year: validatedData.year,
+      pricePerDay: validatedData.price_per_day,
+      image: imageUrls[0] || '/uploads/default-vehicle.jpg',
+      city: validatedData.location?.city || 'Unknown',
       vehicle_type: validatedData.vehicle_type,
       category: validatedData.category,
-      price_per_day: validatedData.price_per_day,
       price_per_week: validatedData.price_per_week,
       price_per_month: validatedData.price_per_month,
-      location: validatedData.location,
+      location: typeof validatedData.location === 'object' 
+        ? `${validatedData.location.city}, ${validatedData.location.province}`
+        : validatedData.location,
       images: imageUrls,
       features: validatedData.features || [],
       minimum_rental_days: validatedData.minimum_rental_days || 1,
-      maximum_rental_days: validatedData.maximum_rental_days,
       fuel_type: validatedData.fuel_type || 'petrol',
       transmission: validatedData.transmission || 'manual',
-      seats: validatedData.seats || 5,
-      mileage: validatedData.mileage,
-      color: validatedData.color,
-      license_plate: validatedData.license_plate,
+      mileage: validatedData.mileage || 0,
       status: 'pending', // Default to pending for admin approval
       approval_status: 'pending',
       is_featured: false,
@@ -343,7 +378,9 @@ router.post('/', authenticateToken, upload.array('images', 5), async (req: AuthR
 
     // Log admin action
     await AdminLog.create({
-      user_id: user_id,
+      adminId: Number(user_id) || 0,
+      targetType: 'listing',
+      targetId: vehicle.id,
       action: 'vehicle_listing_created',
       details: {
         vehicle_id: vehicle.id,
@@ -371,12 +408,112 @@ router.post('/', authenticateToken, upload.array('images', 5), async (req: AuthR
   }
 });
 
+// POST /api/vehicles/:id/documents - Upload vehicle documents
+router.post('/:id/documents', authenticateToken, documentUpload.fields([
+  { name: 'registration', maxCount: 1 },
+  { name: 'roadworthy', maxCount: 1 },
+  { name: 'insurance', maxCount: 1 }
+]), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+    const user_id = req.user?.id;
+    
+    if (!user_id) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Check if vehicle exists and belongs to user
+    const vehicle = await Listing.findByPk(id);
+    if (!vehicle) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+
+    if (vehicle.host_id !== Number(user_id)) {
+      return res.status(403).json({ error: 'You can only upload documents for your own vehicles' });
+    }
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const documentUrls: { [key: string]: string } = {};
+
+    // Process uploaded documents
+    if (files.registration && files.registration[0]) {
+      documentUrls.registration = `/uploads/vehicles/documents/${files.registration[0].filename}`;
+    }
+    if (files.roadworthy && files.roadworthy[0]) {
+      documentUrls.roadworthy = `/uploads/vehicles/documents/${files.roadworthy[0].filename}`;
+    }
+    if (files.insurance && files.insurance[0]) {
+      documentUrls.insurance = `/uploads/vehicles/documents/${files.insurance[0].filename}`;
+    }
+
+    // Update vehicle with document URLs
+    await vehicle.update({
+      documents: documentUrls
+    });
+
+    // Log admin action
+    await AdminLog.create({
+      adminId: Number(user_id) || 0,
+      targetType: 'listing',
+      targetId: vehicle.id,
+      action: 'vehicle_documents_uploaded',
+      details: {
+        vehicle_id: vehicle.id,
+        documents_uploaded: Object.keys(documentUrls),
+        status: 'pending_review'
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Documents uploaded successfully',
+      documents: documentUrls
+    });
+  } catch (error) {
+    console.error('Error uploading vehicle documents:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/vehicles/:id/documents - Get vehicle documents
+router.get('/:id/documents', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+    const user_id = req.user?.id;
+    
+    if (!user_id) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const vehicle = await Listing.findByPk(id);
+    if (!vehicle) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+
+    // Check if user owns the vehicle or is admin
+    if (vehicle.host_id !== Number(user_id) && req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    res.status(200).json({
+      success: true,
+      documents: vehicle.documents || {}
+    });
+  } catch (error) {
+    console.error('Error fetching vehicle documents:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // PATCH /api/vehicles/:id/status - Update vehicle status (admin only)
-router.patch('/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.patch('/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = updateVehicleStatusSchema.parse(req.body);
     const admin_id = req.user?.id;
+    if (!admin_id) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
 
     const vehicle = await Listing.findByPk(id, {
       include: [{ model: User, as: 'host' }]
@@ -395,7 +532,9 @@ router.patch('/:id/status', authenticateToken, requireRole(['admin']), async (re
 
     // Log admin action
     await AdminLog.create({
-      user_id: admin_id,
+      adminId: Number(admin_id) || 0,
+      targetType: 'listing',
+      targetId: vehicle.id,
       action: `vehicle_${status}`,
       details: {
         vehicle_id: vehicle.id,
@@ -427,15 +566,15 @@ router.patch('/:id/status', authenticateToken, requireRole(['admin']), async (re
 });
 
 // GET /api/vehicles/admin/pending - Get pending vehicles (admin only)
-router.get('/admin/pending', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/admin/pending', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     const { count, rows: vehicles } = await Listing.findAndCountAll({
       where: {
-        status: 'pending',
-        approval_status: 'pending'
+        approved: false,
+        is_available: true
       },
       include: [
         { 
@@ -444,7 +583,7 @@ router.get('/admin/pending', authenticateToken, requireRole(['admin']), async (r
           attributes: ['id', 'first_name', 'last_name', 'email'] 
         }
       ],
-      order: [['createdAt', 'ASC']], // Oldest first for admin review
+      order: [['created_at', 'ASC']], // Oldest first for admin review
       limit: Number(limit),
       offset
     });
@@ -464,7 +603,7 @@ router.get('/admin/pending', authenticateToken, requireRole(['admin']), async (r
         host: (vehicle as any).host,
         status: vehicle.status,
         approval_status: vehicle.approval_status,
-        created_at: vehicle.createdAt
+        created_at: vehicle.created_at
       })),
       pagination: {
         page: Number(page),
@@ -480,13 +619,17 @@ router.get('/admin/pending', authenticateToken, requireRole(['admin']), async (r
 });
 
 // GET /api/vehicles/host/:hostId - Get host's vehicles
-router.get('/host/:hostId', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/host/:hostId', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { hostId } = req.params;
     const user_id = req.user?.id;
 
+    if (!user_id) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
     // Check if user is accessing their own vehicles or is admin
-    if (user_id !== hostId && req.user?.role !== 'admin') {
+    if (Number(user_id) !== parseInt(hostId) && req.user?.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -517,7 +660,7 @@ router.get('/host/:hostId', authenticateToken, async (req: AuthRequest, res) => 
         status: vehicle.status,
         approval_status: vehicle.approval_status,
         rejection_reason: (vehicle as any).rejection_reason,
-        created_at: vehicle.createdAt
+        created_at: vehicle.created_at
       }))
     });
   } catch (error) {
@@ -527,3 +670,5 @@ router.get('/host/:hostId', authenticateToken, async (req: AuthRequest, res) => 
 });
 
 export default router;
+
+

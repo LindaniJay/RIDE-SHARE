@@ -9,7 +9,7 @@ interface FleetManagementProps {
 
 export const FleetManagement: React.FC<FleetManagementProps> = ({ 
   hostId, 
-  className = "" 
+  className = '' 
 }) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,59 +36,8 @@ export const FleetManagement: React.FC<FleetManagementProps> = ({
       }
     } catch (error) {
       console.error('Error fetching fleet:', error);
-      // Mock data for development
-      setVehicles([
-        {
-          id: '1',
-          hostId,
-          make: 'Toyota',
-          model: 'Hilux',
-          year: 2022,
-          type: 'bakkie',
-          pricePerDay: 250,
-          dailyRate: 250,
-          location: 'Cape Town',
-          images: ['https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400'],
-          features: [],
-          status: 'approved',
-          approvalStatus: 'approved',
-          description: 'Perfect for your South African adventure!',
-          fuelType: 'petrol',
-          transmission: 'manual',
-          seats: 5,
-          doors: 4,
-          isAvailable: true,
-          rating: 4.8,
-          reviewCount: 24,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: '2',
-          hostId,
-          make: 'BMW',
-          model: 'X3',
-          year: 2021,
-          type: 'suv',
-          pricePerDay: 400,
-          dailyRate: 400,
-          location: 'Johannesburg',
-          images: ['https://images.unsplash.com/photo-1549317336-206569e8475c?w=400'],
-          features: [],
-          status: 'pending',
-          approvalStatus: 'pending',
-          description: 'Luxury SUV for city and country driving.',
-          fuelType: 'petrol',
-          transmission: 'automatic',
-          seats: 5,
-          doors: 4,
-          isAvailable: true,
-          rating: 4.9,
-          reviewCount: 12,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      ]);
+      // Fallback to empty array instead of mock data
+      setVehicles([]);
     } finally {
       setLoading(false);
     }

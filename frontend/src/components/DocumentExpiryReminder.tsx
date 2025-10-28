@@ -17,7 +17,7 @@ interface DocumentExpiryReminderProps {
 
 export const DocumentExpiryReminder: React.FC<DocumentExpiryReminderProps> = ({ 
   userId, 
-  className = "" 
+  className = '' 
 }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,25 +42,8 @@ export const DocumentExpiryReminder: React.FC<DocumentExpiryReminderProps> = ({
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
-      // Mock data for development
-      setDocuments([
-        {
-          id: '1',
-          type: 'driver_license',
-          name: 'Driver License',
-          expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-          status: 'expiring_soon',
-          daysUntilExpiry: 30
-        },
-        {
-          id: '2',
-          type: 'id_document',
-          name: 'South African ID',
-          expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
-          status: 'valid',
-          daysUntilExpiry: 365
-        }
-      ]);
+      // Fallback to empty array instead of mock data
+      setDocuments([]);
     } finally {
       setLoading(false);
     }

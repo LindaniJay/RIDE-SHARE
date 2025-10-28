@@ -13,7 +13,7 @@ export const UserApprovalStatus: React.FC<UserApprovalStatusProps> = ({
   status,
   rejectionReason,
   adminNotes,
-  className = ""
+  className = ''
 }) => {
   const getStatusConfig = (status: ApprovalStatus) => {
     switch (status) {

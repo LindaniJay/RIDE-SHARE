@@ -61,10 +61,9 @@ class AnalyticsService {
         ? `${this.baseUrl}/renter-behavior/${renterId}`
         : `${this.baseUrl}/renter-behavior`;
       
+      const authHeaders = await import('../utils/firebaseAuth').then(module => module.getAuthHeaders());
       const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
+        headers: authHeaders
       });
 
       if (!response.ok) {
@@ -80,10 +79,9 @@ class AnalyticsService {
 
   static async getCrossRoleAnalytics(): Promise<CrossRoleAnalytics> {
     try {
+      const authHeaders = await import('../utils/firebaseAuth').then(module => module.getAuthHeaders());
       const response = await fetch(`${this.baseUrl}/cross-role`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
+        headers: authHeaders
       });
 
       if (!response.ok) {
@@ -99,10 +97,9 @@ class AnalyticsService {
 
   static async getRealTimeMetrics(): Promise<any> {
     try {
+      const authHeaders = await import('../utils/firebaseAuth').then(module => module.getAuthHeaders());
       const response = await fetch(`${this.baseUrl}/real-time`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
+        headers: authHeaders
       });
 
       if (!response.ok) {
@@ -122,7 +119,7 @@ class AnalyticsService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: JSON.stringify({
           reportType,

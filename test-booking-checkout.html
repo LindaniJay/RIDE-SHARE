@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking & Checkout Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        .test-button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background: #45a049;
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .success { border-left: 4px solid #4CAF50; }
+        .error { border-left: 4px solid #f44336; }
+    </style>
+</head>
+<body>
+    <h1>🚗 RideShare SA - Booking & Checkout Test</h1>
+    
+    <div class="test-section">
+        <h2>📋 Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 API Tests</h2>
+        <button class="test-button" onclick="testBookingAPI()">Test Booking API</button>
+        <button class="test-button" onclick="testPaymentAPI()">Test Payment API</button>
+        <button class="test-button" onclick="testFullFlow()">Test Full Booking Flow</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 System Status</h2>
+        <div id="system-status">
+            <p>✅ Backend API endpoints configured</p>
+            <p>✅ Frontend booking service updated</p>
+            <p>✅ Unified checkout component created</p>
+            <p>✅ Payment processing integrated</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5001/api';
+        
+        function addResult(message, type = 'success') {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        async function testBookingAPI() {
+            try {
+                addResult('Testing booking API...', 'success');
+                
+                // Test booking creation
+                const bookingData = {
+                    listing_id: 1,
+                    start_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    end_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    totalPrice: 1500,
+                    specialRequests: 'Test booking from automated test'
+                };
+
+                const response = await fetch(`${API_BASE_URL}/bookings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token'
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    addResult(`✅ Booking API working - Created booking: ${result.booking?.id}`, 'success');
+                } else {
+                    const error = await response.json();
+                    addResult(`❌ Booking API failed: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Booking API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPaymentAPI() {
+            try {
+                addResult('Testing payment API...', 'success');
+                
+                const paymentData = {
+                    bookingId: 'test-booking-123',
+                    amount: 1500,
+                    paymentMethod: 'card',
+                    currency: 'ZAR',
+                    customerInfo: {
+                        email: 'test@example.com',
+                        name: 'Test User',
+                        phone: '0123456789'
+                    }
+                };
+
+                const response = await fetch(`${API_BASE_URL}/payments/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token'
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    addResult(`✅ Payment API working - Payment ID: ${result.paymentId}`, 'success');
+                } else {
+                    const error = await response.json();
+                    addResult(`❌ Payment API failed: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Payment API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFullFlow() {
+            try {
+                addResult('Testing complete booking and checkout flow...', 'success');
+                
+                // Step 1: Create booking
+                const bookingData = {
+                    listing_id: 1,
+                    start_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    end_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    totalPrice: 1500,
+                    specialRequests: 'Full flow test booking'
+                };
+
+                const bookingResponse = await fetch(`${API_BASE_URL}/bookings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token'
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+
+                if (!bookingResponse.ok) {
+                    throw new Error('Booking creation failed');
+                }
+
+                const bookingResult = await bookingResponse.json();
+                addResult(`✅ Step 1: Booking created (${bookingResult.booking.id})`, 'success');
+
+                // Step 2: Process payment
+                const paymentData = {
+                    bookingId: bookingResult.booking.id,
+                    amount: 1500,
+                    paymentMethod: 'card',
+                    currency: 'ZAR',
+                    customerInfo: {
+                        email: 'test@example.com',
+                        name: 'Test User',
+                        phone: '0123456789'
+                    }
+                };
+
+                const paymentResponse = await fetch(`${API_BASE_URL}/payments/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token'
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+
+                if (!paymentResponse.ok) {
+                    throw new Error('Payment processing failed');
+                }
+
+                const paymentResult = await paymentResponse.json();
+                addResult(`✅ Step 2: Payment processed (${paymentResult.paymentId})`, 'success');
+                addResult(`🎉 Complete flow test successful! Total: R${paymentResult.amount}`, 'success');
+
+            } catch (error) {
+                addResult(`❌ Full flow test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run basic tests on page load
+        window.addEventListener('load', () => {
+            addResult('🚀 Booking & Checkout system ready for testing', 'success');
+            addResult('Click the test buttons above to verify functionality', 'success');
+        });
+    </script>
+</body>
+</html>

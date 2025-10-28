@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminAuthService, AdminUser } from '../services/adminAuth';
+import { adminAuthService, AdminUser } from '../services/adminAuthService';
 
 interface AdminAuthContextType {
   admin: AdminUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshClaims: () => Promise<boolean>;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
@@ -35,12 +36,15 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
       setAdmin(admin);
       setLoading(false);
       
-      if (admin) {
+      // Only navigate if we're not already on the correct page
+      const currentPath = window.location.pathname;
+      
+      if (admin && currentPath !== '/admin-dashboard') {
         // Navigate to admin dashboard after successful login
         console.log('AdminAuthContext: Navigating to admin dashboard');
         navigate('/admin-dashboard', { replace: true });
-      } else {
-        // Admin is logged out - navigate to home page
+      } else if (!admin && currentPath.startsWith('/admin')) {
+        // Admin is logged out - navigate to home page only if on admin pages
         console.log('AdminAuthContext: Admin logged out, navigating to home');
         navigate('/', { replace: true });
       }
@@ -74,11 +78,22 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
     }
   };
 
+  const refreshClaims = async () => {
+    try {
+      const success = await adminAuthService.refreshAdminClaims();
+      return success;
+    } catch (error) {
+      console.error('AdminAuthContext: Failed to refresh claims:', error);
+      return false;
+    }
+  };
+
   const value = {
     admin,
     loading,
     login,
     logout,
+    refreshClaims,
   };
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;

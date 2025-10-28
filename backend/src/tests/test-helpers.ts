@@ -17,7 +17,12 @@ export const createTestUser = async (userData: Partial<any> = {}) => {
     ...userData
   };
 
-  return await User.create(defaultUser);
+  return await User.create({
+    ...defaultUser,
+    firebase_uid: `test-${Date.now()}`,
+    isVerified: true,
+    display_name: `${defaultUser.first_name} ${defaultUser.last_name}`
+  });
 };
 
 export const generateTestToken = (userId: number, role: string = 'host') => {

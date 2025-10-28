@@ -62,7 +62,7 @@ class MessagingService {
       const response = await fetch(`${this.baseUrl}/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: formData
       });
@@ -82,7 +82,7 @@ class MessagingService {
     try {
       const response = await fetch(`${this.baseUrl}/conversations/${conversationId}/messages?page=${page}&limit=${limit}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
 
@@ -103,7 +103,7 @@ class MessagingService {
       await fetch(`${this.baseUrl}/messages/${messageId}/read`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
     } catch (error) {
@@ -116,7 +116,7 @@ class MessagingService {
     try {
       const response = await fetch(`${this.baseUrl}/conversations`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
 
@@ -138,7 +138,7 @@ class MessagingService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: JSON.stringify({ participantIds })
       });
@@ -161,7 +161,7 @@ class MessagingService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: JSON.stringify(ticketData)
       });
@@ -185,7 +185,7 @@ class MessagingService {
 
       const response = await fetch(`${this.baseUrl}/support-tickets?${params}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
 
@@ -207,7 +207,7 @@ class MessagingService {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: JSON.stringify(updates)
       });
@@ -229,7 +229,7 @@ class MessagingService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: JSON.stringify({ content })
       });

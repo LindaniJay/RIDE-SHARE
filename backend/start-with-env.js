@@ -1,0 +1,72 @@
+const { spawn } = require('child_process');
+const path = require('path');
+
+// Set the environment variables you provided
+process.env.NODE_ENV = 'development';
+process.env.PORT = '5001';
+process.env.DATABASE_URL = 'sqlite:./database.sqlite';
+process.env.FIREBASE_PROJECT_ID = 'ride-share-56610';
+process.env.FIREBASE_PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC1qaLm/q5zbYm5
+8qpZcvbWWqk9CagAtqvN3cvDOktQuD7Pdi0nGLECBwCNKi3dglhdxoNXvnuY/cP0
+U1r4dwIY2TtvnPaS0cWm6fVbV6CoWIHA49DwHi5vNNtpHN3FUfD+bjmLy8MvzOzY
+BP4Er6KB8a8ZjV7qQ8FvWxlI9EUtU0B8USVxP5HQHCzPJcKfP1cBr6z3/2fCVie5
+cGh/ZdT0ppg7UTMZWowmbxFprM1ciCH1eQpIkciz5Fvq2yTJ5rbOaLUennMw8p4h
+3kIhHhM2BpVA1TmJobuu2MmNdowAmk8DiuxgwhutZNp8bD0UrtbOzlvyaJWiPnwn
+N2z+tfvzAgMBAAECggEABMwUW0OsCT5vxLWoJPXYl5GC5rzynOB/LobBh2NYV6r9
+4+meEcW8OJwglYdzHZ1JWNAIsyvV6Uu3YjaNAqdoKmmtAQ8t/byy0ZCAf7CBM4Vx
+GXKvPASclt8PPsxsIfZ1M6rUxg5dFjuz6blOT6eC1ioOVyzmm689XYPLIMi1azxy
+9CCJqa7XqCqh0Qeb2dcwLnTngmkYfZjUSFC73IiIbwWLLN5t7T2zIXBChY1DP6cX
+OirbyLo7Qmgb1VYxeYHkpATQHfEvt+dMfceCnAA1gceZTbphbXhtEc7KCi3GDZpK
+ZmhM/4KL52R2onxGm1x4zLNZ92UkZrFe4CaTZLlmYQKBgQD+0FF1o1euIBrtLXk8
+9teBKYkwsbVGkhXDYLN1W7hL4A3/v8Q8biU/wxQYXEfZFPgDf5GmJ00LQEjfsRIG
+fUtXO3DiI8svTud1DwMbFHiRzpbvPQVvhO2zEBGiZ24ZzAUDPi9alMxSZiotAwiT
+iOW+Wy3V5K+s71bse38lC/XXIQKBgQC2giNd8yDnwQla5jGl+ccq8P/EQWHNG8/n
+lbYQ/ZqFlezp58r5GvycRvXCBYMuUdieVSMVtUMX/bZEENQU+LvPSg9a94FFhJi/
+ciOAuFueCgdncBWbO9NoiLzB7rTDECILFCDLi8QWL38uvo5YYUnhSHF1tBYxfYG9
+EbAAX4D0kwKBgQC6u7jmh6Rqo3Z4F1oAljhJnEHAYIqiw82VF1mMCIIfgHthz4uk
+aWd8uZ4RWBcC+73g+mynIafxNdPxsdau0MUUkSfhYS+2ZJF0FGNHRhIxb/7mJYbF
+Odnj3kO+CyQBXaTSwpB7Rg4R2HLR96YiUDFk9Xa6h9NB3UeLF9mOMZygYQKBgHI5
+htsRBKInnaxHcAFaD74fcWQqK4TMiFV/zKBbqK88wzctvEomCr3gZ4WUH6MI1JNb
+44Z9mM1WHBIDmki52AmHZ47eYwjYUSVY0UGJoMWLr1CcxNkQG2NMWR7jQDzpRvU6
+FsBt7D6aYXYnCz3jPfMCfQhWuqEk1OM5Q7coDrSDAoGBAIUGxIosNY872Tx4sQbc
++4WRzXYSAS42a4vN+RLKFCuSdENqoyN5aTSQMDK72kcffKFJe4+4fbRQkyiirPTc
+wMYXofNOTdU8/N43cSn4eEt5lNalNabUFM8f7CmaG4PfcP0he6gx27p69+KsVIDN
+5JO2PO1lNCYvIDJTyrz92exS
+-----END PRIVATE KEY-----`;
+process.env.FIREBASE_CLIENT_EMAIL = 'firebase-adminsdk-fbsvc@ride-share-56610.iam.gserviceaccount.com';
+process.env.FRONTEND_URLS = 'http://localhost:3000,http://localhost:3001,http://localhost:5173';
+process.env.SOCKET_IO_PATH = '/socket.io';
+
+console.log('🚀 Starting RideShare Backend with provided environment variables...');
+console.log('📝 Firebase Project ID:', process.env.FIREBASE_PROJECT_ID);
+console.log('📝 Database URL:', process.env.DATABASE_URL);
+console.log('📝 Port:', process.env.PORT);
+
+// Start the server
+const server = spawn('npx', ['ts-node', 'src/server.ts'], {
+  cwd: path.join(__dirname),
+  stdio: 'inherit',
+  shell: true
+});
+
+server.on('error', (error) => {
+  console.error('❌ Failed to start server:', error);
+});
+
+server.on('close', (code) => {
+  console.log(`🛑 Server exited with code ${code}`);
+});
+
+// Handle process termination
+process.on('SIGINT', () => {
+  console.log('🛑 Shutting down server...');
+  server.kill('SIGINT');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('🛑 Shutting down server...');
+  server.kill('SIGTERM');
+  process.exit(0);
+});

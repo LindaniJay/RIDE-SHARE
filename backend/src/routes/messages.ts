@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { User } from '../models/User';
 import { Op } from 'sequelize';
 import { Server as SocketIOServer } from 'socket.io';
@@ -65,12 +65,13 @@ const conversations: any[] = [
 ];
 
 // Get conversations
-router.get('/conversations', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/conversations', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
+    const userIdNum = Number(req.user!.id);
     const userConversations = conversations.filter(c => 
-      c.participants.includes(parseInt(req.user!.id))
+      c.participants.includes(userIdNum)
     ).map(conversation => {
-      const otherParticipantId = conversation.participants.find((id: number) => id !== parseInt(req.user!.id));
+      const otherParticipantId = conversation.participants.find((id: number) => id !== userIdNum);
       const otherParticipant = { id: otherParticipantId, firstName: 'John', lastName: 'Doe', email: 'john@example.com' };
       
       return {
@@ -78,7 +79,7 @@ router.get('/conversations', authenticateToken, async (req: AuthRequest, res) =>
         participants: conversation.participants,
         lastMessage: conversation.lastMessage,
         otherParticipant,
-        unreadCount: conversation.unreadCount[req.user!.id] || 0
+        unreadCount: conversation.unreadCount[String(userIdNum)] || 0
       };
     });
 
@@ -92,12 +93,17 @@ router.get('/conversations', authenticateToken, async (req: AuthRequest, res) =>
 });
 
 // Get messages for a conversation
-router.get('/conversations/:conversationId/messages', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/conversations/:conversationId/messages', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { conversationId } = req.params;
-    const conversationMessages = messages.filter(m => 
-      (m.senderId === parseInt(req.user!.id) && m.recipientId === parseInt(conversationId.split('-').find(id => parseInt(id) !== parseInt(req.user!.id)) || '0')) ||
-      (m.recipientId === parseInt(req.user!.id) && m.senderId === parseInt(conversationId.split('-').find(id => parseInt(id) !== parseInt(req.user!.id)) || '0'))
+    const userIdNum = Number(req.user!.id);
+    const otherId = conversationId
+      .split('-')
+      .map((id) => parseInt(id, 10))
+      .find((id) => id !== userIdNum) || 0;
+    const conversationMessages = messages.filter((m) =>
+      (m.senderId === userIdNum && m.recipientId === otherId) ||
+      (m.recipientId === userIdNum && m.senderId === otherId)
     ).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     res.json({
@@ -110,7 +116,7 @@ router.get('/conversations/:conversationId/messages', authenticateToken, async (
 });
 
 // Send message
-router.post('/send', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/send', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { recipientId, message, type, bookingId } = sendMessageSchema.parse(req.body);
 
@@ -123,7 +129,7 @@ router.post('/send', authenticateToken, async (req: AuthRequest, res) => {
     // Create message
     const newMessage = {
       id: Date.now(),
-      senderId: req.user!.id,
+      senderId: req.user!.id.toString(),
       recipientId,
       message,
       type,
@@ -135,13 +141,13 @@ router.post('/send', authenticateToken, async (req: AuthRequest, res) => {
     messages.push(newMessage);
 
     // Update or create conversation
-    const conversationId = [req.user!.id, recipientId].sort().join('-');
+    const conversationId = [req.user!.id.toString(), recipientId].sort().join('-');
     let conversation = conversations.find(c => c.id === conversationId);
     
     if (!conversation) {
       conversation = {
         id: conversationId,
-        participants: [req.user!.id, recipientId],
+        participants: [req.user!.id.toString(), recipientId],
         lastMessage: newMessage,
         updatedAt: new Date(),
         unreadCount: { [recipientId]: 1 }
@@ -177,10 +183,11 @@ router.post('/send', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get conversations
-router.get('/conversations', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/conversations', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
+    const userIdNum = Number(req.user!.id);
     const userConversations = conversations.filter(c => 
-      c.participants.includes(req.user!.id)
+      c.participants.includes(userIdNum)
     );
 
     // Get participant details
@@ -191,13 +198,13 @@ router.get('/conversations', authenticateToken, async (req: AuthRequest, res) =>
     });
 
     const conversationsWithDetails = userConversations.map(conversation => {
-      const otherParticipantId = conversation.participants.find((id: number) => id !== parseInt(req.user!.id));
+      const otherParticipantId = conversation.participants.find((id: number) => id !== Number(req.user!.id));
       const otherParticipant = participants.find(p => p.id === otherParticipantId);
       
       return {
         ...conversation,
         otherParticipant,
-        unreadCount: conversation.unreadCount[req.user!.id] || 0
+        unreadCount: conversation.unreadCount[String(userIdNum)] || 0
       };
     });
 
@@ -211,7 +218,7 @@ router.get('/conversations', authenticateToken, async (req: AuthRequest, res) =>
 });
 
 // Get messages for a conversation
-router.get('/conversations/:conversationId/messages', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/conversations/:conversationId/messages', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { conversationId } = req.params;
     const { page = 1, limit = 50 } = req.query;
@@ -219,15 +226,17 @@ router.get('/conversations/:conversationId/messages', authenticateToken, async (
 
     // Verify user is part of this conversation
     const conversation = conversations.find(c => c.id === conversationId);
-    if (!conversation || !conversation.participants.includes(req.user!.id)) {
+    if (!conversation || !conversation.participants.includes(Number(req.user!.id))) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
     // Get messages for this conversation
+    const userIdNum = Number(req.user!.id);
+    const otherId = conversation.participants.find((id: number) => id !== userIdNum) as number;
     const conversationMessages = messages
       .filter(m => 
-        (m.senderId === parseInt(req.user!.id) && m.recipientId === conversation.participants.find((id: number) => id !== parseInt(req.user!.id))) ||
-        (m.recipientId === parseInt(req.user!.id) && m.senderId === conversation.participants.find((id: number) => id !== parseInt(req.user!.id)))
+        (m.senderId === userIdNum && m.recipientId === otherId) ||
+        (m.recipientId === userIdNum && m.senderId === otherId)
       )
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(offset, offset + Number(limit));
@@ -247,26 +256,27 @@ router.get('/conversations/:conversationId/messages', authenticateToken, async (
 });
 
 // Mark messages as read
-router.patch('/read', authenticateToken, async (req: AuthRequest, res) => {
+router.patch('/read', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { messageIds } = markAsReadSchema.parse(req.body);
 
     // Update message read status
     messageIds.forEach(messageId => {
       const message = messages.find(m => m.id === messageId);
-      if (message && message.recipientId === req.user!.id) {
+      if (message && message.recipientId === Number(req.user!.id)) {
         message.read = true;
       }
     });
 
     // Update conversation unread count
     const conversationsToUpdate = conversations.filter(c => 
-      c.participants.includes(req.user!.id)
+      c.participants.includes(Number(req.user!.id))
     );
 
     conversationsToUpdate.forEach(conversation => {
-      if (conversation.unreadCount && conversation.unreadCount[req.user!.id]) {
-        conversation.unreadCount[req.user!.id] = 0;
+      const key = String(req.user!.id);
+      if (conversation.unreadCount && conversation.unreadCount[key]) {
+        conversation.unreadCount[key] = 0;
       }
     });
 
@@ -283,10 +293,10 @@ router.patch('/read', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get unread message count
-router.get('/unread-count', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/unread-count', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const unreadCount = messages.filter(m => 
-      m.recipientId === req.user!.id && !m.read
+      m.recipientId === Number(req.user!.id) && !m.read
     ).length;
 
     res.json({
@@ -299,7 +309,7 @@ router.get('/unread-count', authenticateToken, async (req: AuthRequest, res) => 
 });
 
 // Get support messages (admin)
-router.get('/support', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/support', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     if (req.user!.role !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });
@@ -318,13 +328,13 @@ router.get('/support', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Send support message
-router.post('/support', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/support', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { message, priority = 'normal' } = req.body;
 
     const supportMessage = {
       id: Date.now(),
-      senderId: req.user!.id,
+      senderId: req.user!.id.toString(),
       recipientId: 'admin',
       message,
       type: 'support',
@@ -387,3 +397,5 @@ export const setupMessageSocket = (io: SocketIOServer) => {
 };
 
 export default router;
+
+

@@ -10,16 +10,16 @@ async function testDatabaseConnection() {
     await sequelize.authenticate();
     console.log('✅ Database connection successful');
 
-    // Test basic query
-    const result = await sequelize.query('SELECT NOW() as current_time');
+    // Test basic query (SQLite compatible)
+    const result = await sequelize.query('SELECT datetime("now") as current_time');
     console.log('✅ Database query successful');
     console.log(`Current database time: ${result[0][0].current_time}`);
 
-    // Test table existence
+    // Test table existence (SQLite compatible)
     const tables = await sequelize.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public'
+      SELECT name as table_name 
+      FROM sqlite_master 
+      WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
     `);
     
     console.log('✅ Database tables found:');

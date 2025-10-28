@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { authenticateToken, AuthRequest, requireRole } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest, requireRole } from '../middleware/auth';
 import { Document, User } from '../models';
 import { Op } from 'sequelize';
 
@@ -22,7 +22,7 @@ const updateDocumentStatusSchema = z.object({
 });
 
 // Get all documents (admin only)
-router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 20, status, document_type } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -62,10 +62,10 @@ router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthReque
 });
 
 // Get user's documents
-router.get('/my-documents', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/my-documents', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const documents = await Document.findAll({
-      where: { userId: req.user!.id },
+      where: { user_id: req.user!.id },
       order: [['uploadedAt', 'DESC']]
     });
 
@@ -80,15 +80,27 @@ router.get('/my-documents', authenticateToken, async (req: AuthRequest, res) => 
 });
 
 // Upload document
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const documentData = createDocumentSchema.parse(req.body);
 
     const document = await Document.create({
-      ...documentData,
-      userId: req.user!.id,
+      // required camelCase fields
+      userId: Number(req.user!.id) || 0,
+      type: documentData.documentType === 'id' ? 'id_verification' : 
+        documentData.documentType === 'license' ? 'drivers_license' :
+          documentData.documentType === 'registration' ? 'vehicle_registration' :
+            documentData.documentType,
+      title: documentData.fileName,
+      filename: documentData.fileName,
+      originalName: documentData.fileName,
+      mimeType: documentData.mimeType || 'application/octet-stream',
+      size: documentData.fileSize || 0,
       status: 'pending',
-      uploadedAt: new Date()
+      // keep optional compatibility field
+      file_path: documentData.fileUrl,
+      // also keep snake_case user_id for compatibility
+      user_id: Number(req.user!.id) || 0,
     });
 
     res.status(201).json({
@@ -110,27 +122,57 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Update document status (admin only)
-router.put('/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.put('/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = updateDocumentStatusSchema.parse(req.body);
 
-    const document = await Document.findByPk(id);
+    const document = await Document.findByPk(id, {
+      include: [
+        { 
+          model: User, 
+          as: 'user', 
+          attributes: ['id', 'first_name', 'last_name', 'email'] 
+        }
+      ]
+    });
+    
     if (!document) {
       return res.status(404).json({ error: 'Document not found' });
     }
 
     await document.update({
       status,
-      reviewedAt: new Date(),
-      reviewedBy: req.user!.id,
+      reviewed_at: new Date(),
+      reviewedBy: Number(req.user!.id) || 0,
       ...(status === 'rejected' && reason && { rejectionReason: reason })
+    });
+
+    // Update user's document status if this is a critical document
+    if (['license', 'id'].includes(document.type)) {
+      const user = await User.findByPk(document.user_id);
+      if (user) {
+        await user.update({
+          document_status: status === 'approved' ? 'approved' : 'rejected'
+        });
+      }
+    }
+
+    // Get updated document with user info
+    const updatedDocument = await Document.findByPk(id, {
+      include: [
+        { 
+          model: User, 
+          as: 'user', 
+          attributes: ['id', 'first_name', 'last_name', 'email'] 
+        }
+      ]
     });
 
     res.json({
       success: true,
       message: `Document ${status} successfully`,
-      document
+      document: updatedDocument
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -146,7 +188,7 @@ router.put('/:id/status', authenticateToken, requireRole(['admin']), async (req:
 });
 
 // Delete document
-router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
@@ -156,7 +198,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Check if user owns the document or is admin
-    if (document.userId !== req.user!.id && req.user!.role !== 'admin') {
+    if (document.user_id !== Number(req.user!.id) && req.user!.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -173,3 +215,5 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 export default router;
+
+

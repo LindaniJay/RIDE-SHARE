@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { Op } from 'sequelize';
 import { Listing } from '../models/Listing';
 import { User } from '../models/User';
-import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { cacheService } from '../services/cache';
 import { sequelize } from '../config/database';
 
@@ -15,17 +15,23 @@ const createListingSchema = z.object({
   make: z.string().min(1).max(50),
   model: z.string().min(1).max(50),
   year: z.number().int().min(1900).max(new Date().getFullYear() + 1),
-  type: z.enum(['car', 'trailer', 'bakkie', 'truck', 'motorcycle', 'van', 'suv']),
+  vehicle_type: z.enum(['car', 'bakkie', 'truck', 'motorcycle', 'van', 'suv']),
+  category: z.enum(['economy', 'compact', 'mid_size', 'full_size', 'premium', 'luxury', 'sports']).optional(),
   transmission: z.enum(['manual', 'automatic']),
-  fuelType: z.enum(['petrol', 'diesel', 'electric']),
+  fuel_type: z.enum(['petrol', 'diesel', 'electric']),
   seats: z.number().int().min(1).max(50),
   features: z.array(z.string()).optional(),
-  pricePerDay: z.number().int().min(0).max(10000),
-  location: z.string().min(1).max(100),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  price_per_day: z.number().int().min(0).max(10000),
+  location: z.object({
+    city: z.string(),
+    province: z.string(),
+    address: z.string().optional(),
+    coordinates: z.object({
+      lat: z.number(),
+      lng: z.number()
+    }).optional()
+  }),
   images: z.array(z.string().url()).optional(),
-  availability: z.any().optional(),
   description: z.string().min(10).max(1000).optional(),
 });
 
@@ -84,6 +90,7 @@ router.get('/', async (req, res) => {
     // Only show approved listings to public
     if (!req.query.admin) {
       whereClause.status = 'approved';
+      whereClause.approval_status = 'approved';
     }
     
     // Enhanced search functionality
@@ -99,37 +106,24 @@ router.get('/', async (req, res) => {
     
     // Price filtering
     if (minPriceNum || maxPriceNum) {
-      whereClause.pricePerDay = {} as Record<string, unknown>;
-      if (minPriceNum) (whereClause.pricePerDay as any)[Op.gte] = Number(minPriceNum);
-      if (maxPriceNum) (whereClause.pricePerDay as any)[Op.lte] = Number(maxPriceNum);
+      whereClause.price_per_day = {} as Record<string, unknown>;
+      if (minPriceNum) (whereClause.price_per_day as any)[Op.gte] = Number(minPriceNum);
+      if (maxPriceNum) (whereClause.price_per_day as any)[Op.lte] = Number(maxPriceNum);
     }
     
-    // Location filtering
+    // Location filtering - simplified for SQLite compatibility
     if (locationStr) {
+      // Simple string matching for SQLite compatibility
       whereClause.location = { [Op.like]: `%${locationStr}%` };
     }
     
-    // Geographic search
-    if (latitudeNum && longitudeNum) {
-      const lat = Number(latitudeNum);
-      const lng = Number(longitudeNum);
-      const rad = Number(radiusNum || 50);
-      
-      // Simple bounding box search (for production, use PostGIS or similar)
-      const latRange = rad / 111; // Rough conversion: 1 degree ≈ 111 km
-      const lngRange = rad / (111 * Math.cos(lat * Math.PI / 180));
-      
-      whereClause.latitude = {
-        [Op.between]: [lat - latRange, lat + latRange]
-      };
-      whereClause.longitude = {
-        [Op.between]: [lng - lngRange, lng + lngRange]
-      };
-    }
+    // Geographic search - disabled for SQLite compatibility
+    // Note: Geographic search requires PostGIS or similar spatial extensions
+    // For now, we'll rely on location string matching
     
     // Type filtering
     if (typeStr) {
-      whereClause.type = typeStr;
+      whereClause.vehicle_type = typeStr;
     }
     
     // Status filtering
@@ -137,12 +131,11 @@ router.get('/', async (req, res) => {
       whereClause.status = statusStr;
     }
     
-    // Feature filtering
+    // Feature filtering - simplified for SQLite
     if (featuresStr) {
       const featureArray = Array.isArray(featuresStr) ? featuresStr : [featuresStr];
-      whereClause.features = {
-        [Op.contains]: featureArray
-      };
+      // Use LIKE for SQLite compatibility instead of JSON contains
+      whereClause.features = { [Op.like]: `%${featureArray[0]}%` };
     }
     
     // Transmission filtering
@@ -152,7 +145,7 @@ router.get('/', async (req, res) => {
     
     // Fuel type filtering
     if (fuelTypeStr) {
-      whereClause.fuelType = fuelTypeStr;
+      whereClause.fuel_type = fuelTypeStr;
     }
     
     // Seats filtering
@@ -163,9 +156,9 @@ router.get('/', async (req, res) => {
     // Sorting options
     const orderOptions: [string, string][] = [];
     if (sortBy === 'price') {
-      orderOptions.push(['pricePerDay', sortOrder as string]);
+      orderOptions.push(['price_per_day', sortOrder as string]);
     } else if (sortBy === 'rating') {
-      orderOptions.push(['averageRating', sortOrder as string]);
+      orderOptions.push(['rating', sortOrder as string]);
     } else if (sortBy === 'distance' && latitude && longitude) {
       // For distance sorting, we'd need to calculate distance in the query
       // This is a simplified version
@@ -180,7 +173,7 @@ router.get('/', async (req, res) => {
         {
           model: User,
           as: 'host',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'rating', 'profileImage'],
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber'],
         },
       ],
       limit: Number(limit),
@@ -192,7 +185,7 @@ router.get('/', async (req, res) => {
     const enhancedListings = listings.rows.map(listing => ({
       ...listing.toJSON(),
       // Add calculated fields
-      isNew: new Date(listing.createdAt).getTime() > Date.now() - (7 * 24 * 60 * 60 * 1000), // 7 days
+      isNew: new Date(listing.created_at || listing.createdAt || new Date()).getTime() > Date.now() - (7 * 24 * 60 * 60 * 1000), // 7 days
       discountPercentage: 0, // No original price field in current model
       // Add distance if coordinates provided (using location string for now)
       distance: null // Distance calculation would need geocoding service
@@ -264,8 +257,8 @@ async function getAvailableLocations() {
 async function getPriceRange() {
   const result = await Listing.findAll({
     attributes: [
-      [sequelize.fn('MIN', sequelize.col('pricePerDay')), 'min'],
-      [sequelize.fn('MAX', sequelize.col('pricePerDay')), 'max']
+      [sequelize.fn('MIN', sequelize.col('price_per_day')), 'min'],
+      [sequelize.fn('MAX', sequelize.col('price_per_day')), 'max']
     ],
     raw: true
   });
@@ -273,12 +266,12 @@ async function getPriceRange() {
 }
 
 // Enhanced listing creation with validation
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const listingData = createListingSchema.parse(req.body);
     
     // Additional business logic validation
-    if (listingData.pricePerDay < 50) {
+    if (listingData.price_per_day < 50) {
       return res.status(400).json({ 
         error: 'Price too low', 
         message: 'Minimum price per day is R50' 
@@ -294,7 +287,10 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     
     const listing = await Listing.create({
       ...listingData,
-      host_id: req.user!.id,
+      hostId: Number(req.user!.id) || 0,
+      pricePerDay: listingData.price_per_day,
+      image: listingData.images?.[0] || '/uploads/default-vehicle.jpg',
+      city: listingData.location?.city || 'Unknown',
       status: 'pending', // Requires approval
       approval_status: 'pending',
       features: listingData.features || [], // Ensure features is always an array
@@ -303,13 +299,12 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
       total_bookings: 0,
       total_earnings: 0,
       minimum_rental_days: 1,
-      category: 'economy',
-      vehicle_type: listingData.type === 'trailer' ? 'truck' : listingData.type, // Map type to vehicle_type, handle trailer
-      price_per_day: listingData.pricePerDay || 0,
-      fuel_type: listingData.fuelType || 'petrol',
-      transmission: listingData.transmission || 'manual',
-      seats: listingData.seats || 4,
-      // availability: listingData.availability || {}, // Field doesn't exist in model
+      category: listingData.category || 'economy',
+      mileage: (listingData as any).mileage || 0, // Add required mileage field
+      location: typeof listingData.location === 'string' 
+        ? listingData.location 
+        : `${listingData.location.address || ''}, ${listingData.location.city}, ${listingData.location.province}`,
+      // All other fields are already correctly named in the schema
     });
     
     // Clear relevant caches
@@ -328,7 +323,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Enhanced listing update
-router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const updateData = updateListingSchema.parse(req.body);
@@ -339,11 +334,16 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
     
     // Check ownership
-    if (listing.host_id !== req.user!.id && req.user!.role !== 'admin') {
+    if (listing.host_id !== Number(req.user!.id) && req.user!.role !== 'admin') {
       return res.status(403).json({ error: 'Not authorized' });
     }
     
-    await listing.update(updateData);
+    // Convert location object to string if needed
+    if (updateData.location && typeof updateData.location === 'object') {
+      (updateData as any).location = `${updateData.location.address || ''}, ${updateData.location.city}, ${updateData.location.province}`;
+    }
+
+    await listing.update(updateData as any);
     
     // Clear relevant caches
     await cacheService.del('listings:*');
@@ -361,3 +361,4 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 export default router;
+

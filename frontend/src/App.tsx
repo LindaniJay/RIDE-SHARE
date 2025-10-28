@@ -1,5 +1,4 @@
 // Production Service Imports (available for use)
-// import { authService } from './services/productionAuthService';
 // import { bookingService } from './services/productionBookingService';
 // import { listingService } from './services/productionListingService';
 // import { apiClient } from './services/productionApiClient';
@@ -9,12 +8,11 @@ import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense, lazy, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
-import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/ToastProvider';
 import Layout from './layouts/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
-// import AdminProtectedRoute from './components/AdminProtectedRoute';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 import { FullPageLoading } from './components/Loading';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -26,14 +24,12 @@ const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 // Import Dashboard directly to avoid dynamic import issues
 import Dashboard from './pages/Dashboard';
-const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const RealTimeAdminDashboard = lazy(() => import('./pages/RealTimeAdminDashboard'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+import AdminDashboard from './components/AdminDashboard';
 const FAQ = lazy(() => import('./pages/FAQ'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
-const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -115,26 +111,16 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
                         <Route path="/register" element={<Signup />} />
-                        <Route path="/admin-login" element={
-                          <AdminAuthProvider>
-                            <AdminLogin />
-                          </AdminAuthProvider>
-                        } />
                         <Route path="/unauthorized" element={<Unauthorized />} />
                         <Route path="/dashboard/*" element={
                           <ProtectedRoute>
                             <Layout><Dashboard /></Layout>
                           </ProtectedRoute>
                         } />
-                        <Route path="/user-dashboard" element={
-                          <ProtectedRoute>
-                            <Layout><UserDashboard /></Layout>
-                          </ProtectedRoute>
-                        } />
                         <Route path="/admin-dashboard/*" element={
-                          <ProtectedRoute requiredRole="admin">
-                            <Layout><AdminDashboard /></Layout>
-                          </ProtectedRoute>
+                          <AdminProtectedRoute>
+                            <AdminDashboard />
+                          </AdminProtectedRoute>
                         } />
                         <Route path="/legacy-admin-dashboard" element={<RealTimeAdminDashboard />} />
                         <Route path="*" element={<Layout><NotFound /></Layout>} />

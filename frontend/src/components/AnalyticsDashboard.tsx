@@ -15,10 +15,10 @@ interface AnalyticsData {
     bookings: number;
     revenue: number;
   };
-  topVehicles: any[];
-  userActivity: any[];
-  bookingStatusDistribution: any[];
-  revenueByMonth: any[];
+  topVehicles: unknown[];
+  userActivity: unknown[];
+  bookingStatusDistribution: unknown[];
+  revenueByMonth: unknown[];
   userRetention: number;
   averageBookingValue: number;
   conversionRates: {
@@ -28,7 +28,7 @@ interface AnalyticsData {
 }
 
 const AnalyticsDashboard: React.FC = () => {
-  const { } = useAuth();
+  const { user: _user } = useAuth();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');
@@ -216,9 +216,9 @@ const AnalyticsDashboard: React.FC = () => {
               <h3 className="text-lg font-semibold text-white mb-4">Booking Status</h3>
               <div className="space-y-3">
                 {analytics.bookingStatusDistribution.map((status) => (
-                  <div key={status.status} className="flex justify-between items-center">
-                    <span className="text-white/70 capitalize">{status.status}</span>
-                    <span className="text-white font-semibold">{status.count}</span>
+                  <div key={(status as any).status} className="flex justify-between items-center">
+                    <span className="text-white/70 capitalize">{(status as any).status}</span>
+                    <span className="text-white font-semibold">{(status as any).count}</span>
                   </div>
                 ))}
               </div>
@@ -236,9 +236,9 @@ const AnalyticsDashboard: React.FC = () => {
               {analytics.userActivity.slice(0, 10).map((activity, index) => (
                 <div key={index} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                   <div>
-                    <p className="text-white font-medium">{new Date(activity.date).toLocaleDateString()}</p>
+                    <p className="text-white font-medium">{new Date((activity as any).date).toLocaleDateString()}</p>
                   </div>
-                  <span className="text-white font-semibold">{activity.count} new users</span>
+                  <span className="text-white font-semibold">{(activity as any).count} new users</span>
                 </div>
               ))}
             </div>
@@ -255,12 +255,12 @@ const AnalyticsDashboard: React.FC = () => {
               {analytics.topVehicles.map((vehicle, index) => (
                 <div key={index} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                   <div>
-                    <p className="text-white font-medium">{vehicle.vehicle.title}</p>
-                    <p className="text-white/70 text-sm">{vehicle.vehicle.make} {vehicle.vehicle.model}</p>
+                    <p className="text-white font-medium">{(vehicle as any).vehicle.title}</p>
+                    <p className="text-white/70 text-sm">{(vehicle as any).vehicle.make} {(vehicle as any).vehicle.model}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-semibold">{vehicle.bookingCount} bookings</p>
-                    <p className="text-white/70 text-sm">R{parseFloat(vehicle.totalRevenue).toLocaleString()}</p>
+                    <p className="text-white font-semibold">{(vehicle as any).bookingCount} bookings</p>
+                    <p className="text-white/70 text-sm">R{parseFloat((vehicle as any).totalRevenue).toLocaleString()}</p>
                   </div>
                 </div>
               ))}
@@ -278,9 +278,9 @@ const AnalyticsDashboard: React.FC = () => {
               {analytics.revenueByMonth.map((month, index) => (
                 <div key={index} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                   <div>
-                    <p className="text-white font-medium">{new Date(month.month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+                    <p className="text-white font-medium">{new Date((month as any).month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
                   </div>
-                  <span className="text-white font-semibold">R{parseFloat(month.revenue).toLocaleString()}</span>
+                  <span className="text-white font-semibold">R{parseFloat((month as any).revenue).toLocaleString()}</span>
                 </div>
               ))}
             </div>

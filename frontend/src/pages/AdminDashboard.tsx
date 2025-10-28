@@ -1,459 +1,648 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
-import PerformanceMonitor from '../components/PerformanceMonitor';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { useToast } from '../components/ToastProvider';
-import RealTimeNotifications from '../components/RealTimeNotifications';
-import { AdminStats } from '../services/adminService';
-// Removed mock data imports
+import GlassButton from '../components/GlassButton';
+import StatusBadge from '../components/StatusBadge';
+import OptimizedImage from '../components/OptimizedImage';
+import { DashboardSkeleton } from '../components/SkeletonLoader';
+import { containerVariants, itemVariants, dashboardCardVariants } from '../utils/motionVariants';
+import { toast } from 'react-hot-toast';
 
-// Import admin components
-import UserManagementPanel from '../components/admin/UserManagementPanel';
-import VehicleManagementPanel from '../components/admin/VehicleManagementPanel';
-import BookingManagementPanel from '../components/admin/BookingManagementPanel';
-import FinancialDashboard from '../components/admin/FinancialDashboard';
-import ContentModerationPanel from '../components/admin/ContentModerationPanel';
-import AnalyticsDashboard from '../components/admin/AnalyticsDashboard';
-import SystemAdminPanel from '../components/admin/SystemAdminPanel';
-import DocumentManagementPanel from '../components/admin/DocumentManagementPanel';
-import VehicleApprovalPanel from '../components/VehicleApprovalPanel';
+// API base URL
+const API_BASE_URL = 'http://localhost:5001/api';
+
+interface DashboardStats {
+  totalUsers: number;
+  totalListings: number;
+  totalBookings: number;
+  pendingListings: number;
+  activeBookings: number;
+  totalRevenue: number;
+}
+
+interface Listing {
+  id: number;
+  hostId: number;
+  make: string;
+  model: string;
+  year: number;
+  pricePerDay: number;
+  image: string;
+  status: 'pending' | 'approved' | 'rejected';
+  city: string;
+  description?: string;
+  createdAt: string;
+  host?: {
+    id: number;
+    name: string;
+    email: string;
+    phone?: string;
+  };
+}
+
+interface User {
+  id: number;
+  uid: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'host' | 'renter';
+  isVerified: boolean;
+  createdAt: string;
+}
 
 const AdminDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
-  const { showToast } = useToast();
-  const navigate = useNavigate();
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [pendingListings, setPendingListings] = useState<Listing[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  const navigationTabs = [
+    { id: 'overview', label: 'Overview', icon: 'BarChart' },
+    { id: 'listings', label: 'Listings', icon: 'Car' },
+    { id: 'users', label: 'Users', icon: 'Users' },
+    { id: 'bookings', label: 'Bookings', icon: 'Calendar' },
+    { id: 'analytics', label: 'Analytics', icon: 'TrendingUp' },
+    { id: 'reports', label: 'Reports', icon: 'FileText' },
+    { id: 'settings', label: 'Settings', icon: 'Settings' },
+    { id: 'logs', label: 'System Logs', icon: 'Activity' },
+    { id: 'support', label: 'Support', icon: 'HelpCircle' },
+  ];
 
-  const fetchStats = async () => {
+  useEffect(() => {
+    fetchDashboardData();
+  }, [user?.uid]);
+
+  const fetchDashboardData = async () => {
     try {
+      if (!user?.uid) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
-      showToast('Loading admin dashboard...', 'info');
       
-      const response = await fetch('/api/admin/dashboard-stats', {
+      const token = await user.getIdToken();
+      
+      // Fetch dashboard stats
+      const statsResponse = await fetch(`${API_BASE_URL}/admin/dashboard-stats`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.success) {
+          setStats(statsData.data);
+        }
+      }
+
+      // Fetch pending listings
+      const listingsResponse = await fetch(`${API_BASE_URL}/admin/pending-listings`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch admin stats');
+      if (listingsResponse.ok) {
+        const listingsData = await listingsResponse.json();
+        if (listingsData.success) {
+          setPendingListings(listingsData.data);
+        }
       }
-      
-      const result = await response.json();
-      if (result.success) {
-        // Transform the backend response to match our interface
-        const transformedStats: AdminStats = {
-          overview: {
-            totalUsers: result.stats.users.total,
-            pendingUsers: 0, // We'll need to add this to the backend
-            totalVehicles: result.stats.vehicles.total,
-            pendingVehicles: result.stats.vehicles.pending,
-            totalBookings: result.stats.bookings.total,
-            pendingBookings: 0, // We'll need to add this to the backend
-            totalRevenue: result.stats.revenue.total
-          },
-          recentActivity: {
-            recentUsers: [], // We'll need to add this to the backend
-            recentVehicles: [] // We'll need to add this to the backend
-          }
-        };
-        setStats(transformedStats);
-      } else {
-        throw new Error(result.error || 'Failed to fetch admin stats');
+
+      // Fetch users
+      const usersResponse = await fetch(`${API_BASE_URL}/admin/users`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (usersResponse.ok) {
+        const usersData = await usersResponse.json();
+        if (usersData.success) {
+          setUsers(usersData.data);
+        }
       }
+
     } catch (error) {
-      console.error('Error fetching admin stats:', error);
-      // Set empty state on error instead of mock data
-      setStats(null);
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRefresh = () => {
-    fetchStats();
-  };
-
-  const handleLogout = async () => {
+  const handleApproveListing = async (listingId: number) => {
     try {
-      await logout();
-      // Navigation will be handled by the AdminAuthContext
+      if (!user?.uid) return;
+      
+      const token = await user.getIdToken();
+      
+      const response = await fetch(`${API_BASE_URL}/admin/listings/${listingId}/approve`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to approve listing');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success('Listing approved successfully');
+        fetchDashboardData(); // Refresh data
+      } else {
+        throw new Error(data.error || 'Failed to approve listing');
+      }
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error('Error approving listing:', error);
+      toast.error('Failed to approve listing');
     }
   };
 
-  const adminTabs = [
-    { id: 'overview', label: 'Overview', icon: 'bar-chart', path: '/admin-dashboard' },
-    { id: 'users', label: 'User Management', icon: 'users', path: '/admin-dashboard/users' },
-    { id: 'vehicles', label: 'Vehicle Management', icon: 'car', path: '/admin-dashboard/vehicles' },
-    { id: 'vehicle-approvals', label: 'Vehicle Approvals', icon: 'check-circle', path: '/admin-dashboard/vehicle-approvals' },
-    { id: 'bookings', label: 'Booking Management', icon: 'calendar', path: '/admin-dashboard/bookings' },
-    { id: 'financial', label: 'Financial Dashboard', icon: 'dollar-sign', path: '/admin-dashboard/financial' },
-    { id: 'content', label: 'Content Moderation', icon: 'shield', path: '/admin-dashboard/content' },
-    { id: 'analytics', label: 'Analytics & Reports', icon: 'trending-up', path: '/admin-dashboard/analytics' },
-    { id: 'system', label: 'System Admin', icon: 'settings', path: '/admin-dashboard/system' },
-    { id: 'documents', label: 'Document Management', icon: 'file-text', path: '/admin-dashboard/documents' },
-  ];
+  const handleRejectListing = async (listingId: number) => {
+    try {
+      if (!user?.uid) return;
+      
+      const token = await user.getIdToken();
+      
+      const response = await fetch(`${API_BASE_URL}/admin/listings/${listingId}/reject`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          reason: 'Does not meet our quality standards'
+        })
+      });
 
-  useEffect(() => {
-    // Check if admin is authenticated
-    if (!user || user.role !== 'admin') {
-      navigate('/');
-      return;
+      if (!response.ok) {
+        throw new Error('Failed to reject listing');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success('Listing rejected');
+        fetchDashboardData(); // Refresh data
+      } else {
+        throw new Error(data.error || 'Failed to reject listing');
+      }
+    } catch (error) {
+      console.error('Error rejecting listing:', error);
+      toast.error('Failed to reject listing');
     }
+  };
 
-    fetchStats();
-    // Set up polling for real-time updates
-    const interval = setInterval(fetchStats, 30000); // Update every 30 seconds
-    return () => clearInterval(interval);
-  }, [user, navigate]);
-
-  // Show loading while checking authentication or fetching data
-  if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading Admin Dashboard...</p>
-        </div>
-      </div>
-    );
+  if (loading) {
+    return <DashboardSkeleton />;
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="flex">
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="lg:hidden fixed top-4 left-4 z-50 p-3 bg-white/20 backdrop-blur-md rounded-lg border border-white/30 text-white hover:bg-white/30 transition-all"
-        >
-          <Icon name={isMobileMenuOpen ? "X" : "Menu"} className="h-5 w-5" />
-        </button>
+    <div className="page-background">
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-indigo-900/20 backdrop-blur-sm"></div>
+      <motion.div 
+        className="relative min-h-screen p-4 lg:p-8 space-y-6 lg:space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+      {/* Hero Header */}
+      <motion.div 
+        className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-6 lg:space-y-0"
+        variants={itemVariants}
+      >
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center shadow-lg">
+            <span className="text-2xl font-bold text-white">
+              {user?.name?.charAt(0) || 'A'}
+            </span>
+          </div>
+          <div>
+            <h1 className="text-3xl lg:text-4xl font-bold text-white font-heading text-shadow-lg">Admin Dashboard</h1>
+            <div className="flex items-center space-x-2 mt-2">
+              <p className="text-white/80 text-lg font-body">Platform overview and management</p>
+              <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-medium border border-red-500/30">
+                ⚡ Admin
+              </span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
-        {/* Mobile Menu Overlay */}
-        {isMobileMenuOpen && (
-          <div 
-            className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
+      {/* Navigation Tabs */}
+      <motion.div 
+        className="flex flex-wrap gap-2"
+        variants={itemVariants}
+      >
+        {navigationTabs.map((tab, index) => (
+          <motion.div
+            key={tab.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <GlassButton
+              onClick={() => setActiveTab(tab.id)}
+              variant={activeTab === tab.id ? 'primary' : 'secondary'}
+              size="sm"
+              icon={<Icon name={tab.icon} size="sm" />}
+              className={activeTab === tab.id ? 'shadow-glow' : ''}
+            >
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+            </GlassButton>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Tab Content */}
+      <div className="space-y-6">
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {/* Stats Cards */}
+            {stats && (
+              <motion.div 
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6"
+                variants={itemVariants}
+              >
+          <motion.div variants={dashboardCardVariants}>
+            <GlassCard
+              level={3}
+              hover
+              animated
+              title="Total Users"
+              subtitle="Registered users"
+              icon={<Icon name="Users" size="md" className="text-primary-400" />}
+              className="text-center"
+            >
+              <div className="text-3xl font-bold text-white mb-2 font-heading">{stats.totalUsers}</div>
+              <div className="text-white/70 text-sm font-body">Active users</div>
+            </GlassCard>
+          </motion.div>
+          
+          <motion.div variants={dashboardCardVariants}>
+            <GlassCard
+              level={3}
+              hover
+              animated
+              title="Total Listings"
+              subtitle="All vehicles"
+              icon={<Icon name="Car" size="md" className="text-accent-400" />}
+              className="text-center"
+            >
+              <div className="text-3xl font-bold text-white mb-2 font-heading">{stats.totalListings}</div>
+              <div className="text-white/70 text-sm font-body">Vehicles listed</div>
+            </GlassCard>
+          </motion.div>
+          
+          <motion.div variants={dashboardCardVariants}>
+            <GlassCard
+              level={3}
+              hover
+              animated
+              title="Pending Reviews"
+              subtitle="Awaiting approval"
+              icon={<Icon name="Clock" size="md" className="text-yellow-400" />}
+              className="text-center"
+            >
+              <div className="text-3xl font-bold text-white mb-2 font-heading">{stats.pendingListings}</div>
+              <div className="text-white/70 text-sm font-body">Need review</div>
+            </GlassCard>
+          </motion.div>
+          
+          <motion.div variants={dashboardCardVariants}>
+            <GlassCard
+              level={3}
+              hover
+              animated
+              title="Active Bookings"
+              subtitle="Current rentals"
+              icon={<Icon name="Calendar" size="md" className="text-green-400" />}
+              className="text-center"
+            >
+              <div className="text-3xl font-bold text-white mb-2 font-heading">{stats.activeBookings}</div>
+              <div className="text-white/70 text-sm font-body">In progress</div>
+            </GlassCard>
+          </motion.div>
+          
+          <motion.div variants={dashboardCardVariants}>
+            <GlassCard
+              level={3}
+              hover
+              animated
+              title="Total Revenue"
+              subtitle="Platform earnings"
+              icon={<Icon name="DollarSign" size="md" className="text-green-400" />}
+              className="text-center"
+            >
+              <div className="text-3xl font-bold text-white mb-2 font-heading">R{stats.totalRevenue.toLocaleString()}</div>
+              <div className="text-white/70 text-sm font-body">Total earnings</div>
+            </GlassCard>
+          </motion.div>
+          
+          <motion.div variants={dashboardCardVariants}>
+            <GlassCard
+              level={3}
+              hover
+              animated
+              title="Total Bookings"
+              subtitle="All time"
+              icon={<Icon name="BookOpen" size="md" className="text-blue-400" />}
+              className="text-center"
+            >
+              <div className="text-3xl font-bold text-white mb-2 font-heading">{stats.totalBookings}</div>
+              <div className="text-white/70 text-sm font-body">Completed bookings</div>
+            </GlassCard>
+          </motion.div>
+              </motion.div>
+            )}
+          </motion.div>
         )}
 
-        {/* Sidebar Navigation */}
-        <div className={`${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white/10 backdrop-blur-md border-r border-white/20 min-h-screen transition-transform duration-300 ease-in-out`}>
-          <div className="p-6">
-            <div className="flex items-center space-x-3 mb-8">
-              <div className="bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-sm rounded-lg p-3 shadow-xl border border-white/30">
-                <div className="text-white font-bold text-lg">RideShare</div>
-                <div className="text-white/80 text-xs">South Africa</div>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">Admin Dashboard</h1>
-                <p className="text-white/70 text-sm">RideShare SA Management</p>
-              </div>
+        {/* Listings Tab */}
+        {activeTab === 'listings' && (
+          <motion.div variants={itemVariants}>
+            <GlassCard 
+              level={3}
+              hover
+              animated
+              title="Pending Vehicle Approvals" 
+              icon={<Icon name="AlertCircle" size="md" className="text-yellow-400" />}
+            >
+          {pendingListings.length === 0 ? (
+            <div className="text-center py-8">
+              <Icon name="CheckCircle" size="lg" className="text-green-400 mx-auto mb-4" />
+              <p className="text-white/70">No pending listings</p>
+              <p className="text-white/50 text-sm">All vehicles have been reviewed</p>
             </div>
-            
-            <div className="space-y-2 flex-1">
-              {adminTabs.map((tab) => (
-                <Link
-                  key={tab.id}
-                  to={tab.path}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-white/20 text-white'
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
-                  }`}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setIsMobileMenuOpen(false); // Close mobile menu on navigation
-                  }}
+          ) : (
+            <div className="space-y-4">
+              {pendingListings.map((listing, index) => (
+                <motion.div 
+                  key={listing.id} 
+                  className="flex items-center space-x-4 p-4 glass-2 rounded-lg"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
                 >
-                  <Icon name={tab.icon} className="h-5 w-5" />
-                  <span className="font-medium">{tab.label}</span>
-                </Link>
+                  <OptimizedImage 
+                    src={listing.image}
+                    alt={`${listing.make} ${listing.model}`}
+                    width={80}
+                    height={60}
+                    className="w-20 h-15 rounded-lg object-cover"
+                  />
+                  <div className="flex-1">
+                    <h4 className="text-white font-medium font-body">
+                      {listing.make} {listing.model} ({listing.year})
+                    </h4>
+                    <p className="text-white/70 text-sm font-body">
+                      {listing.city} • R{listing.pricePerDay}/day
+                    </p>
+                    <p className="text-white/60 text-xs font-body">
+                      Listed by {listing.host?.name} • {new Date(listing.createdAt).toLocaleDateString()}
+                    </p>
+                    {listing.description && (
+                      <p className="text-white/60 text-xs font-body mt-1 line-clamp-2">
+                        {listing.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end space-y-2">
+                    <StatusBadge status={listing.status} />
+                    <div className="flex space-x-2">
+                      <GlassButton
+                        onClick={() => handleApproveListing(listing.id)}
+                        variant="primary"
+                        size="sm"
+                        icon={<Icon name="Check" size="sm" />}
+                      >
+                        Approve
+                      </GlassButton>
+                      <GlassButton
+                        onClick={() => handleRejectListing(listing.id)}
+                        variant="secondary"
+                        size="sm"
+                        icon={<Icon name="X" size="sm" />}
+                      >
+                        Reject
+                      </GlassButton>
+                </div>
+              </div>
+                </motion.div>
               ))}
             </div>
-            
-            {/* Logout Button */}
-            <div className="mt-8 pt-4 border-t border-white/20">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all text-red-400 hover:text-white hover:bg-red-600/20"
+          )}
+              </GlassCard>
+          </motion.div>
+        )}
+
+        {/* Users Tab */}
+        {activeTab === 'users' && (
+          <motion.div variants={itemVariants}>
+            <GlassCard 
+              level={3}
+              hover
+              animated
+              title="User Management" 
+              icon={<Icon name="Users" size="md" className="text-primary-400" />}
+            >
+          <div className="space-y-3">
+            {users.slice(0, 5).map((user, index) => (
+              <motion.div 
+                key={user.id} 
+                className="flex items-center justify-between p-3 glass-2 rounded-lg"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
               >
-                <Icon name="log-out" className="h-5 w-5" />
-                <span className="font-medium">Exit Admin Dashboard</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 p-4 lg:p-6">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="mb-6 lg:mb-8">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-                <div>
-                  <h2 className="text-2xl lg:text-3xl font-bold text-white mb-2">
-                    {adminTabs.find(tab => tab.id === activeTab)?.label || 'Admin Dashboard'}
-                  </h2>
-                  <p className="text-gray-300 text-sm lg:text-base">
-                    Welcome back, {user?.firstName} {user?.lastName}
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-                  <RealTimeNotifications userId={user?.id || ''} userRole="admin" />
-                  <button
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    className="flex items-center justify-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 text-white hover:bg-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <LoadingSpinner size="sm" text="" />
-                    ) : (
-                      <Icon name="refresh-cw" className="h-4 w-4" />
-                    )}
-                    <span className="hidden sm:inline">{loading ? 'Refreshing...' : 'Refresh'}</span>
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center justify-center space-x-2 px-4 py-2 bg-red-600/80 backdrop-blur-md rounded-lg border border-red-500/30 text-white hover:bg-red-600 transition-all"
-                  >
-                    <Icon name="log-out" className="h-4 w-4" />
-                    <span className="hidden sm:inline">Exit Admin</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Routes */}
-            <Routes>
-              <Route path="/" element={<OverviewTab stats={stats} />} />
-              <Route path="/users" element={<UserManagementPanel onRefresh={handleRefresh} />} />
-              <Route path="/vehicles" element={<VehicleManagementPanel onRefresh={handleRefresh} />} />
-              <Route path="/vehicle-approvals" element={<VehicleApprovalPanel />} />
-              <Route path="/bookings" element={<BookingManagementPanel />} />
-              <Route path="/financial" element={<FinancialDashboard onRefresh={handleRefresh} />} />
-              <Route path="/content" element={<ContentModerationPanel onRefresh={handleRefresh} />} />
-              <Route path="/analytics" element={<AnalyticsDashboard onRefresh={handleRefresh} />} />
-              <Route path="/system" element={<SystemAdminPanel />} />
-              <Route path="/documents" element={<DocumentManagementPanel onRefresh={handleRefresh} />} />
-            </Routes>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Overview Tab Component
-const OverviewTab: React.FC<{ stats: AdminStats | null }> = ({ stats }) => {
-  const navigate = useNavigate();
-  
-  if (!stats) {
-    return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-300">Loading platform statistics...</p>
-        <p className="text-gray-400 text-sm mt-2">Connecting to backend services...</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6 lg:space-y-8">
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <GlassCard className="p-4 lg:p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-300 text-xs lg:text-sm">Total Users</p>
-              <p className="text-xl lg:text-2xl font-bold text-white">{stats.overview.totalUsers}</p>
-              <p className="text-red-400 text-xs lg:text-sm mt-1">
-                {stats.overview.pendingUsers} pending approval
-              </p>
-            </div>
-            <Icon name="users" className="h-6 w-6 lg:h-8 lg:w-8 text-blue-400 flex-shrink-0" />
-          </div>
-        </GlassCard>
-
-        <GlassCard className="p-4 lg:p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-300 text-xs lg:text-sm">Total Vehicles</p>
-              <p className="text-xl lg:text-2xl font-bold text-white">{stats.overview.totalVehicles}</p>
-              <p className="text-red-400 text-xs lg:text-sm mt-1">
-                {stats.overview.pendingVehicles} pending approval
-              </p>
-            </div>
-            <Icon name="car" className="h-6 w-6 lg:h-8 lg:w-8 text-green-400 flex-shrink-0" />
-          </div>
-        </GlassCard>
-
-        <GlassCard className="p-4 lg:p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-300 text-xs lg:text-sm">Total Bookings</p>
-              <p className="text-xl lg:text-2xl font-bold text-white">{stats.overview.totalBookings}</p>
-              <p className="text-yellow-400 text-xs lg:text-sm mt-1">
-                {stats.overview.pendingBookings} pending
-              </p>
-            </div>
-            <Icon name="calendar" className="h-6 w-6 lg:h-8 lg:w-8 text-purple-400 flex-shrink-0" />
-          </div>
-        </GlassCard>
-
-        <GlassCard className="p-4 lg:p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-300 text-xs lg:text-sm">Total Revenue</p>
-              <p className="text-xl lg:text-2xl font-bold text-white">R{stats.overview.totalRevenue.toLocaleString()}</p>
-              <p className="text-green-400 text-xs lg:text-sm mt-1">
-                +12% from last month
-              </p>
-            </div>
-            <Icon name="dollar-sign" className="h-6 w-6 lg:h-8 lg:w-8 text-yellow-400 flex-shrink-0" />
-          </div>
-        </GlassCard>
-      </div>
-
-      {/* Performance Monitor */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <PerformanceMonitor />
-        </div>
-        <div className="lg:col-span-1">
-          <GlassCard className="p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">System Health</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300 text-sm">Server Status</span>
-                <span className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 text-sm font-medium">Online</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300 text-sm">Database</span>
-                <span className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 text-sm font-medium">Connected</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300 text-sm">API Status</span>
-                <span className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 text-sm font-medium">Healthy</span>
-                </span>
-              </div>
-            </div>
-          </GlassCard>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Recent User Registrations</h3>
-          <div className="space-y-3">
-            {stats.recentActivity.recentUsers.length > 0 ? (
-              stats.recentActivity.recentUsers.slice(0, 5).map((user) => (
-                <div key={user.id} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
-                  <div>
-                    <p className="text-white font-medium">{user.firstName} {user.lastName}</p>
-                    <p className="text-gray-400 text-sm">{user.email}</p>
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-primary-500/20 rounded-full flex items-center justify-center">
+                    <Icon name="User" size="sm" className="text-primary-400" />
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    user.approvalStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                    user.approvalStatus === 'approved' ? 'bg-green-500/20 text-green-400' :
-                    'bg-red-500/20 text-red-400'
+                  <div>
+                    <h4 className="text-white font-medium font-body">{user.name}</h4>
+                    <p className="text-white/70 text-sm font-body">{user.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    user.role === 'admin' ? 'bg-red-500/20 text-red-400' :
+                    user.role === 'host' ? 'bg-blue-500/20 text-blue-400' :
+                    'bg-green-500/20 text-green-400'
                   }`}>
-                    {user.approvalStatus}
+                    {user.role}
+                  </span>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    user.isVerified ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                  }`}>
+                    {user.isVerified ? 'Verified' : 'Pending'}
                   </span>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-400">No recent user registrations</p>
-                <p className="text-gray-500 text-sm">Data will appear here when users register</p>
-              </div>
-            )}
+              </motion.div>
+            ))}
           </div>
         </GlassCard>
+          </motion.div>
+        )}
 
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Recent Vehicle Listings</h3>
-          <div className="space-y-3">
-            {stats.recentActivity.recentVehicles.length > 0 ? (
-              stats.recentActivity.recentVehicles.slice(0, 5).map((vehicle) => (
-                <div key={vehicle.id} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
-                  <div>
-                    <p className="text-white font-medium">{vehicle.title}</p>
-                    <p className="text-gray-400 text-sm">{vehicle.make} {vehicle.model}</p>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    vehicle.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                    vehicle.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                    'bg-red-500/20 text-red-400'
-                  }`}>
-                    {vehicle.status}
-                  </span>
+        {/* Bookings Tab */}
+        {activeTab === 'bookings' && (
+          <div className="space-y-6">
+            <GlassCard title="Booking Management" icon="Calendar">
+              <div className="space-y-3">
+                <div className="text-center py-8">
+                  <Icon name="Calendar" size="lg" className="text-white/50 mx-auto mb-4" />
+                  <p className="text-white/70">No bookings to manage</p>
+                  <p className="text-white/50 text-sm">Bookings will appear here for management</p>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-400">No recent vehicle listings</p>
-                <p className="text-gray-500 text-sm">Data will appear here when hosts list vehicles</p>
               </div>
-            )}
+            </GlassCard>
           </div>
-        </GlassCard>
-      </div>
+        )}
 
-      {/* Quick Actions */}
-      <GlassCard className="p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button 
-            onClick={() => (navigate as any)('/admin-dashboard/users')}
-            className="flex items-center space-x-2 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
-          >
-            <Icon name="user-plus" className="h-5 w-5 text-blue-400" />
-            <span className="text-white">Approve Users</span>
-          </button>
-          <button 
-            onClick={() => navigate('/admin-dashboard/vehicle-approvals')}
-            className="flex items-center space-x-2 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
-          >
-            <Icon name="car" className="h-5 w-5 text-green-400" />
-            <span className="text-white">Review Vehicles</span>
-          </button>
-          <button 
-            onClick={() => (navigate as any)('/admin-dashboard/bookings')}
-            className="flex items-center space-x-2 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
-          >
-            <Icon name="alert-triangle" className="h-5 w-5 text-yellow-400" />
-            <span className="text-white">Handle Disputes</span>
-          </button>
-          <button 
-            onClick={() => (navigate as any)('/admin-dashboard/documents')}
-            className="flex items-center space-x-2 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
-          >
-            <Icon name="file-text" className="h-5 w-5 text-purple-400" />
-            <span className="text-white">Review Documents</span>
-          </button>
-        </div>
-      </GlassCard>
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            <GlassCard title="Platform Analytics" icon="TrendingUp">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <h4 className="text-white font-medium mb-2">User Growth</h4>
+                    <div className="text-3xl font-bold text-white">+15%</div>
+                    <div className="text-green-400 text-sm">This month</div>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <h4 className="text-white font-medium mb-2">Booking Rate</h4>
+                    <div className="text-3xl font-bold text-white">78%</div>
+                    <div className="text-green-400 text-sm">Success rate</div>
+                  </div>
+                </div>
+              </div>
+            </GlassCard>
+          </div>
+        )}
+
+        {/* Reports Tab */}
+        {activeTab === 'reports' && (
+          <div className="space-y-6">
+            <GlassCard title="Admin Reports" icon="FileText">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                    <h4 className="text-white font-medium mb-2">Platform Report</h4>
+                    <p className="text-white/70 text-sm mb-3">Complete platform performance analysis</p>
+                    <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                      Generate Report
+                    </button>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                    <h4 className="text-white font-medium mb-2">Financial Report</h4>
+                    <p className="text-white/70 text-sm mb-3">Revenue and financial metrics</p>
+                    <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                      Download PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </GlassCard>
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="space-y-6">
+            <GlassCard title="System Settings" icon="Settings">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-white/80 mb-2">Platform Name</label>
+                    <input
+                      type="text"
+                      value="RideShare SA"
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white/80 mb-2">Commission Rate (%)</label>
+                    <input
+                      type="number"
+                      value="10"
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <button className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    Save Settings
+                  </button>
+                </div>
+              </div>
+            </GlassCard>
+          </div>
+        )}
+
+        {/* System Logs Tab */}
+        {activeTab === 'logs' && (
+          <div className="space-y-6">
+            <GlassCard title="System Logs" icon="Activity">
+              <div className="space-y-3">
+                <div className="text-center py-8">
+                  <Icon name="Activity" size="lg" className="text-white/50 mx-auto mb-4" />
+                  <p className="text-white/70">No system logs available</p>
+                  <p className="text-white/50 text-sm">System activity logs will appear here</p>
+                </div>
+              </div>
+            </GlassCard>
+          </div>
+        )}
+
+        {/* Support Tab */}
+        {activeTab === 'support' && (
+          <div className="space-y-6">
+            <GlassCard title="Admin Support" icon="HelpCircle">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                    <h4 className="text-white font-medium mb-2">System Documentation</h4>
+                    <p className="text-white/70 text-sm mb-3">Access system documentation and guides</p>
+                    <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                      View Docs
+                    </button>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                    <h4 className="text-white font-medium mb-2">Technical Support</h4>
+                    <p className="text-white/70 text-sm mb-3">Get technical assistance</p>
+                    <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                      Contact Support
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </GlassCard>
+          </div>
+        )}
+      </div>
+      </motion.div>
     </div>
   );
 };

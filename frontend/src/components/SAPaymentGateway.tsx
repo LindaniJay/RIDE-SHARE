@@ -14,7 +14,7 @@ export const SAPaymentGateway: React.FC<SAPaymentGatewayProps> = ({
   // currency = 'ZAR',
   onPaymentSuccess,
   onPaymentError,
-  className = ""
+  className = ''
 }) => {
   const [selectedMethod, setSelectedMethod] = useState<string>('');
   const [processing, setProcessing] = useState(false);

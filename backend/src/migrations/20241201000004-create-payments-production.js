@@ -12,23 +12,11 @@ module.exports = {
       },
       booking_id: {
         type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: 'bookings',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        allowNull: false
       },
       renter_id: {
         type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: 'users',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        allowNull: false
       },
       amount: {
         type: Sequelize.DECIMAL(10, 2),
@@ -102,6 +90,31 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.NOW
       }
+    });
+
+    // Add foreign key constraints
+    await queryInterface.addConstraint('payments', {
+      fields: ['booking_id'],
+      type: 'foreign key',
+      name: 'payments_booking_id_fkey',
+      references: {
+        table: 'bookings',
+        field: 'id'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE'
+    });
+
+    await queryInterface.addConstraint('payments', {
+      fields: ['renter_id'],
+      type: 'foreign key',
+      name: 'payments_renter_id_fkey',
+      references: {
+        table: 'users',
+        field: 'id'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE'
     });
 
     // Create indexes for better performance

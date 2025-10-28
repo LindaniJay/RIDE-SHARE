@@ -58,7 +58,7 @@ const PhotoDocumentationSystem: React.FC<PhotoDocumentationSystemProps> = ({
     setTimeout(() => {
       const newPhoto: PhotoDocument = {
         id: `photo_${Date.now()}`,
-        url: `https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=${(categories as any)[currentCategory]?.name}`,
+        url: `/images/vehicle-placeholder.png`,
         timestamp: new Date(),
         category: currentCategory,
         description: `${(categories as any)[currentCategory]?.name} - ${inspectionType}`,

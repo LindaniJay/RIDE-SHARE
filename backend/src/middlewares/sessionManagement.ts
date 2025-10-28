@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import { User } from '../models';
-import { AuthRequest } from './auth';
+import { AuthenticatedRequest } from '../middleware/auth';
 import { cacheService } from '../services/cache';
 
 // Session configuration
@@ -10,7 +9,7 @@ const REFRESH_TIMEOUT = 7 * 24 * 60 * 60 * 1000; // 7 days
 const MAX_CONCURRENT_SESSIONS = 3;
 
 // Track active sessions
-export const trackSession = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const trackSession = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user!;
     const sessionId = req.headers['x-session-id'] as string;
@@ -41,7 +40,7 @@ export const trackSession = async (req: AuthRequest, res: Response, next: NextFu
 };
 
 // Create new session
-export const createSession = async (req: AuthRequest, res: Response) => {
+export const createSession = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = req.user!;
     const sessionId = generateSessionId();
@@ -74,7 +73,7 @@ export const createSession = async (req: AuthRequest, res: Response) => {
 };
 
 // Refresh session
-export const refreshSession = async (req: AuthRequest, res: Response) => {
+export const refreshSession = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = req.user!;
     const sessionId = req.headers['x-session-id'] as string;
@@ -90,13 +89,6 @@ export const refreshSession = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ error: 'Invalid session' });
     }
     
-    // Generate new access token
-    const accessToken = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: '15m' }
-    );
-    
     // Update session
     const parsedSession = JSON.parse(sessionData);
     await cacheService.set(sessionKey, {
@@ -106,7 +98,6 @@ export const refreshSession = async (req: AuthRequest, res: Response) => {
     
     res.json({
       success: true,
-      accessToken,
       expiresAt: new Date(Date.now() + SESSION_TIMEOUT).toISOString()
     });
   } catch (error) {
@@ -116,7 +107,7 @@ export const refreshSession = async (req: AuthRequest, res: Response) => {
 };
 
 // Logout and invalidate session
-export const logoutSession = async (req: AuthRequest, res: Response) => {
+export const logoutSession = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = req.user!;
     const sessionId = req.headers['x-session-id'] as string;
@@ -134,7 +125,7 @@ export const logoutSession = async (req: AuthRequest, res: Response) => {
 };
 
 // Logout from all devices
-export const logoutAllSessions = async (req: AuthRequest, res: Response) => {
+export const logoutAllSessions = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = req.user!;
     
@@ -161,7 +152,7 @@ export const logoutAllSessions = async (req: AuthRequest, res: Response) => {
 };
 
 // Get active sessions
-export const getActiveSessions = async (req: AuthRequest, res: Response) => {
+export const getActiveSessions = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = req.user!;
     const sessionPattern = `session:${user.id}:*`;
@@ -236,7 +227,7 @@ const generateSessionId = (): string => {
 };
 
 // Session timeout middleware
-export const checkSessionTimeout = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const checkSessionTimeout = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user!;
     const sessionId = req.headers['x-session-id'] as string;

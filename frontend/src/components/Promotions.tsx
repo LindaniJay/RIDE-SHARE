@@ -20,7 +20,7 @@ interface PromotionsProps {
   className?: string;
 }
 
-export const Promotions: React.FC<PromotionsProps> = ({ userId, className = "" }) => {
+export const Promotions: React.FC<PromotionsProps> = ({ userId, className = '' }) => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(true);
   const [appliedCode, setAppliedCode] = useState<string>('');
@@ -45,35 +45,8 @@ export const Promotions: React.FC<PromotionsProps> = ({ userId, className = "" }
       }
     } catch (error) {
       console.error('Error fetching promotions:', error);
-      // Mock data for development
-      setPromotions([
-        {
-          id: '1',
-          code: 'WELCOME20',
-          title: 'Welcome Bonus',
-          description: '20% off your first booking',
-          discountType: 'percentage',
-          discountValue: 20,
-          minBookingAmount: 500,
-          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          isActive: true,
-          usageCount: 0,
-          maxUsage: 1
-        },
-        {
-          id: '2',
-          code: 'SAVE100',
-          title: 'Fixed Discount',
-          description: 'R100 off bookings over R1000',
-          discountType: 'fixed',
-          discountValue: 100,
-          minBookingAmount: 1000,
-          validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-          isActive: true,
-          usageCount: 0,
-          maxUsage: 3
-        }
-      ]);
+      // Fallback to empty array instead of mock data
+      setPromotions([]);
     } finally {
       setLoading(false);
     }

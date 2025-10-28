@@ -37,9 +37,8 @@ const GlassFormExample: React.FC = () => {
           <GlassInput
             label="Full Name"
             value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
+            onChange={(e) => handleInputChange('name', e)}
             placeholder="Enter your full name"
-            leftIcon="User"
             required
             error={errors.name}
           />
@@ -49,9 +48,8 @@ const GlassFormExample: React.FC = () => {
             label="Email Address"
             type="email"
             value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
+            onChange={(e) => handleInputChange('email', e)}
             placeholder="Enter your email"
-            leftIcon="Mail"
             required
             error={errors.email}
           />
@@ -61,9 +59,8 @@ const GlassFormExample: React.FC = () => {
             label="Password"
             type="password"
             value={formData.password}
-            onChange={(e) => handleInputChange('password', e.target.value)}
+            onChange={(e) => handleInputChange('password', e)}
             placeholder="Enter your password"
-            leftIcon="Lock"
             required
             error={errors.password}
           />

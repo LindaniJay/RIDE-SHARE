@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { authenticateToken, AuthRequest, requireRole } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest, requireRole } from '../middleware/auth';
 import { User } from '../models/User';
 import { Op } from 'sequelize';
 import { sequelize as db } from '../config/database';
@@ -63,7 +63,7 @@ const documentUploadSchema = z.object({
 });
 
 // Get user profile
-router.get('/profile', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/profile', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const user = await User.findByPk((req as any).user?.id, {
       attributes: { exclude: ['passwordHash'] }
@@ -83,7 +83,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Update user profile
-router.put('/profile', authenticateToken, async (req: AuthRequest, res) => {
+router.put('/profile', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const updateData = updateProfileSchema.parse(req.body);
 
@@ -112,7 +112,7 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Upload document
-router.post('/documents', authenticateToken, upload.single('document'), async (req: AuthRequest, res) => {
+router.post('/documents', authenticateToken, upload.single('document'), async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -155,7 +155,7 @@ router.post('/documents', authenticateToken, upload.single('document'), async (r
 });
 
 // Get user documents
-router.get('/documents', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/documents', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const user = await User.findByPk((req as any).user?.id);
     if (!user) {
@@ -174,7 +174,7 @@ router.get('/documents', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Verify document (admin only)
-router.patch('/documents/:documentId/verify', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.patch('/documents/:documentId/verify', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { documentId } = req.params;
     const { status, reason } = req.body;
@@ -198,7 +198,7 @@ router.patch('/documents/:documentId/verify', authenticateToken, requireRole(['a
 });
 
 // Get all users (admin)
-router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 10, role, status, search } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
@@ -238,7 +238,7 @@ router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthReque
 });
 
 // Approve/reject user (admin)
-router.patch('/:id/approve', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.patch('/:id/approve', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = req.body;
@@ -254,21 +254,27 @@ router.patch('/:id/approve', authenticateToken, requireRole(['admin']), async (r
 
     await user.update({
       approval_status: status,
-      ...(status === 'rejected' && reason && { rejectionReason: reason })
+      ...(status === 'rejected' && reason && { rejection_reason: reason })
+    });
+
+    // Get updated user with all fields
+    const updatedUser = await User.findByPk(id, {
+      attributes: { exclude: ['password_hash'] }
     });
 
     res.json({
       success: true,
       message: `User ${status}`,
-      user
+      data: updatedUser
     });
   } catch (error) {
+    console.error('Error updating user approval:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Suspend/activate user (admin)
-router.patch('/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.patch('/:id/status', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = req.body;
@@ -298,7 +304,7 @@ router.patch('/:id/status', authenticateToken, requireRole(['admin']), async (re
 });
 
 // Get user statistics (admin)
-router.get('/stats', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/stats', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const [
       totalUsers,
@@ -344,3 +350,5 @@ router.get('/stats', authenticateToken, requireRole(['admin']), async (req: Auth
 });
 
 export default router;
+
+

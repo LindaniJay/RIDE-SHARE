@@ -1,11 +1,11 @@
 import express from 'express';
-import { authenticateToken, requireHost, AuthRequest } from '../middlewares/auth';
+import { authenticateToken, requireHost, AuthenticatedRequest } from '../middleware/auth';
 import { Booking, Listing } from '../models';
 
 const router = express.Router();
 
 // Get host earnings overview
-router.get('/', authenticateToken, requireHost, async (req: AuthRequest, res) => {
+router.get('/', authenticateToken, requireHost, async (req: AuthenticatedRequest, res) => {
   try {
     const hostId = req.user!.id;
     
@@ -22,7 +22,7 @@ router.get('/', authenticateToken, requireHost, async (req: AuthRequest, res) =>
     });
 
     // Calculate earnings
-    const totalEarnings = bookings.reduce((sum, booking) => sum + booking.total_amount, 0);
+    const totalEarnings = bookings.reduce((sum, booking) => sum + (booking.total_amount || 0), 0);
     
     // Monthly earnings (current month)
     const currentMonth = new Date();
@@ -30,12 +30,12 @@ router.get('/', authenticateToken, requireHost, async (req: AuthRequest, res) =>
     const monthlyBookings = bookings.filter(booking => 
       new Date(booking.createdAt) >= startOfMonth
     );
-    const monthlyEarnings = monthlyBookings.reduce((sum, booking) => sum + booking.total_amount, 0);
+    const monthlyEarnings = monthlyBookings.reduce((sum, booking) => sum + (booking.total_amount || 0), 0);
 
     // Pending payouts (completed bookings not yet paid out)
     const pendingPayouts = bookings
       .filter(booking => booking.status === 'completed')
-      .reduce((sum, booking) => sum + booking.total_amount, 0);
+      .reduce((sum, booking) => sum + (booking.total_amount || 0), 0);
 
     const completedBookings = bookings.filter(booking => booking.status === 'completed').length;
 
@@ -51,8 +51,8 @@ router.get('/', authenticateToken, requireHost, async (req: AuthRequest, res) =>
           vehicleTitle: (booking as any).Vehicle?.title,
           total_amount: booking.total_amount,
           status: booking.status,
-          start_date: booking.start_date,
-          end_date: booking.end_date,
+          startDate: booking.startDate,
+          endDate: booking.endDate,
           createdAt: booking.createdAt
         }))
       }
@@ -67,12 +67,12 @@ router.get('/', authenticateToken, requireHost, async (req: AuthRequest, res) =>
 });
 
 // Get earnings by vehicle
-router.get('/by-vehicle', authenticateToken, requireHost, async (req: AuthRequest, res) => {
+router.get('/by-vehicle', authenticateToken, requireHost, async (req: AuthenticatedRequest, res) => {
   try {
     const hostId = req.user!.id;
     
     const vehicles = await Listing.findAll({
-      where: { host_id: hostId },
+      where: { hostId: hostId },
       include: [{
         model: Booking,
         where: {
@@ -109,7 +109,7 @@ router.get('/by-vehicle', authenticateToken, requireHost, async (req: AuthReques
 });
 
 // Get monthly earnings breakdown
-router.get('/monthly', authenticateToken, requireHost, async (req: AuthRequest, res) => {
+router.get('/monthly', authenticateToken, requireHost, async (req: AuthenticatedRequest, res) => {
   try {
     const hostId = req.user!.id;
     const { year = new Date().getFullYear() } = req.query;
@@ -140,7 +140,7 @@ router.get('/monthly', authenticateToken, requireHost, async (req: AuthRequest, 
 
     bookings.forEach(booking => {
       const month = new Date(booking.createdAt).getMonth();
-      monthlyData[month].earnings += booking.total_amount;
+      monthlyData[month].earnings += (booking.total_amount || 0);
       monthlyData[month].bookings += 1;
     });
 
@@ -158,3 +158,5 @@ router.get('/monthly', authenticateToken, requireHost, async (req: AuthRequest, 
 });
 
 export default router;
+
+

@@ -35,7 +35,7 @@ class AutoApprovalService {
     const user = await User.findByPk(request.submittedById);
     if (!user) return false;
 
-    const accountAge = Math.floor((Date.now() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+    const accountAge = Math.floor((Date.now() - (user.created_at?.getTime() || Date.now())) / (1000 * 60 * 60 * 24));
 
     // Check conditions
     if (rule.conditions.verifiedUser && !user.is_email_verified) return false;

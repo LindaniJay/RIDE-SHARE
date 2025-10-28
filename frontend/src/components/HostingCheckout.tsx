@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { paymentService } from '../services/paymentService';
+import { enhancedPaymentService } from '../services/EnhancedPaymentService';
 import Icon from './Icon';
 import { SAPaymentGateway } from './SAPaymentGateway';
 
@@ -188,12 +188,13 @@ const HostingCheckout: React.FC<HostingCheckoutProps> = ({
           }
           break;
           
-        case 'verification':
+        case 'verification': {
           const allVerified = Object.values(verificationStatus).every(status => status);
           if (!allVerified) {
             throw new Error('Please complete all verification steps');
           }
           break;
+        }
           
         case 'payment':
           if (!paymentMethod) {
@@ -235,12 +236,14 @@ const HostingCheckout: React.FC<HostingCheckoutProps> = ({
     };
 
     // Process payment
-    await paymentService.processPayment({
+    await enhancedPaymentService.processPayment({
       ...paymentData,
+      gateway: 'stripe',
       bookingId: `hosting_${Date.now()}`,
       customerInfo: {
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
         email: user?.email || '',
-        name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
         phone: user?.phoneNumber || ''
       }
     });
@@ -354,9 +357,9 @@ const HostingCheckout: React.FC<HostingCheckoutProps> = ({
                 <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Icon 
-                      name={verificationStatus.identity ? "CheckCircle" : "User"} 
+                      name={verificationStatus.identity ? 'CheckCircle' : 'User'} 
                       size="sm" 
-                      className={verificationStatus.identity ? "text-green-400" : "text-white/60"} 
+                      className={verificationStatus.identity ? 'text-green-400' : 'text-white/60'} 
                     />
                     <div>
                       <h4 className="text-white font-medium">Identity Verification</h4>
@@ -371,9 +374,9 @@ const HostingCheckout: React.FC<HostingCheckoutProps> = ({
                 <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Icon 
-                      name={verificationStatus.address ? "CheckCircle" : "MapPin"} 
+                      name={verificationStatus.address ? 'CheckCircle' : 'MapPin'} 
                       size="sm" 
-                      className={verificationStatus.address ? "text-green-400" : "text-white/60"} 
+                      className={verificationStatus.address ? 'text-green-400' : 'text-white/60'} 
                     />
                     <div>
                       <h4 className="text-white font-medium">Address Verification</h4>
@@ -388,9 +391,9 @@ const HostingCheckout: React.FC<HostingCheckoutProps> = ({
                 <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Icon 
-                      name={verificationStatus.vehicle ? "CheckCircle" : "Car"} 
+                      name={verificationStatus.vehicle ? 'CheckCircle' : 'Car'} 
                       size="sm" 
-                      className={verificationStatus.vehicle ? "text-green-400" : "text-white/60"} 
+                      className={verificationStatus.vehicle ? 'text-green-400' : 'text-white/60'} 
                     />
                     <div>
                       <h4 className="text-white font-medium">Vehicle Inspection</h4>
@@ -405,9 +408,9 @@ const HostingCheckout: React.FC<HostingCheckoutProps> = ({
                 <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Icon 
-                      name={verificationStatus.insurance ? "CheckCircle" : "Shield"} 
+                      name={verificationStatus.insurance ? 'CheckCircle' : 'Shield'} 
                       size="sm" 
-                      className={verificationStatus.insurance ? "text-green-400" : "text-white/60"} 
+                      className={verificationStatus.insurance ? 'text-green-400' : 'text-white/60'} 
                     />
                     <div>
                       <h4 className="text-white font-medium">Insurance Verification</h4>

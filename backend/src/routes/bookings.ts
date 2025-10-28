@@ -1,73 +1,98 @@
 import express from 'express';
-import { z } from 'zod';
-import { authenticateToken, AuthRequest, requireRole } from '../middlewares/auth';
-import { Booking } from '../models/Booking';
-import { Vehicle } from '../models/Vehicle';
-import { Listing } from '../models/Listing';
-import { User } from '../models/User';
-import { Op } from 'sequelize';
+import { authenticateToken } from '../middleware/auth';
+import { Booking, Listing, User } from '../models';
+import { logger } from '../utils/logger';
 
 const router = express.Router();
 
-// Validation schemas
-const createBookingSchema = z.object({
-  listing_id: z.number(),
-  start_date: z.string().transform(str => new Date(str)),
-  end_date: z.string().transform(str => new Date(str)),
-  totalPrice: z.number().positive(),
-  specialRequests: z.string().optional(),
-  addOns: z.array(z.object({
-    name: z.string(),
-    price: z.number().positive()
-  })).optional()
-});
-
-const updateBookingSchema = z.object({
-  start_date: z.string().transform(str => new Date(str)).optional(),
-  end_date: z.string().transform(str => new Date(str)).optional(),
-  specialRequests: z.string().optional(),
-  addOns: z.array(z.object({
-    name: z.string(),
-    price: z.number().positive()
-  })).optional()
-});
-
-const bookingActionSchema = z.object({
-  action: z.enum(['accept', 'reject', 'cancel']),
-  reason: z.string().optional()
-});
-
-// Create booking (renter)
-router.post('/', authenticateToken, requireRole(['renter', 'admin']), async (req: AuthRequest, res) => {
+// GET /api/bookings/user/:uid - Get renter's bookings
+router.get('/user/:uid', authenticateToken, async (req, res) => {
   try {
-    const bookingData = createBookingSchema.parse(req.body);
+    const { uid } = req.params;
     
-    // Verify vehicle exists and is available
-    const vehicle = await Listing.findByPk(bookingData.listing_id);
-    if (!vehicle) {
-      return res.status(404).json({ error: 'Vehicle not found' });
+    // Find user by Firebase UID
+    const user = await User.findOne({ where: { firebase_uid: uid } });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
     }
 
-    if (vehicle.status !== 'approved') {
-      return res.status(400).json({ error: 'Vehicle is not available for booking' });
+    const bookings = await Booking.findAll({
+      where: { renter_id: user.id },
+      include: [{
+        model: Listing,
+        as: 'listing',
+        include: [{
+          model: User,
+          as: 'host',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phone']
+        }]
+      }],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      data: bookings,
+      count: bookings.length
+    });
+  } catch (error) {
+    logger.error('Error fetching user bookings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch bookings'
+    });
+  }
+});
+
+// POST /api/bookings/create - Create a new booking
+router.post('/create', authenticateToken, async (req, res) => {
+  try {
+    const { uid, listingId, startDate, endDate, totalPrice, paymentMethod, specialRequests } = req.body;
+    
+    // Find user by Firebase UID
+    const user = await User.findOne({ where: { firebase_uid: uid } });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check if listing exists and is approved
+    const listing = await Listing.findByPk(listingId);
+    if (!listing) {
+      return res.status(404).json({
+        success: false,
+        error: 'Listing not found'
+      });
+    }
+
+    if (listing.status !== 'approved') {
+      return res.status(400).json({
+        success: false,
+        error: 'Listing is not available for booking'
+      });
     }
 
     // Check for date conflicts
     const existingBooking = await Booking.findOne({
       where: {
-        listing_id: bookingData.listing_id,
-        status: { [Op.in]: ['pending', 'confirmed'] },
-        [Op.or]: [
+        listingId,
+        status: ['pending', 'confirmed'],
+        [require('sequelize').Op.or]: [
           {
-            start_date: { [Op.between]: [bookingData.start_date, bookingData.end_date] }
+            startDate: { [require('sequelize').Op.between]: [startDate, endDate] }
           },
           {
-            end_date: { [Op.between]: [bookingData.start_date, bookingData.end_date] }
+            endDate: { [require('sequelize').Op.between]: [startDate, endDate] }
           },
           {
-            [Op.and]: [
-              { start_date: { [Op.lte]: bookingData.start_date } },
-              { end_date: { [Op.gte]: bookingData.end_date } }
+            [require('sequelize').Op.and]: [
+              { startDate: { [require('sequelize').Op.lte]: startDate } },
+              { endDate: { [require('sequelize').Op.gte]: endDate } }
             ]
           }
         ]
@@ -75,435 +100,150 @@ router.post('/', authenticateToken, requireRole(['renter', 'admin']), async (req
     });
 
     if (existingBooking) {
-      return res.status(400).json({ error: 'Vehicle is not available for the selected dates' });
-    }
-
-    // Calculate total price with add-ons
-    let totalPrice = bookingData.totalPrice;
-    if (bookingData.addOns) {
-      const addOnTotal = bookingData.addOns.reduce((sum, addOn) => sum + addOn.price, 0);
-      totalPrice += addOnTotal;
+      return res.status(400).json({
+        success: false,
+        error: 'Vehicle is not available for the selected dates'
+      });
     }
 
     // Create booking
     const booking = await Booking.create({
-      listing_id: bookingData.listing_id.toString(),
-      renter_id: req.user!.id,
-      start_date: bookingData.start_date,
-      end_date: bookingData.end_date,
-      total_amount: totalPrice,
+      booking_id: `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      renterId: Number(user.id) || 0,
+      hostId: listing.hostId,
+      vehicleId: listing.id,
+      listingId,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      totalPrice,
+      paymentMethod,
+      specialRequests,
       status: 'pending',
-      special_requests: bookingData.specialRequests,
-      add_ons: bookingData.addOns || [],
-      total_days: Math.ceil((new Date(bookingData.end_date).getTime() - new Date(bookingData.start_date).getTime()) / (1000 * 60 * 60 * 24)),
-      price_per_day: 0, // Will be calculated from listing
-      subtotal: totalPrice,
-      service_fee: 0,
-      insurance_fee: 0,
-      // tax_amount: 0, // Field doesn't exist in model
-      payment_status: 'pending'
+      paymentStatus: 'pending'
     });
 
-    // Include vehicle and renter details in response
-    const bookingWithDetails = await Booking.findByPk(booking.id, {
-      include: [
-        {
-          model: Listing,
-          as: 'vehicle',
-          attributes: ['id', 'title', 'make', 'model', 'pricePerDay', 'location']
-        },
-        {
-          model: User,
-          as: 'renter',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber']
-        }
-      ]
-    });
+    // Emit notification to host
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user-${listing.hostId}`).emit('new-booking', {
+        id: booking.id,
+        renterName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        listingTitle: `${listing.make} ${listing.model}`,
+        startDate,
+        endDate,
+        totalPrice,
+        createdAt: booking.createdAt
+      });
+    }
 
     res.status(201).json({
       success: true,
-      message: 'Booking created successfully',
-      booking: bookingWithDetails
+      data: booking,
+      message: 'Booking created successfully'
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Validation error', details: error.errors });
-    }
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error creating booking:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create booking'
+    });
   }
 });
 
-// Get user's bookings
-router.get('/my-bookings', authenticateToken, async (req: AuthRequest, res) => {
-  try {
-    const { page = 1, limit = 10, status } = req.query;
-    const offset = (Number(page) - 1) * Number(limit);
-
-    const whereClause: any = { renter_id: req.user!.id };
-    if (status) {
-      whereClause.status = status;
-    }
-
-    const bookings = await Booking.findAndCountAll({
-      where: whereClause,
-      include: [
-        {
-          model: Listing,
-          as: 'vehicle',
-          attributes: ['id', 'title', 'make', 'model', 'pricePerDay', 'location', 'images']
-        }
-      ],
-      limit: Number(limit),
-      offset,
-      order: [['createdAt', 'DESC']]
-    });
-
-    res.json({
-      success: true,
-      bookings: bookings.rows,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: bookings.count,
-        pages: Math.ceil(bookings.count / Number(limit))
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Get host's booking requests
-router.get('/host-requests', authenticateToken, requireRole(['host', 'admin']), async (req: AuthRequest, res) => {
-  try {
-    const { page = 1, limit = 10, status } = req.query;
-    const offset = (Number(page) - 1) * Number(limit);
-
-    // Get host's vehicles
-    const hostVehicles = await Listing.findAll({
-      where: { host_id: req.user!.id },
-      attributes: ['id']
-    });
-    const listing_ids = hostVehicles.map(v => v.id);
-
-    const whereClause: any = { listing_id: { [Op.in]: listing_ids } };
-    if (status) {
-      whereClause.status = status;
-    }
-
-    const bookings = await Booking.findAndCountAll({
-      where: whereClause,
-      include: [
-        {
-          model: Listing,
-          as: 'vehicle',
-          attributes: ['id', 'title', 'make', 'model']
-        },
-        {
-          model: User,
-          as: 'renter',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber']
-        }
-      ],
-      limit: Number(limit),
-      offset,
-      order: [['createdAt', 'DESC']]
-    });
-
-    res.json({
-      success: true,
-      bookings: bookings.rows,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: bookings.count,
-        pages: Math.ceil(bookings.count / Number(limit))
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Update booking (renter)
-router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
+// DELETE /api/bookings/:id - Cancel a booking
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = updateBookingSchema.parse(req.body);
-
-    const booking = await Booking.findByPk(id);
-    if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' });
-    }
-
-    // Check if user owns the booking
-    if (booking.renter_id !== req.user!.id && req.user!.role !== 'admin') {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-
-    // Check if booking can be modified
-    if (booking.status === 'completed' || booking.status === 'cancelled') {
-      return res.status(400).json({ error: 'Cannot modify completed or cancelled booking' });
-    }
-
-    // If dates are being changed, check for conflicts
-    if (updateData.start_date || updateData.end_date) {
-      const start_date = updateData.start_date || booking.start_date;
-      const end_date = updateData.end_date || booking.end_date;
-
-      const existingBooking = await Booking.findOne({
-        where: {
-          listing_id: booking.listing_id,
-          id: { [Op.ne]: booking.id },
-          status: { [Op.in]: ['pending', 'confirmed'] },
-          [Op.or]: [
-            {
-              start_date: { [Op.between]: [start_date, end_date] }
-            },
-            {
-              end_date: { [Op.between]: [start_date, end_date] }
-            },
-            {
-              [Op.and]: [
-                { start_date: { [Op.lte]: start_date } },
-                { end_date: { [Op.gte]: end_date } }
-              ]
-            }
-          ]
-        }
+    const { uid } = req.body;
+    
+    // Find user by Firebase UID
+    const user = await User.findOne({ where: { firebase_uid: uid } });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
       });
-
-      if (existingBooking) {
-        return res.status(400).json({ error: 'Vehicle is not available for the selected dates' });
-      }
     }
-
-    await booking.update(updateData);
-
-    const updatedBooking = await Booking.findByPk(booking.id, {
-      include: [
-        {
-          model: Listing,
-          as: 'vehicle',
-          attributes: ['id', 'title', 'make', 'model', 'pricePerDay', 'location']
-        },
-        {
-          model: User,
-          as: 'renter',
-          attributes: ['id', 'firstName', 'lastName', 'email']
-        }
-      ]
-    });
-
-    res.json({
-      success: true,
-      message: 'Booking updated successfully',
-      booking: updatedBooking
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Validation error', details: error.errors });
-    }
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Handle booking action (host/admin)
-router.patch('/:id/action', authenticateToken, requireRole(['host', 'admin']), async (req: AuthRequest, res) => {
-  try {
-    const { id } = req.params;
-    const { action, reason } = bookingActionSchema.parse(req.body);
-
-    const booking = await Booking.findByPk(id, {
-      include: [
-        {
-          model: Vehicle,
-          as: 'vehicle',
-          attributes: ['host_id']
-        }
-      ]
-    });
-
-    if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' });
-    }
-
-    // Check if user is the host or admin
-    if ((booking as any).vehicle.host_id !== req.user!.id && req.user!.role !== 'admin') {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-
-    let newStatus: string;
-    switch (action) {
-      case 'accept':
-        newStatus = 'confirmed';
-        break;
-      case 'reject':
-        newStatus = 'cancelled';
-        break;
-      case 'cancel':
-        newStatus = 'cancelled';
-        break;
-      default:
-        return res.status(400).json({ error: 'Invalid action' });
-    }
-
-    await booking.update({
-      status: newStatus as 'pending' | 'confirmed' | 'cancelled' | 'completed',
-      ...(reason && { cancellation_reason: reason })
-    });
-
-    const updatedBooking = await Booking.findByPk(booking.id, {
-      include: [
-        {
-          model: Listing,
-          as: 'vehicle',
-          attributes: ['id', 'title', 'make', 'model']
-        },
-        {
-          model: User,
-          as: 'renter',
-          attributes: ['id', 'firstName', 'lastName', 'email']
-        }
-      ]
-    });
-
-    res.json({
-      success: true,
-      message: `Booking ${action}ed successfully`,
-      booking: updatedBooking
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Validation error', details: error.errors });
-    }
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Cancel booking (renter)
-router.patch('/:id/cancel', authenticateToken, async (req: AuthRequest, res) => {
-  try {
-    const { id } = req.params;
-    const { reason } = req.body;
 
     const booking = await Booking.findByPk(id);
     if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' });
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found'
+      });
     }
 
-    if (booking.renter_id !== req.user!.id && req.user!.role !== 'admin') {
-      return res.status(403).json({ error: 'Unauthorized' });
+    if (booking.renterId !== Number(user.id)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized to cancel this booking'
+      });
     }
 
-    if (booking.status === 'completed' || booking.status === 'cancelled') {
-      return res.status(400).json({ error: 'Cannot cancel completed or already cancelled booking' });
+    if (booking.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        error: 'Only pending bookings can be cancelled'
+      });
     }
 
-    await booking.update({
+    // Update booking status
+    await booking.update({ 
       status: 'cancelled',
-      cancellation_reason: reason
+      paymentStatus: 'refunded'
     });
 
     res.json({
       success: true,
-      message: 'Booking cancelled successfully',
-      booking
+      message: 'Booking cancelled successfully'
     });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error cancelling booking:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to cancel booking'
+    });
   }
 });
 
-// Get booking by ID
-router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
+// GET /api/bookings/:id - Get specific booking
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-
+    
     const booking = await Booking.findByPk(id, {
-      include: [
-        {
-          model: Listing,
-          as: 'vehicle',
-          attributes: ['id', 'title', 'make', 'model', 'pricePerDay', 'location', 'images']
-        },
-        {
-          model: User,
-          as: 'renter',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber']
-        }
-      ]
-    });
-
-    if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' });
-    }
-
-    // Check if user has access to this booking
-    const hasAccess = booking.renter_id === req.user!.id || 
-                     req.user!.role === 'admin' ||
-                     (req.user!.role === 'host' && (booking as any).vehicle.host_id === req.user!.id);
-
-    if (!hasAccess) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-
-    res.json({
-      success: true,
-      booking
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Get all bookings (admin)
-router.get('/', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
-  try {
-    const { page = 1, limit = 10, status, renter_id, host_id } = req.query;
-    const offset = (Number(page) - 1) * Number(limit);
-
-    const whereClause: any = {};
-    if (status) whereClause.status = status;
-    if (renter_id) whereClause.renter_id = renter_id;
-
-    const includeClause: any[] = [
-      {
+      include: [{
         model: Listing,
-        as: 'vehicle',
-        attributes: ['id', 'title', 'make', 'model', 'host_id']
-      },
-      {
+        as: 'listing',
+        include: [{
+          model: User,
+          as: 'host',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phone']
+        }]
+      }, {
         model: User,
         as: 'renter',
-        attributes: ['id', 'firstName', 'lastName', 'email']
-      }
-    ];
-
-    if (host_id) {
-      includeClause[0].where = { host_id };
-    }
-
-    const bookings = await Booking.findAndCountAll({
-      where: whereClause,
-      include: includeClause,
-      limit: Number(limit),
-      offset,
-      order: [['createdAt', 'DESC']]
+        attributes: ['id', 'name', 'email', 'phone']
+      }]
     });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found'
+      });
+    }
 
     res.json({
       success: true,
-      bookings: bookings.rows,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: bookings.count,
-        pages: Math.ceil(bookings.count / Number(limit))
-      }
+      data: booking
     });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error('Error fetching booking:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch booking'
+    });
   }
 });
 

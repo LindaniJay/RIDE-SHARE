@@ -1,5 +1,4 @@
 import express from 'express';
-import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { User } from '../models';
 import { getFirebaseAdmin } from '../config/firebase';
@@ -48,29 +47,16 @@ router.post('/firestore-login', async (req, res) => {
         });
       }
 
-      // Generate JWT token for admin user
-      const accessToken = jwt.sign(
-        { 
-          userId: user.id, 
-          email: user.email, 
-          role: user.role,
-          source: 'firestore'
-        },
-        process.env.JWT_SECRET!,
-        { expiresIn: '15m' }
-      );
-
       return res.json({
         success: true,
         data: {
           user: {
             id: user.id,
             email: user.email,
-            first_name: user.first_name,
-            last_name: user.last_name,
+            firstName: user.firstName,
+            lastName: user.lastName,
             role: user.role,
-          },
-          accessToken,
+          }
         }
       });
     }
@@ -127,13 +113,15 @@ router.post('/sync-firestore-users', async (req, res) => {
       if (!user) {
         // Create user in our database
         user = await User.create({
-          first_name: userData.first_name || 'Admin',
-          last_name: userData.last_name || 'User',
+          firebase_uid: userData.uid || `firestore-${Date.now()}`,
+          display_name: userData.displayName || `${userData.firstName} ${userData.lastName}` || 'User',
+          firstName: userData.firstName || 'Admin',
+          lastName: userData.lastName || 'User',
           email: userData.email,
           password: 'firestore-sync', // Virtual field
           password_hash: 'firestore-sync', // Placeholder
           role: userData.role || 'admin',
-          is_email_verified: true,
+          isVerified: true,
           phone_number: userData.phone_number || null,
           is_phone_verified: false,
           approval_status: 'approved',
@@ -166,3 +154,4 @@ router.post('/sync-firestore-users', async (req, res) => {
 });
 
 export default router;
+

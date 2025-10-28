@@ -73,42 +73,95 @@ const About: React.FC = () => {
             </p>
           </div>
 
-          {/* Mission Section */}
+          {/* Mission & Vision Section */}
           <div className="py-20 px-4">
             <div className="max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-lg border border-white/20">
-                  <h2 className="text-3xl font-bold text-white mb-6">Our Mission</h2>
-                  <p className="text-lg text-white text-opacity-90 mb-6">
-                    We believe that every South African should have access to reliable, affordable transportation. 
-                    By connecting vehicle owners with people who need temporary access to cars, bakkies, and SUVs, 
-                    we're building a more connected and sustainable South Africa.
-                  </p>
-                  <p className="text-lg text-white text-opacity-90">
-                    Whether you're exploring the Cape Peninsula, visiting family in Johannesburg, or taking a safari 
-                    in Kruger National Park, RideShare SA makes it easy to find the perfect vehicle for your journey.
-                  </p>
+              {/* Mission Statement */}
+              <div className="mb-20">
+                <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-md p-12 rounded-3xl shadow-2xl border border-white/20">
+                  <div className="text-center mb-8">
+                    <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 drop-shadow-lg">Our Mission</h2>
+                    <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto rounded-full"></div>
+                  </div>
+                  <div className="max-w-4xl mx-auto">
+                    <blockquote className="text-2xl md:text-3xl font-medium text-white text-center leading-relaxed mb-8 italic">
+                      "To democratize vehicle access across South Africa by connecting vehicle owners with renters through a trusted, secure, and user-friendly platform that creates economic opportunities for hosts while providing affordable, convenient transportation solutions for all South Africans."
+                    </blockquote>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+                      <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
+                        <h3 className="text-xl font-bold text-white mb-4">🎯 Mission Focus Areas</h3>
+                        <ul className="space-y-3">
+                          <li className="flex items-start space-x-3">
+                            <span className="text-green-400 mt-1">✓</span>
+                            <span className="text-white text-opacity-90">Democratize vehicle access for all South Africans</span>
+                          </li>
+                          <li className="flex items-start space-x-3">
+                            <span className="text-green-400 mt-1">✓</span>
+                            <span className="text-white text-opacity-90">Create economic opportunities for vehicle owners</span>
+                          </li>
+                          <li className="flex items-start space-x-3">
+                            <span className="text-green-400 mt-1">✓</span>
+                            <span className="text-white text-opacity-90">Build trust through security and verification</span>
+                          </li>
+                          <li className="flex items-start space-x-3">
+                            <span className="text-green-400 mt-1">✓</span>
+                            <span className="text-white text-opacity-90">Provide affordable transportation solutions</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
+                        <h3 className="text-xl font-bold text-white mb-4">🇿🇦 South African Focus</h3>
+                        <ul className="space-y-3">
+                          <li className="flex items-center space-x-3">
+                            <span className="text-green-400">✓</span>
+                            <span className="text-white text-opacity-90">Local payment methods (EFT, SnapScan)</span>
+                          </li>
+                          <li className="flex items-center space-x-3">
+                            <span className="text-green-400">✓</span>
+                            <span className="text-white text-opacity-90">South African insurance coverage</span>
+                          </li>
+                          <li className="flex items-center space-x-3">
+                            <span className="text-green-400">✓</span>
+                            <span className="text-white text-opacity-90">24/7 support in English & Afrikaans</span>
+                          </li>
+                          <li className="flex items-center space-x-3">
+                            <span className="text-green-400">✓</span>
+                            <span className="text-white text-opacity-90">Coverage across all 9 provinces</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-lg border border-white/20">
-                  <h3 className="text-2xl font-bold text-white mb-4">🇿🇦 Made for South Africa</h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-center space-x-3">
-                      <span className="text-green-400">✓</span>
-                      <span className="text-white text-opacity-90">Local payment methods (EFT, SnapScan)</span>
-                    </li>
-                    <li className="flex items-center space-x-3">
-                      <span className="text-green-400">✓</span>
-                      <span className="text-white text-opacity-90">South African insurance coverage</span>
-                    </li>
-                    <li className="flex items-center space-x-3">
-                      <span className="text-green-400">✓</span>
-                      <span className="text-white text-opacity-90">24/7 customer support in English & Afrikaans</span>
-                    </li>
-                    <li className="flex items-center space-x-3">
-                      <span className="text-green-400">✓</span>
-                      <span className="text-white text-opacity-90">Verified hosts across all 9 provinces</span>
-                    </li>
-                  </ul>
+              </div>
+
+              {/* Vision Statement */}
+              <div className="bg-gradient-to-r from-green-600/20 to-blue-600/20 backdrop-blur-md p-12 rounded-3xl shadow-2xl border border-white/20">
+                <div className="text-center mb-8">
+                  <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 drop-shadow-lg">Our Vision</h2>
+                  <div className="w-24 h-1 bg-gradient-to-r from-green-400 to-blue-400 mx-auto rounded-full"></div>
+                </div>
+                <div className="max-w-4xl mx-auto">
+                  <blockquote className="text-2xl md:text-3xl font-medium text-white text-center leading-relaxed mb-8 italic">
+                    "To become South Africa's leading peer-to-peer vehicle sharing platform, transforming how South Africans access transportation while building a sustainable sharing economy that empowers communities, reduces vehicle underutilization, and creates a more connected, mobile society."
+                  </blockquote>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+                    <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
+                      <div className="text-4xl mb-4">🏆</div>
+                      <h3 className="text-xl font-bold text-white mb-2">Market Leadership</h3>
+                      <p className="text-white text-opacity-80 text-sm">Leading platform in South African peer-to-peer vehicle sharing</p>
+                    </div>
+                    <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
+                      <div className="text-4xl mb-4">🌱</div>
+                      <h3 className="text-xl font-bold text-white mb-2">Sustainable Future</h3>
+                      <p className="text-white text-opacity-80 text-sm">Building a sustainable sharing economy for South Africa</p>
+                    </div>
+                    <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
+                      <div className="text-4xl mb-4">🤝</div>
+                      <h3 className="text-xl font-bold text-white mb-2">Community Impact</h3>
+                      <p className="text-white text-opacity-80 text-sm">Empowering communities and reducing vehicle underutilization</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -267,32 +320,52 @@ const About: React.FC = () => {
           <div className="py-20 px-4">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-16">
-                <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 drop-shadow-lg">Our Values</h2>
-                <p className="text-xl text-white text-opacity-90 max-w-3xl mx-auto drop-shadow-md">The principles that guide everything we do</p>
+                <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 drop-shadow-lg">Our Core Values</h2>
+                <p className="text-xl text-white text-opacity-90 max-w-3xl mx-auto drop-shadow-md">The principles that guide everything we do at RideShare SA</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20">
+                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20 hover:bg-white/15 transition-all duration-300">
                   <div className="text-4xl mb-4">🤝</div>
-                  <h3 className="text-xl font-bold text-white mb-2">Trust</h3>
-                  <p className="text-white text-opacity-80 text-sm">Building trust through verification and transparency</p>
+                  <h3 className="text-xl font-bold text-white mb-2">Trust & Safety</h3>
+                  <p className="text-white text-opacity-80 text-sm">Every interaction built on trust with comprehensive verification and insurance</p>
                 </div>
-                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20">
-                  <div className="text-4xl mb-4">🌍</div>
-                  <h3 className="text-xl font-bold text-white mb-2">Sustainability</h3>
-                  <p className="text-white text-opacity-80 text-sm">Promoting shared mobility for a greener future</p>
+                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20 hover:bg-white/15 transition-all duration-300">
+                  <div className="text-4xl mb-4">♿</div>
+                  <h3 className="text-xl font-bold text-white mb-2">Accessibility</h3>
+                  <p className="text-white text-opacity-80 text-sm">Transportation available to everyone, regardless of income level</p>
                 </div>
-                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20">
-                  <div className="text-4xl mb-4">🇿🇦</div>
-                  <h3 className="text-xl font-bold text-white mb-2">Local Focus</h3>
-                  <p className="text-white text-opacity-80 text-sm">Supporting South African communities and economy</p>
+                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20 hover:bg-white/15 transition-all duration-300">
+                  <div className="text-4xl mb-4">🏘️</div>
+                  <h3 className="text-xl font-bold text-white mb-2">Community</h3>
+                  <p className="text-white text-opacity-80 text-sm">Fostering connections between South Africans through shared mobility</p>
                 </div>
-                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20">
+                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20 hover:bg-white/15 transition-all duration-300">
                   <div className="mb-4">
                     <Icon name="Zap" size="lg" className="text-white/50 mx-auto" />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-2">Innovation</h3>
-                  <p className="text-white text-opacity-80 text-sm">Using technology to solve real-world problems</p>
+                  <p className="text-white text-opacity-80 text-sm">Leveraging technology to solve real transportation challenges</p>
+                </div>
+                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20 hover:bg-white/15 transition-all duration-300">
+                  <div className="text-4xl mb-4">🌱</div>
+                  <h3 className="text-xl font-bold text-white mb-2">Sustainability</h3>
+                  <p className="text-white text-opacity-80 text-sm">Promoting efficient use of existing vehicles rather than increasing ownership</p>
+                </div>
+                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20 hover:bg-white/15 transition-all duration-300">
+                  <div className="text-4xl mb-4">🇿🇦</div>
+                  <h3 className="text-xl font-bold text-white mb-2">Local Focus</h3>
+                  <p className="text-white text-opacity-80 text-sm">Understanding and serving the unique needs of South African communities</p>
+                </div>
+                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20 hover:bg-white/15 transition-all duration-300">
+                  <div className="text-4xl mb-4">🔍</div>
+                  <h3 className="text-xl font-bold text-white mb-2">Transparency</h3>
+                  <p className="text-white text-opacity-80 text-sm">Clear pricing, honest communication, and fair practices</p>
+                </div>
+                <div className="text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20 hover:bg-white/15 transition-all duration-300">
+                  <div className="text-4xl mb-4">💪</div>
+                  <h3 className="text-xl font-bold text-white mb-2">Empowerment</h3>
+                  <p className="text-white text-opacity-80 text-sm">Enabling both hosts and renters to achieve their goals</p>
                 </div>
               </div>
             </div>

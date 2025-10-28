@@ -108,7 +108,7 @@ export interface RentalHistory {
 }
 
 class QuickWinsService {
-  private readonly API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:5001/api';
+  private readonly API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
   /**
    * Dark Mode Management
@@ -340,7 +340,7 @@ class QuickWinsService {
         name: 'Google',
         icon: 'google',
         enabled: true,
-        clientId: process.env.VITE_GOOGLE_CLIENT_ID || '',
+        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
         scope: ['email', 'profile']
       },
       {
@@ -348,7 +348,7 @@ class QuickWinsService {
         name: 'Facebook',
         icon: 'facebook',
         enabled: true,
-        clientId: process.env.VITE_FACEBOOK_APP_ID || '',
+        clientId: import.meta.env.VITE_FACEBOOK_APP_ID || '',
         scope: ['email', 'public_profile']
       },
       {
@@ -356,7 +356,7 @@ class QuickWinsService {
         name: 'LinkedIn',
         icon: 'linkedin',
         enabled: true,
-        clientId: process.env.VITE_LINKEDIN_CLIENT_ID || '',
+        clientId: import.meta.env.VITE_LINKEDIN_CLIENT_ID || '',
         scope: ['r_liteprofile', 'r_emailaddress']
       }
     ];

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Vehicle } from '../services/productionApiService';
+import { Vehicle } from '../types';
 import Icon from './Icon';
 import GlassInput from './GlassInput';
 import GlassButton from './GlassButton';
+import AuthModal from './AuthModal';
+import UnifiedCheckout from './UnifiedCheckout';
 import { useAuth } from '../context/AuthContext';
 
 interface BookingModalProps {
@@ -13,7 +15,7 @@ interface BookingModalProps {
 }
 
 const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBookingSuccess }) => {
-  const { } = useAuth();
+  const { user } = useAuth();
   const [bookingData, setBookingData] = useState({
     startDate: '',
     endDate: '',
@@ -21,67 +23,60 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
     pickupLocation: car.location,
     returnLocation: car.location
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [loading] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const calculateTotal = () => {
     if (!bookingData.startDate || !bookingData.endDate) return 0;
     const start = new Date(bookingData.startDate);
     const end = new Date(bookingData.endDate);
     const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return days * (car.price_per_day || 0);
+    return days * (car.pricePerDay || 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      // Create booking request
-      const requestData = {
-        listing_id: car.id,
-        start_date: bookingData.startDate,
-        end_date: bookingData.endDate,
-        special_requests: bookingData.notes,
-        pickup_location: {
-          address: bookingData.pickupLocation,
-          city: car.location?.city || 'Unknown',
-          province: car.location?.province || 'Unknown'
-        },
-        return_location: {
-          address: bookingData.returnLocation,
-          city: car.location?.city || 'Unknown',
-          province: car.location?.province || 'Unknown'
-        }
-      };
-
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        body: JSON.stringify(requestData)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.booking) {
-          onBookingSuccess(result.booking);
-          onClose();
-        } else {
-          throw new Error(result.error || 'Failed to create booking');
-        }
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create booking');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to create booking. Please try again.');
-    } finally {
-      setLoading(false);
+    
+    // Check if user is authenticated
+    if (!user) {
+      setShowAuthModal(true);
+      return;
     }
+    
+    // Validate dates
+    if (!bookingData.startDate || !bookingData.endDate) {
+      setError('Please select both start and end dates');
+      return;
+    }
+
+    const start = new Date(bookingData.startDate);
+    const end = new Date(bookingData.endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (start < today) {
+      setError('Start date cannot be in the past');
+      return;
+    }
+
+    if (end <= start) {
+      setError('End date must be after start date');
+      return;
+    }
+
+    // Calculate total days and price
+    const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const totalPrice = totalDays * (car.pricePerDay || 0);
+
+    if (totalPrice <= 0) {
+      setError('Invalid pricing calculation');
+      return;
+    }
+
+    // Show checkout modal
+    setShowCheckout(true);
   };
 
   if (!isOpen) return null;
@@ -111,8 +106,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
               />
               <div>
                 <h3 className="text-lg font-semibold text-white">{car.make} {car.model} ({car.year})</h3>
-                <p className="text-white/70">{car.location?.city}, {car.location?.province}</p>
-                <p className="text-green-400 font-semibold">R{car.price_per_day}/day</p>
+                <p className="text-white/70">{car.location}</p>
+                <p className="text-green-400 font-semibold">R{car.pricePerDay}/day</p>
               </div>
             </div>
           </div>
@@ -124,7 +119,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
                 label="Start Date"
                 type="date"
                 value={bookingData.startDate}
-                onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
+                onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e }))}
                 required
                 icon="Calendar"
               />
@@ -132,7 +127,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
                 label="End Date"
                 type="date"
                 value={bookingData.endDate}
-                onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
+                onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e }))}
                 required
                 icon="Calendar"
               />
@@ -140,16 +135,16 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
 
             <GlassInput
               label="Pickup Location"
-              value={bookingData.pickupLocation?.city || ''}
-              onChange={(e) => setBookingData(prev => ({ ...prev, pickupLocation: { ...prev.pickupLocation, city: e.target.value } }))}
+              value={bookingData.pickupLocation || ''}
+              onChange={(e) => setBookingData(prev => ({ ...prev, pickupLocation: e }))}
               placeholder="Enter pickup location"
               icon="MapPin"
             />
 
             <GlassInput
               label="Return Location"
-              value={bookingData.returnLocation?.city || ''}
-              onChange={(e) => setBookingData(prev => ({ ...prev, returnLocation: { ...prev.returnLocation, city: e.target.value } }))}
+              value={bookingData.returnLocation || ''}
+              onChange={(e) => setBookingData(prev => ({ ...prev, returnLocation: e }))}
               placeholder="Enter return location"
               icon="MapPin"
             />
@@ -176,7 +171,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
                 </div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-white/70">Price per day:</span>
-                  <span className="text-white">R{car.price_per_day}</span>
+                  <span className="text-white">R{car.pricePerDay}</span>
                 </div>
                 <div className="border-t border-white/20 pt-2">
                   <div className="flex justify-between items-center">
@@ -208,12 +203,53 @@ const BookingModal: React.FC<BookingModalProps> = ({ car, isOpen, onClose, onBoo
                 disabled={loading || !bookingData.startDate || !bookingData.endDate}
                 className="flex-1"
               >
-                {loading ? 'Creating Booking...' : 'Book Now'}
+                {loading ? 'Creating Booking...' : user ? 'Book Now' : 'Sign In to Book'}
               </GlassButton>
             </div>
           </form>
         </div>
       </div>
+      
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        initialMode="login"
+      />
+
+      {/* Unified Checkout Modal */}
+      <UnifiedCheckout
+        vehicle={{
+          id: car.id,
+          make: car.make,
+          model: car.model,
+          year: car.year,
+          pricePerDay: car.pricePerDay,
+          images: car.images,
+          location: { city: car.location, province: '' },
+          host: { id: '1', name: 'Host Name' }
+        }}
+        bookingData={{
+          startDate: bookingData.startDate,
+          endDate: bookingData.endDate,
+          totalDays: Math.ceil((new Date(bookingData.endDate).getTime() - new Date(bookingData.startDate).getTime()) / (1000 * 60 * 60 * 24)),
+          totalPrice: calculateTotal(),
+          specialRequests: bookingData.notes,
+          pickupLocation: bookingData.pickupLocation,
+          returnLocation: bookingData.returnLocation
+        }}
+        isOpen={showCheckout}
+        onClose={() => setShowCheckout(false)}
+        onSuccess={(booking) => {
+          onBookingSuccess(booking);
+          setShowCheckout(false);
+          onClose();
+        }}
+        onError={(error) => {
+          setError(error);
+          setShowCheckout(false);
+        }}
+      />
     </div>
   );
 };

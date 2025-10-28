@@ -4,21 +4,21 @@ import Icon from '../Icon';
 import StatusBadge from '../StatusBadge';
 
 interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
+  id: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: 'renter' | 'host' | 'admin';
-  phoneNumber?: string;
-  approvalStatus: 'pending' | 'approved' | 'rejected';
-  rejectionReason?: string;
-  documentStatus: 'pending' | 'verified' | 'rejected';
-  createdAt: string;
+  phone_number?: string;
+  approval_status: 'pending' | 'approved' | 'rejected';
+  rejection_reason?: string;
+  document_status: 'not_uploaded' | 'pending' | 'approved' | 'rejected';
+  created_at: string;
   documents?: any[];
 }
 
 const UserApprovalPanel: React.FC = () => {
-  const { } = useAuth();
+  const { user: _user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
@@ -41,7 +41,7 @@ const UserApprovalPanel: React.FC = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.data.users || []);
+        setUsers(data.data?.users || data.users || []);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -50,7 +50,7 @@ const UserApprovalPanel: React.FC = () => {
     }
   };
 
-  const handleApproval = async (userId: number, action: 'approve' | 'reject', reason?: string) => {
+  const handleApproval = async (userId: string, action: 'approve' | 'reject', reason?: string) => {
     try {
       const response = await fetch(`/api/admin/users/${userId}/approve`, {
         method: 'PATCH',
@@ -68,7 +68,7 @@ const UserApprovalPanel: React.FC = () => {
         // Update local state
         setUsers(prev => prev.map(u => 
           u.id === userId 
-            ? { ...u, approvalStatus: action === 'approve' ? 'approved' : 'rejected', rejectionReason: reason }
+            ? { ...u, approval_status: action === 'approve' ? 'approved' : 'rejected', rejection_reason: reason }
             : u
         ));
         
@@ -133,12 +133,12 @@ const UserApprovalPanel: React.FC = () => {
                     <div className="flex items-center space-x-3 mb-2">
                       <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                         <span className="text-white font-semibold text-sm">
-                          {user.firstName[0]}{user.lastName[0]}
+                          {user.first_name[0]}{user.last_name[0]}
                         </span>
                       </div>
                       <div>
                         <h3 className="text-white font-semibold">
-                          {user.firstName} {user.lastName}
+                          {user.first_name} {user.last_name}
                         </h3>
                         <p className="text-white/70 text-sm">{user.email}</p>
                       </div>
@@ -151,11 +151,11 @@ const UserApprovalPanel: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-white/70">Phone</p>
-                        <p className="text-white">{user.phoneNumber || 'Not provided'}</p>
+                        <p className="text-white">{user.phone_number || 'Not provided'}</p>
                       </div>
                       <div>
                         <p className="text-white/70">Joined</p>
-                        <p className="text-white">{new Date(user.createdAt).toLocaleDateString()}</p>
+                        <p className="text-white">{new Date(user.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
 
@@ -172,10 +172,10 @@ const UserApprovalPanel: React.FC = () => {
                       </div>
                     )}
 
-                    {user.rejectionReason && (
+                    {user.rejection_reason && (
                       <div className="mt-3 p-3 bg-red-500/10 border border-red-400/30 rounded-lg">
                         <p className="text-red-200 text-sm">
-                          <strong>Rejection Reason:</strong> {user.rejectionReason}
+                          <strong>Rejection Reason:</strong> {user.rejection_reason}
                         </p>
                       </div>
                     )}
@@ -183,11 +183,11 @@ const UserApprovalPanel: React.FC = () => {
 
                   <div className="flex flex-col space-y-2 ml-4">
                     <div className="flex space-x-2">
-                      <StatusBadge status={user.approvalStatus} />
-                      <StatusBadge status={user.documentStatus} />
+                      <StatusBadge status={user.approval_status} />
+                      <StatusBadge status={user.document_status} />
                     </div>
                     
-                    {user.approvalStatus === 'pending' && (
+                    {user.approval_status === 'pending' && (
                       <div className="flex space-x-2">
                         <button
                           onClick={() => openApprovalModal(user, 'approve')}
@@ -229,8 +229,8 @@ const UserApprovalPanel: React.FC = () => {
             <div className="mb-4">
               <p className="text-white/70 mb-2">
                 {approvalAction === 'approve' 
-                  ? `Are you sure you want to approve ${selectedUser.firstName} ${selectedUser.lastName}?`
-                  : `Are you sure you want to reject ${selectedUser.firstName} ${selectedUser.lastName}?`
+                  ? `Are you sure you want to approve ${selectedUser.first_name} ${selectedUser.last_name}?`
+                  : `Are you sure you want to reject ${selectedUser.first_name} ${selectedUser.last_name}?`
                 }
               </p>
               

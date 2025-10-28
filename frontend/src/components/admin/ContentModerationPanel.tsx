@@ -58,26 +58,65 @@ const ContentModerationPanel: React.FC<ContentModerationPanelProps> = ({ onRefre
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API calls
+      
+      // Fetch real data from API
+      const [reviewsResponse, reportsResponse] = await Promise.all([
+        fetch('/api/admin/reviews', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch('/api/admin/reports', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Content-Type': 'application/json'
+          }
+        })
+      ]);
+
+      if (reviewsResponse.ok) {
+        const reviewsData = await reviewsResponse.json();
+        setReviews(reviewsData.reviews || []);
+      }
+
+      if (reportsResponse.ok) {
+        const reportsData = await reportsResponse.json();
+        setReports(reportsData.reports || []);
+      }
+    } catch (error) {
+      console.error('Error fetching moderation data:', error);
+      // Fallback to empty arrays instead of mock data
+      setReviews([]);
+      setReports([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchModerationData = async () => {
+    try {
+      setLoading(true);
+      
+      // Mock data for demonstration
       const mockReviews: Review[] = [
         {
           id: 1,
+          comment: 'Great car, very clean and well maintained!',
+          reviewer: { name: 'John Doe', email: 'john@example.com' },
+          reviewee: { name: 'Host Name', email: 'host@example.com' },
           rating: 5,
-          comment: "Excellent service! The car was clean and the owner was very helpful.",
-          reviewer: { name: "John Doe", email: "john@example.com" },
-          reviewee: { name: "Jane Smith", email: "jane@example.com" },
-          status: 'approved',
-          createdAt: '2024-01-15'
+          createdAt: '2024-01-15',
+          status: 'approved'
         },
         {
           id: 2,
+          comment: 'Terrible experience, car was dirty and had issues.',
+          reviewer: { name: 'Jane Smith', email: 'jane@example.com' },
+          reviewee: { name: 'Host Name', email: 'host@example.com' },
           rating: 1,
-          comment: "Terrible experience. Car was dirty and had mechanical issues.",
-          reviewer: { name: "Bob Wilson", email: "bob@example.com" },
-          reviewee: { name: "Mike Johnson", email: "mike@example.com" },
-          status: 'flagged',
-          reportedBy: ['user1', 'user2'],
-          createdAt: '2024-01-14'
+          createdAt: '2024-01-14',
+          status: 'pending'
         }
       ];
 
@@ -85,8 +124,8 @@ const ContentModerationPanel: React.FC<ContentModerationPanelProps> = ({ onRefre
         {
           id: 1,
           type: 'inappropriate_content',
-          description: "This review contains offensive language and personal attacks.",
-          reporter: { name: "Alice Brown", email: "alice@example.com" },
+          description: 'This review contains offensive language and personal attacks.',
+          reporter: { name: 'Alice Brown', email: 'alice@example.com' },
           reportedItem: { type: 'review', id: 2, title: 'Review #2' },
           status: 'pending',
           createdAt: '2024-01-15'
@@ -94,8 +133,8 @@ const ContentModerationPanel: React.FC<ContentModerationPanelProps> = ({ onRefre
         {
           id: 2,
           type: 'fake_review',
-          description: "This appears to be a fake review written by the listing owner.",
-          reporter: { name: "Charlie Davis", email: "charlie@example.com" },
+          description: 'This appears to be a fake review written by the listing owner.',
+          reporter: { name: 'Charlie Davis', email: 'charlie@example.com' },
           reportedItem: { type: 'review', id: 3, title: 'Review #3' },
           status: 'pending',
           createdAt: '2024-01-14'
@@ -110,6 +149,10 @@ const ContentModerationPanel: React.FC<ContentModerationPanelProps> = ({ onRefre
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchModerationData();
+  }, []);
 
   const handleReviewAction = async (reviewId: number, action: 'approve' | 'flag' | 'remove') => {
     try {

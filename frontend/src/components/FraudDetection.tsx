@@ -19,7 +19,7 @@ interface FraudDetectionProps {
   className?: string;
 }
 
-export const FraudDetection: React.FC<FraudDetectionProps> = ({ className = "" }) => {
+export const FraudDetection: React.FC<FraudDetectionProps> = ({ className = '' }) => {
   const [alerts, setAlerts] = useState<FraudAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'investigating' | 'resolved'>('all');
@@ -44,45 +44,8 @@ export const FraudDetection: React.FC<FraudDetectionProps> = ({ className = "" }
       }
     } catch (error) {
       console.error('Error fetching fraud alerts:', error);
-      // Mock data for development
-      setAlerts([
-        {
-          id: '1',
-          type: 'duplicate_document',
-          severity: 'high',
-          userId: 'user123',
-          userName: 'John Doe',
-          description: 'Driver license appears to be duplicated across multiple accounts',
-          evidence: ['document_hash_match', 'similar_photos'],
-          confidence: 85,
-          status: 'pending',
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
-        },
-        {
-          id: '2',
-          type: 'suspicious_activity',
-          severity: 'medium',
-          userId: 'user456',
-          userName: 'Jane Smith',
-          description: 'Unusual booking patterns detected - multiple bookings in different cities simultaneously',
-          evidence: ['location_anomaly', 'booking_frequency'],
-          confidence: 72,
-          status: 'investigating',
-          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000) // 4 hours ago
-        },
-        {
-          id: '3',
-          type: 'fake_identity',
-          severity: 'critical',
-          userId: 'user789',
-          userName: 'Mike Johnson',
-          description: 'ID document appears to be digitally altered or fake',
-          evidence: ['document_manipulation', 'metadata_anomaly'],
-          confidence: 95,
-          status: 'pending',
-          createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000) // 1 hour ago
-        }
-      ]);
+      // Fallback to empty array instead of mock data
+      setAlerts([]);
     } finally {
       setLoading(false);
     }

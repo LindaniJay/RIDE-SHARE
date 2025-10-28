@@ -257,6 +257,7 @@ class AIService {
 
   private calculateEventMultiplier(_location: string, _dateRange: { start: Date; end: Date }): number {
     // Check for major events in the area
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const events = this.getLocalEvents();
     
     if (events.length > 0) {
@@ -366,35 +367,35 @@ class AIService {
       const lowerMessage = message.toLowerCase();
       
       if (lowerMessage.includes('booking') || lowerMessage.includes('rent')) {
-        return "I can help you with booking a vehicle! What type of vehicle are you looking for and when do you need it?";
+        return 'I can help you with booking a vehicle! What type of vehicle are you looking for and when do you need it?';
       }
       
       if (lowerMessage.includes('payment') || lowerMessage.includes('pay')) {
-        return "We accept multiple payment methods including credit cards, EFT, and PayFast. All payments are processed securely through our payment partners.";
+        return 'We accept multiple payment methods including credit cards, EFT, and PayFast. All payments are processed securely through our payment partners.';
       }
       
       if (lowerMessage.includes('cancel') || lowerMessage.includes('refund')) {
-        return "You can cancel your booking up to 24 hours before pickup for a full refund. For cancellations within 24 hours, a 50% refund applies.";
+        return 'You can cancel your booking up to 24 hours before pickup for a full refund. For cancellations within 24 hours, a 50% refund applies.';
       }
       
       if (lowerMessage.includes('insurance') || lowerMessage.includes('cover')) {
-        return "All vehicles are covered by comprehensive insurance. Additional coverage options are available during the booking process.";
+        return 'All vehicles are covered by comprehensive insurance. Additional coverage options are available during the booking process.';
       }
       
       if (lowerMessage.includes('location') || lowerMessage.includes('where')) {
-        return "You can find vehicles in major cities across South Africa including Cape Town, Johannesburg, Durban, and Pretoria.";
+        return 'You can find vehicles in major cities across South Africa including Cape Town, Johannesburg, Durban, and Pretoria.';
       }
       
       if (lowerMessage.includes('price') || lowerMessage.includes('cost')) {
-        return "Our prices vary by vehicle type and location. You can use our search filters to find vehicles within your budget.";
+        return 'Our prices vary by vehicle type and location. You can use our search filters to find vehicles within your budget.';
       }
       
       // Default response
-      return "I'm here to help! You can ask me about booking vehicles, payments, cancellations, insurance, or any other questions about RideShare SA.";
+      return 'I\'m here to help! You can ask me about booking vehicles, payments, cancellations, insurance, or any other questions about RideShare SA.';
       
     } catch (error) {
       console.error('Error getting chatbot response:', error);
-      return "I'm sorry, I'm having trouble understanding. Could you please rephrase your question?";
+      return 'I\'m sorry, I\'m having trouble understanding. Could you please rephrase your question?';
     }
   }
 

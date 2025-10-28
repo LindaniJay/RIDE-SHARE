@@ -3,13 +3,13 @@ import { z } from 'zod';
 import { Review } from '../models/Review';
 import { Listing } from '../models/Listing';
 import { User } from '../models/User';
-import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
 
 // Validation schemas
 const createReviewSchema = z.object({
-  listingId: z.number().int().positive(),
+  listing_id: z.number().int().positive(),
   rating: z.number().int().min(1).max(5),
   comment: z.string().min(1),
 });
@@ -20,13 +20,13 @@ const updateReviewSchema = z.object({
 });
 
 // Get reviews for a listing
-router.get('/listing/:listingId', async (req, res) => {
+router.get('/listing/:listing_id', async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
     
     const reviews = await Review.findAndCountAll({
-      where: { listing_id: req.params.listingId },
+      where: { listing_id: req.params.listing_id },
       include: [
         {
           model: User,
@@ -54,13 +54,13 @@ router.get('/listing/:listingId', async (req, res) => {
 });
 
 // Get user's reviews
-router.get('/my-reviews', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/my-reviews', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
     
     const reviews = await Review.findAndCountAll({
-      where: { reviewer_id: req.user!.id },
+      where: { reviewer_id: Number(req.user!.id) },
       include: [
         {
           model: Listing,
@@ -116,12 +116,12 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create review
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const reviewData = createReviewSchema.parse(req.body);
     
     // Check if listing exists
-    const listing = await Listing.findByPk(reviewData.listingId);
+    const listing = await Listing.findByPk(reviewData.listing_id);
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
@@ -130,8 +130,8 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     const { Booking } = require('../models/Booking');
     const completedBooking = await Booking.findOne({
       where: {
-        listingId: reviewData.listingId,
-        reviewer_id: req.user!.id,
+        listing_id: reviewData.listing_id,
+        reviewer_id: Number(req.user!.id),
         status: 'completed',
       },
     });
@@ -145,8 +145,8 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     // Check if user has already reviewed this listing
     const existingReview = await Review.findOne({
       where: {
-        listing_id: reviewData.listingId,
-        reviewer_id: req.user!.id,
+        listing_id: reviewData.listing_id,
+        reviewer_id: Number(req.user!.id),
       },
     });
     
@@ -155,15 +155,16 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     }
     
     const review = await Review.create({
-      ...reviewData,
-      reviewer_id: req.user!.id,
-      listing_id: reviewData.listingId.toString(),
-      booking_id: '',
-      reviewee_id: '',
-      review_type: 'renter_to_vehicle',
-      is_public: true,
-      is_verified: false,
-      helpful_count: 0
+      // required fields
+      rating: reviewData.rating,
+      comment: reviewData.comment,
+      bookingId: completedBooking.id,
+      reviewerId: Number(req.user!.id),
+      revieweeId: listing.hostId,
+      // compatibility fields
+      reviewer_id: Number(req.user!.id),
+      reviewee_id: listing.hostId,
+      listing_id: reviewData.listing_id,
     });
     
     res.status(201).json(review);
@@ -176,7 +177,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Update review
-router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const review = await Review.findByPk(req.params.id);
     
@@ -184,7 +185,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Review not found' });
     }
     
-    if (review.reviewer_id !== req.user!.id) {
+    if (review.reviewer_id !== Number(req.user!.id)) {
       return res.status(403).json({ error: 'You can only update your own reviews' });
     }
     
@@ -202,7 +203,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Delete review
-router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const review = await Review.findByPk(req.params.id);
     
@@ -210,7 +211,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Review not found' });
     }
     
-    if (review.reviewer_id !== req.user!.id) {
+    if (review.reviewer_id !== Number(req.user!.id)) {
       return res.status(403).json({ error: 'You can only delete your own reviews' });
     }
     
@@ -223,4 +224,6 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 export default router;
+
+
 

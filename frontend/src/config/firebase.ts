@@ -5,13 +5,13 @@ import { getAnalytics } from 'firebase/analytics';
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: (import.meta.env as any).VITE_FIREBASE_API_KEY || "AIzaSyCUn6sq5qode0tO73tfDgXneg03_CobxjI",
-  authDomain: (import.meta.env as any).VITE_FIREBASE_AUTH_DOMAIN || "ride-share-56610.firebaseapp.com",
-  projectId: (import.meta.env as any).VITE_FIREBASE_PROJECT_ID || "ride-share-56610",
-  storageBucket: (import.meta.env as any).VITE_FIREBASE_STORAGE_BUCKET || "ride-share-56610.firebasestorage.app",
-  messagingSenderId: (import.meta.env as any).VITE_FIREBASE_MESSAGING_SENDER_ID || "1074725088115",
-  appId: (import.meta.env as any).VITE_FIREBASE_APP_ID || "1:1074725088115:web:9d53e6c7b24a497cf3b306",
-  measurementId: (import.meta.env as any).VITE_FIREBASE_MEASUREMENT_ID || "G-XN91B7PKY4"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyCUn6sq5qode0tO73tfDgXneg03_CobxjI',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'ride-share-56610.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'ride-share-56610',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'ride-share-56610.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1074725088115',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:1074725088115:web:9d53e6c7b24a497cf3b306',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-XN91B7PKY4'
 };
 
 // Initialize Firebase

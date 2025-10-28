@@ -85,10 +85,10 @@ const AdaptiveGlassCard: React.FC<AdaptiveGlassCardProps> = ({
         <div className="flex items-center mb-4">
           {icon && (
             <div className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center mr-4 backdrop-blur-sm border",
+              'w-12 h-12 rounded-xl flex items-center justify-center mr-4 backdrop-blur-sm border',
               isLightBackground 
-                ? "bg-gray-800/20 border-gray-700/30" 
-                : "bg-white/20 border-white/30"
+                ? 'bg-gray-800/20 border-gray-700/30' 
+                : 'bg-white/20 border-white/30'
             )}>
               {icon}
             </div>
@@ -96,7 +96,7 @@ const AdaptiveGlassCard: React.FC<AdaptiveGlassCardProps> = ({
           <div>
             {title && (
               <h3 className={cn(
-                "text-lg font-semibold mb-1",
+                'text-lg font-semibold mb-1',
                 getTextClasses()
               )}>
                 {title}
@@ -104,7 +104,7 @@ const AdaptiveGlassCard: React.FC<AdaptiveGlassCardProps> = ({
             )}
             {subtitle && (
               <p className={cn(
-                "text-sm opacity-90",
+                'text-sm opacity-90',
                 getTextClasses()
               )}>
                 {subtitle}

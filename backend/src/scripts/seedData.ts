@@ -9,12 +9,15 @@ const seedData = async () => {
 
     // Create sample users
     const host1 = await User.create({
+      firebase_uid: `firebase-${Date.now()}-1`,
+      display_name: 'John Smith',
       first_name: 'John',
       last_name: 'Smith',
       email: 'john@example.com',
       password: 'password123',
       password_hash: await bcrypt.hash('password123', 12),
       role: 'host',
+      isVerified: true,
       phone_number: '+27 21 123 4567',
       is_email_verified: true,
       is_phone_verified: false,
@@ -24,12 +27,15 @@ const seedData = async () => {
     });
 
     const host2 = await User.create({
+      firebase_uid: `firebase-${Date.now()}-2`,
+      display_name: 'Sarah Johnson',
       first_name: 'Sarah',
       last_name: 'Johnson',
       email: 'sarah@example.com',
       password: 'password123',
       password_hash: await bcrypt.hash('password123', 12),
       role: 'host',
+      isVerified: true,
       phone_number: '+27 11 987 6543',
       is_email_verified: true,
       is_phone_verified: false,
@@ -39,12 +45,15 @@ const seedData = async () => {
     });
 
     await User.create({
+      firebase_uid: `firebase-${Date.now()}-3`,
+      display_name: 'Mike Wilson',
       first_name: 'Mike',
       last_name: 'Wilson',
       email: 'mike@example.com',
       password: 'password123',
       password_hash: await bcrypt.hash('password123', 12),
       role: 'renter',
+      isVerified: true,
       phone_number: '+27 82 555 1234',
       is_email_verified: true,
       is_phone_verified: false,
@@ -228,12 +237,16 @@ const seedData = async () => {
     for (const listingData of listings) {
       await Listing.create({
         ...listingData,
+        host_id: undefined, // Remove conflicting field
+        hostId: Number(listingData.host_id!) || 0,
+        pricePerDay: listingData.price_per_day || 100,
+        image: '/uploads/default-vehicle.jpg',
+        city: 'Cape Town',
         is_featured: false,
         total_bookings: 0,
         total_earnings: 0,
         category: 'economy',
-        minimum_rental_days: 1,
-        host_id: listingData.host_id!
+        minimum_rental_days: 1
       });
     }
 
@@ -253,5 +266,5 @@ if (require.main === module) {
     process.exit(0);
   });
 }
-
 export default seedData;
+

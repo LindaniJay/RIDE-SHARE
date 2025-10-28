@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import websocketService from '../services/websocketService';
 import Icon from './Icon';
 // import { ApprovalStatus } from '../types';
 
@@ -20,18 +22,58 @@ interface NotificationSystemProps {
 
 export const NotificationSystem: React.FC<NotificationSystemProps> = ({
   userId,
-  className = ""
+  className = ''
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isConnected, setIsConnected] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchNotifications();
-    // Set up real-time notifications (WebSocket or polling)
-    const interval = setInterval(fetchNotifications, 30000); // Poll every 30 seconds
-    return () => clearInterval(interval);
   }, [userId]);
+
+  // Set up WebSocket connection for real-time notifications
+  useEffect(() => {
+    if (!user) return;
+
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    // Connect to WebSocket
+    websocketService.connect(token);
+
+    // Subscribe to real-time notifications
+    websocketService.subscribeToNotifications((notification: any) => {
+      const newNotification: Notification = {
+        id: notification.id || Math.random().toString(36).substr(2, 9),
+        type: notification.type || 'info',
+        title: notification.title,
+        message: notification.message,
+        timestamp: new Date(notification.timestamp || Date.now()),
+        read: false,
+        actionUrl: notification.actionUrl,
+        actionText: notification.actionText
+      };
+
+      setNotifications(prev => [newNotification, ...prev.slice(0, 19)]);
+      setUnreadCount(prev => prev + 1);
+    });
+
+    // Check connection status
+    const checkConnection = () => {
+      setIsConnected(websocketService.socket?.connected || false);
+    };
+
+    checkConnection();
+    const interval = setInterval(checkConnection, 5000);
+
+    return () => {
+      clearInterval(interval);
+      // Do not disconnect here; WebSocket is shared across the app
+    };
+  }, [user]);
 
   const fetchNotifications = async () => {
     try {
@@ -50,40 +92,9 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      // Mock notifications for development
-      setNotifications([
-        {
-          id: '1',
-          type: 'approval',
-          title: 'Account Approved!',
-          message: 'Your account has been verified and approved. You can now make bookings on RideShare SA.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-          read: false,
-          actionUrl: '/dashboard',
-          actionText: 'Go to Dashboard'
-        },
-        {
-          id: '2',
-          type: 'rejection',
-          title: 'Document Rejected',
-          message: 'Your driver\'s license was rejected. Please upload a clearer photo and resubmit.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-          read: false,
-          actionUrl: '/dashboard/documents',
-          actionText: 'Resubmit Documents'
-        },
-        {
-          id: '3',
-          type: 'approval',
-          title: 'Vehicle Listing Approved',
-          message: 'Your 2020 Toyota Corolla listing has been approved and is now live on the marketplace.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-          read: true,
-          actionUrl: '/dashboard/host',
-          actionText: 'View Listing'
-        }
-      ]);
-      setUnreadCount(2);
+      // Fallback to empty arrays instead of mock data
+      setNotifications([]);
+      setUnreadCount(0);
     }
   };
 
@@ -184,6 +195,9 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
+        )}
+        {!isConnected && (
+          <span className="absolute -bottom-1 -right-1 bg-yellow-500 text-white text-xs rounded-full h-3 w-3" title="Disconnected"></span>
         )}
       </button>
 

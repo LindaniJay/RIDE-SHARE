@@ -1,78 +1,144 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { buttonVariants } from '../utils/motionVariants';
 
-interface GlassButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  icon?: React.ReactNode;
+interface GlassButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  type?: 'button' | 'submit' | 'reset';
+  variant?: 'primary' | 'secondary' | 'accent' | 'ghost' | 'danger' | 'outline';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  disabled?: boolean;
   loading?: boolean;
-  gradient?: boolean;
+  icon?: React.ReactNode;
+  iconPosition?: 'left' | 'right';
+  className?: string;
+  animated?: boolean;
+  glow?: boolean;
+  fullWidth?: boolean;
 }
 
 const GlassButton: React.FC<GlassButtonProps> = ({
+  children,
+  onClick,
+  type = 'button',
   variant = 'primary',
   size = 'md',
-  icon,
+  disabled = false,
   loading = false,
-  gradient = false,
+  icon,
+  iconPosition = 'left',
   className = '',
-  children,
-  disabled,
-  ...props
+  animated = true,
+  glow = false,
+  fullWidth = false
 }) => {
   const getVariantStyles = () => {
     switch (variant) {
       case 'primary':
-        return gradient 
-          ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 text-white border border-white/30'
-          : 'bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/20 text-white border border-white/30';
+        return 'bg-primary-500/20 hover:bg-primary-500/30 text-white border-primary-500/30 hover:border-primary-500/50';
       case 'secondary':
-        return 'bg-white/10 dark:bg-white/5 hover:bg-white/20 dark:hover:bg-white/10 text-white border border-white/20';
-      case 'outline':
-        return 'bg-transparent hover:bg-white/10 dark:hover:bg-white/5 text-white border border-white/30 hover:border-white/50';
+        return 'bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30';
+      case 'accent':
+        return 'bg-accent-500/20 hover:bg-accent-500/30 text-white border-accent-500/30 hover:border-accent-500/50';
       case 'ghost':
-        return 'bg-transparent hover:bg-white/10 dark:hover:bg-white/5 text-white border-none';
+        return 'bg-transparent hover:bg-white/10 text-white border-white/10 hover:border-white/20';
+      case 'danger':
+        return 'bg-red-500/20 hover:bg-red-500/30 text-white border-red-500/30 hover:border-red-500/50';
+      case 'outline':
+        return 'bg-transparent hover:bg-white/10 text-white border-white/30 hover:border-white/50';
       default:
-        return 'bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/20 text-white border border-white/30';
+        return 'bg-primary-500/20 hover:bg-primary-500/30 text-white border-primary-500/30 hover:border-primary-500/50';
     }
   };
 
   const getSizeStyles = () => {
     switch (size) {
       case 'sm':
-        return 'px-3 py-2 text-sm';
+        return 'px-3 py-1.5 text-sm';
       case 'md':
-        return 'px-4 py-3 text-base';
+        return 'px-4 py-2 text-base';
       case 'lg':
-        return 'px-6 py-4 text-lg';
+        return 'px-6 py-3 text-lg';
+      case 'xl':
+        return 'px-8 py-4 text-xl';
       default:
-        return 'px-4 py-3 text-base';
+        return 'px-4 py-2 text-base';
     }
   };
 
+  const buttonClasses = `
+    ${getVariantStyles()}
+    ${getSizeStyles()}
+    ${fullWidth ? 'w-full' : ''}
+    ${glow ? 'shadow-glow' : 'shadow-glass'}
+    backdrop-blur-md
+    border
+    rounded-xl
+    font-medium
+    font-heading
+    transition-all
+    duration-300
+    ease-in-out
+    relative
+    overflow-hidden
+    disabled:opacity-50
+    disabled:cursor-not-allowed
+    disabled:hover:scale-100
+    disabled:hover:shadow-glass
+    ${className}
+  `;
+
+  const ButtonComponent = animated ? motion.button : 'button';
+  const buttonProps = animated ? {
+    variants: buttonVariants,
+    initial: 'rest',
+    whileHover: disabled ? 'rest' : 'hover',
+    whileTap: disabled ? 'rest' : 'tap',
+    onClick: disabled ? undefined : onClick,
+  } : {
+    onClick: disabled ? undefined : onClick,
+  };
+
   return (
-    <button
-      className={`
-        inline-flex items-center justify-center rounded-xl font-medium
-        backdrop-blur-md transition-all duration-300 ease-in-out
-        hover:scale-105 active:scale-95
-        focus:outline-none focus:ring-2 focus:ring-white/20 dark:focus:ring-white/10
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
-        ${getVariantStyles()}
-        ${getSizeStyles()}
-        ${className}
-      `}
+    <ButtonComponent
+      type={type}
       disabled={disabled || loading}
-      {...props}
+      className={buttonClasses}
+      {...buttonProps}
     >
-      {loading ? (
-        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2" />
-      ) : icon ? (
-        <span className="mr-2">{icon}</span>
-      ) : null}
-      {children}
-    </button>
+      {/* Shimmer effect */}
+      {animated && !disabled && (
+        <div className="absolute inset-0 -top-2 -left-2 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 -translate-x-full hover:translate-x-full" />
+      )}
+      
+      {/* Content */}
+      <div className="relative z-10 flex items-center justify-center gap-2">
+        {loading && (
+          <motion.div
+            className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          />
+        )}
+        
+        {!loading && icon && iconPosition === 'left' && (
+          <span className="flex-shrink-0">{icon}</span>
+        )}
+        
+        <span className="text-shadow-sm">{children}</span>
+        
+        {!loading && icon && iconPosition === 'right' && (
+          <span className="flex-shrink-0">{icon}</span>
+        )}
+      </div>
+      
+      {/* Reflection highlight */}
+      {animated && (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50" />
+      )}
+    </ButtonComponent>
   );
 };
 
 export default GlassButton;
-

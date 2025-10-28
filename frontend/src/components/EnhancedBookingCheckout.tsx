@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { bookingService } from '../services/bookingService';
-import { paymentService } from '../services/paymentService';
+import { enhancedPaymentService } from '../services/EnhancedPaymentService';
 import Icon from './Icon';
 import { SAPaymentGateway } from './SAPaymentGateway';
 
@@ -85,7 +85,7 @@ const EnhancedBookingCheckout: React.FC<EnhancedBookingCheckoutProps> = ({
 
   const loadLoyaltyPoints = async () => {
     try {
-      const points = await paymentService.getLoyaltyPoints();
+      const points = await enhancedPaymentService.getLoyaltyPoints();
       setLoyaltyPoints(typeof points === 'number' ? points : points.available);
     } catch (error) {
       console.error('Error loading loyalty points:', error);
@@ -231,12 +231,14 @@ const EnhancedBookingCheckout: React.FC<EnhancedBookingCheckoutProps> = ({
     });
 
     // Process payment
-    await paymentService.processPayment({
+    await enhancedPaymentService.processPayment({
       ...paymentData,
+      gateway: 'stripe',
       bookingId: booking.id,
       customerInfo: {
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
         email: user?.email || '',
-        name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
         phone: user?.phoneNumber || ''
       }
     });

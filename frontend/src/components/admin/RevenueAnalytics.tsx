@@ -34,34 +34,25 @@ const RevenueAnalytics: React.FC = () => {
 
   const fetchRevenueData = async () => {
     try {
-      // Mock data - replace with actual API call
-      const mockData: RevenueData = {
-        total: 1250000,
-        monthly: 45000,
-        daily: 1500,
-        growth: 12.5,
-        breakdown: {
-          bookings: 80000,
-          fees: 25000,
-          commissions: 20000
-        },
-        trends: [
-          { period: 'Jan', revenue: 35000 },
-          { period: 'Feb', revenue: 42000 },
-          { period: 'Mar', revenue: 38000 },
-          { period: 'Apr', revenue: 45000 },
-          { period: 'May', revenue: 52000 },
-          { period: 'Jun', revenue: 48000 }
-        ],
-        topSources: [
-          { source: 'Vehicle Rentals', revenue: 60000, percentage: 75 },
-          { source: 'Service Fees', revenue: 15000, percentage: 18.75 },
-          { source: 'Insurance', revenue: 5000, percentage: 6.25 }
-        ]
-      };
-      setData(mockData);
+      setLoading(true);
+      
+      const response = await fetch(`/api/admin/revenue-analytics?timeRange=${timeRange}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const analyticsData = await response.json();
+        setData(analyticsData.data);
+      } else {
+        console.error('Failed to fetch revenue data');
+        setData(null);
+      }
     } catch (error) {
       console.error('Error fetching revenue data:', error);
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -133,7 +124,7 @@ const RevenueAnalytics: React.FC = () => {
         {/* Growth Indicator */}
         <div className="flex items-center space-x-2">
           <Icon 
-            name={data.growth >= 0 ? "TrendingUp" : "TrendingDown"} 
+            name={data.growth >= 0 ? 'TrendingUp' : 'TrendingDown'} 
             className={`w-5 h-5 ${data.growth >= 0 ? 'text-green-500' : 'text-red-500'}`}
           />
           <span className={`font-medium ${data.growth >= 0 ? 'text-green-500' : 'text-red-500'}`}>

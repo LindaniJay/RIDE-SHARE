@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { Op } from 'sequelize';
 import { Payment, Booking, User } from '../models';
 import { sequelize } from '../config/database';
-import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -18,13 +18,13 @@ const createPaymentSchema = z.object({
 const processPaymentSchema = z.object({
   payment_intent_id: z.string().optional(),
   transaction_id: z.string().optional(),
-  payment_status: z.enum(['completed', 'failed', 'cancelled']),
+  paymentStatus: z.enum(['completed', 'failed', 'cancelled']),
   failure_reason: z.string().optional(),
   payment_metadata: z.object({}).optional()
 });
 
 // Create payment
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { booking_id, payment_method, payment_provider, payment_metadata } = createPaymentSchema.parse(req.body);
 
@@ -43,7 +43,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Verify user owns this booking
-    if (booking.renter_id !== req.user!.id) {
+    if (booking.renterId !== Number(req.user!.id)) {
       return res.status(403).json({
         error: 'Access denied',
         message: 'You can only create payments for your own bookings'
@@ -51,18 +51,18 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Check if booking is in a payable state
-    if (!['pending', 'confirmed'].includes(booking.payment_status)) {
+    if (!['pending', 'confirmed'].includes(booking.paymentStatus || 'pending')) {
       return res.status(400).json({
-        error: 'Invalid booking payment_status',
-        message: 'Payment cannot be processed for bookings in this payment_status'
+        error: 'Invalid booking paymentStatus',
+        message: 'Payment cannot be processed for bookings in this paymentStatus'
       });
     }
 
     // Check if payment already exists
     const existingPayment = await Payment.findOne({
       where: {
-        booking_id,
-        payment_status: ['pending', 'processing', 'completed']
+        booking_id: parseInt(booking_id),
+        paymentStatus: ['pending', 'processing', 'completed']
       }
     });
 
@@ -75,18 +75,19 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 
     // Create payment record
     const payment = await Payment.create({
-      booking_id,
-      renter_id: req.user!.id,
-      amount: booking.total_amount,
+      bookingId: parseInt(booking_id),
+      renter_id: Number(req.user!.id) || 0,
+      host_id: (booking as any).listing?.host_id || '',
+      amount: booking.total_amount || 0,
       currency: 'ZAR',
-      payment_method,
-      payment_provider,
-      payment_status: 'pending',
+      paymentMethod: payment_method as 'stripe' | 'payfast' | 'bank_transfer',
+      payment_provider: payment_provider as 'stripe' | 'payfast',
+      status: 'pending',
       payment_metadata: payment_metadata || {}
     });
 
     // Update booking payment status
-    await booking.update({ payment_status: 'pending' });
+    await booking.update({ paymentStatus: 'pending' });
 
     res.status(201).json({
       message: 'Payment created successfully',
@@ -95,8 +96,8 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
         amount: payment.amount,
         currency: payment.currency,
         payment_method: payment.payment_method,
-        payment_status: payment.payment_status,
-        createdAt: payment.createdAt
+        paymentStatus: payment.paymentStatus,
+        created_at: payment.created_at
       }
     });
 
@@ -117,10 +118,10 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Process payment (webhook or manual processing)
-router.post('/:id/process', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/:id/process', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
-    const { payment_intent_id, transaction_id, payment_status, failure_reason, payment_metadata } = processPaymentSchema.parse(req.body);
+    const { payment_intent_id, transaction_id, paymentStatus, failure_reason, payment_metadata } = processPaymentSchema.parse(req.body);
 
     const payment = await Payment.findByPk(id, {
       include: [
@@ -145,7 +146,7 @@ router.post('/:id/process', authenticateToken, async (req: AuthRequest, res) => 
     }
 
     const canProcess = 
-      payment.renter_id === user.id || 
+      payment.renter_id === Number(user.id) || 
       user.role === 'admin';
 
     if (!canProcess) {
@@ -157,7 +158,7 @@ router.post('/:id/process', authenticateToken, async (req: AuthRequest, res) => 
 
     // Update payment
     const updateData: any = {
-      payment_status,
+      paymentStatus,
       processed_at: new Date()
     };
 
@@ -180,13 +181,13 @@ router.post('/:id/process', authenticateToken, async (req: AuthRequest, res) => 
     await payment.update(updateData);
 
     // Update booking payment status based on payment status
-    if (payment_status === 'completed') {
+    if (paymentStatus === 'completed') {
       await (payment as any).booking.update({ 
-        payment_status: 'paid'
+        paymentStatus: 'paid'
       });
-    } else if (payment_status === 'failed') {
+    } else if (paymentStatus === 'failed') {
       await (payment as any).booking.update({ 
-        payment_status: 'failed'
+        paymentStatus: 'failed'
       });
     }
 
@@ -194,7 +195,7 @@ router.post('/:id/process', authenticateToken, async (req: AuthRequest, res) => 
       message: 'Payment processed successfully',
       payment: {
         id: payment.id,
-        payment_status: payment.payment_status,
+        paymentStatus: payment.paymentStatus,
         processed_at: payment.processed_at
       }
     });
@@ -216,13 +217,13 @@ router.post('/:id/process', authenticateToken, async (req: AuthRequest, res) => 
 });
 
 // Get user's payments
-router.get('/my-payments', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/my-payments', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const { payment_status, page = 1, limit = 10 } = req.query;
+    const { paymentStatus, page = 1, limit = 10 } = req.query;
     
     const whereClause: any = { renter_id: req.user!.id };
-    if (payment_status) {
-      whereClause.payment_status = payment_status;
+    if (paymentStatus) {
+      whereClause.paymentStatus = paymentStatus;
     }
 
     const offset = (Number(page) - 1) * Number(limit);
@@ -263,7 +264,7 @@ router.get('/my-payments', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get single payment
-router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
@@ -296,7 +297,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     const canView = 
-      payment.renter_id === user.id || 
+      payment.renter_id === Number(user.id) || 
       user.role === 'admin';
 
     if (!canView) {
@@ -318,7 +319,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Refund payment
-router.post('/:id/refund', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/:id/refund', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const { amount, reason } = req.body;
@@ -337,7 +338,7 @@ router.post('/:id/refund', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Check if payment can be refunded
-    if (payment.payment_status !== 'succeeded') {
+    if (payment.paymentStatus !== 'paid') {
       return res.status(400).json({
         error: 'Payment not completed',
         message: 'Only completed payments can be refunded'
@@ -364,15 +365,14 @@ router.post('/:id/refund', authenticateToken, async (req: AuthRequest, res) => {
 
     // Update payment
     await payment.update({
-      payment_status: refundAmount === payment.amount ? 'refunded' : 'refunded',
+      paymentStatus: refundAmount === payment.amount ? 'refunded' : 'partially_refunded',
       refund_amount: refundAmount,
-      refund_reason: reason,
-      refund_processed_at: new Date()
+      refund_reason: reason
     });
 
     // Update booking payment status
     await (payment as any).booking.update({
-      payment_status: refundAmount === payment.amount ? 'refunded' : 'partially_refunded'
+      paymentStatus: refundAmount === payment.amount ? 'refunded' : 'partially_refunded'
     });
 
     res.json({
@@ -390,7 +390,7 @@ router.post('/:id/refund', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get payment statistics (admin only)
-router.get('/admin/statistics', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/admin/statistics', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     // Check if user is admin
     const user = await User.findByPk(req.user!.id);
@@ -413,18 +413,18 @@ router.get('/admin/statistics', authenticateToken, async (req: AuthRequest, res)
     // Get payment statistics
     const totalPayments = await Payment.count({ where: whereClause });
     const completedPayments = await Payment.count({ 
-      where: { ...whereClause, payment_status: 'completed' } 
+      where: { ...whereClause, paymentStatus: 'completed' } 
     });
     const failedPayments = await Payment.count({ 
-      where: { ...whereClause, payment_status: 'failed' } 
+      where: { ...whereClause, paymentStatus: 'failed' } 
     });
     const refundedPayments = await Payment.count({ 
-      where: { ...whereClause, payment_status: ['refunded', 'partially_refunded'] } 
+      where: { ...whereClause, paymentStatus: ['refunded', 'partially_refunded'] } 
     });
 
     // Get total revenue
     const revenueResult = await Payment.findOne({
-      where: { ...whereClause, payment_status: 'completed' },
+      where: { ...whereClause, paymentStatus: 'completed' },
       attributes: [
         [sequelize.fn('SUM', sequelize.col('amount')), 'total_revenue']
       ],
@@ -435,7 +435,7 @@ router.get('/admin/statistics', authenticateToken, async (req: AuthRequest, res)
 
     // Get refund statistics
     const refundResult = await Payment.findOne({
-      where: { ...whereClause, payment_status: ['refunded', 'partially_refunded'] },
+      where: { ...whereClause, paymentStatus: ['refunded', 'partially_refunded'] },
       attributes: [
         [sequelize.fn('SUM', sequelize.col('refund_amount')), 'total_refunds']
       ],
@@ -466,3 +466,5 @@ router.get('/admin/statistics', authenticateToken, async (req: AuthRequest, res)
 });
 
 export default router;
+
+

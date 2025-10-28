@@ -4,10 +4,10 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('approval_requests', {
       id: {
-        allowNull: false,
-        autoIncrement: true,
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        allowNull: false
       },
       requestType: {
         type: Sequelize.STRING,
@@ -17,7 +17,7 @@ module.exports = {
         }
       },
       entityId: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         comment: 'ID of the related entity (user, vehicle, listing, etc.)'
       },
@@ -31,7 +31,7 @@ module.exports = {
         defaultValue: 'Pending'
       },
       submittedById: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'users',
@@ -41,7 +41,7 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       reviewedById: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: true,
         references: {
           model: 'users',

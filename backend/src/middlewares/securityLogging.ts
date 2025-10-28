@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthRequest } from './auth';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 // Security event logging
 export const logSecurityEvent = (event: string, details: any) => {
@@ -88,7 +88,7 @@ export const logAuthAttempt = (req: Request, res: Response, next: NextFunction) 
 
 // Log admin actions
 export const logAdminAction = (action: string) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const originalSend = res.send;
     
     res.send = function(data) {
@@ -202,7 +202,7 @@ export const logPasswordEvent = (event: string, userId: string, success: boolean
 };
 
 // Log data access events
-export const logDataAccess = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const logDataAccess = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const originalSend = res.send;
   
   res.send = function(data) {

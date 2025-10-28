@@ -5,10 +5,10 @@
 
 // Import statements to replace mock services
 export const PRODUCTION_IMPORTS = {
-  auth: `import { authService } from '../services/productionAuthService';`,
-  booking: `import { bookingService } from '../services/productionBookingService';`,
-  listing: `import { listingService } from '../services/productionListingService';`,
-  api: `import { apiClient } from '../services/productionApiClient';`,
+  auth: 'import { authService } from \'../services/productionAuthService\';',
+  booking: 'import { bookingService } from \'../services/productionBookingService\';',
+  listing: 'import { listingService } from \'../services/productionListingService\';',
+  api: 'import { apiClient } from \'../services/apiClient\';',
 };
 
 // Service mappings

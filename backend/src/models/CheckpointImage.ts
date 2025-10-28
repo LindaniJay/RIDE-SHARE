@@ -1,95 +1,80 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { Model, DataTypes, CreationOptional, InferAttributes, InferCreationAttributes } from 'sequelize';
 import { sequelize } from '../config/database';
 
 export interface CheckpointImageAttributes {
-  id: string;
-  checkpoint_id: string;
-  uploaded_by: string;
-  file_url: string;
-  filename: string;
-  file_size?: number;
-  mime_type?: string;
-  category?: string;
+  id: number;
+  checkpointId: number;
+  imageUrl: string;
   description?: string;
-  createdAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // Additional fields for compatibility
+  checkpoint_id?: number;
+  image_url?: string;
+  created_at?: Date;
 }
 
-export interface CheckpointImageCreationAttributes extends Optional<CheckpointImageAttributes, 'id' | 'file_size' | 'mime_type' | 'category' | 'description' | 'createdAt'> {}
+export interface CheckpointImageCreationAttributes extends Omit<CheckpointImageAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
-export class CheckpointImage extends Model<CheckpointImageAttributes, CheckpointImageCreationAttributes> implements CheckpointImageAttributes {
-  public id!: string;
-  public checkpoint_id!: string;
-  public uploaded_by!: string;
-  public file_url!: string;
-  public filename!: string;
-  public file_size?: number;
-  public mime_type?: string;
-  public category?: string;
-  public description?: string;
-  public readonly createdAt!: Date;
+export class CheckpointImage extends Model<InferAttributes<CheckpointImage>, InferCreationAttributes<CheckpointImage>> {
+  declare id: CreationOptional<number>;
+  declare checkpointId: number;
+  declare imageUrl: string;
+  declare description?: string;
+  declare readonly createdAt: CreationOptional<Date>;
+  declare readonly updatedAt: CreationOptional<Date>;
+  
+  // Additional fields for compatibility
+  declare checkpoint_id?: number;
+  declare image_url?: string;
+  declare created_at?: Date;
 }
 
-CheckpointImage.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-      allowNull: false
-    },
-    checkpoint_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'checkpoints',
-        key: 'id'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE'
-    },
-    uploaded_by: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE'
-    },
-    file_url: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    filename: {
-      type: DataTypes.STRING(255),
-      allowNull: false
-    },
-    file_size: {
-      type: DataTypes.INTEGER,
-      allowNull: true
-    },
-    mime_type: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    category: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    }
+CheckpointImage.init({
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
   },
-  {
-    sequelize,
-    modelName: 'CheckpointImage',
-    tableName: 'checkpoint_images',
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: false
-  }
-);
+  checkpointId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'checkpoints',
+      key: 'id',
+    },
+  },
+  imageUrl: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  createdAt: DataTypes.DATE,
+  updatedAt: DataTypes.DATE,
+  
+  // Additional fields for compatibility
+  checkpoint_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  image_url: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+}, {
+  sequelize,
+  modelName: 'CheckpointImage',
+  tableName: 'checkpoint_images',
+  timestamps: true,
+  underscored: true,
+});
 
 export default CheckpointImage;

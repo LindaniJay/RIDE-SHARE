@@ -30,7 +30,7 @@ interface VehicleApprovalPanelProps {
   className?: string;
 }
 
-const VehicleApprovalPanel: React.FC<VehicleApprovalPanelProps> = ({ className = "" }) => {
+const VehicleApprovalPanel: React.FC<VehicleApprovalPanelProps> = ({ className = '' }) => {
   const [pendingVehicles, setPendingVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,7 +143,7 @@ const VehicleApprovalPanel: React.FC<VehicleApprovalPanelProps> = ({ className =
         <div className="text-center py-8">
           <Icon name="AlertCircle" size="lg" className="text-red-400 mx-auto mb-4" />
           <p className="text-red-200 mb-4">{error}</p>
-          <GlassButton onClick={fetchPendingVehicles} variant="outline">
+          <GlassButton onClick={fetchPendingVehicles} variant="secondary">
             Try Again
           </GlassButton>
         </div>
@@ -284,7 +284,7 @@ const VehicleApprovalPanel: React.FC<VehicleApprovalPanelProps> = ({ className =
               <div className="flex space-x-3">
                 <GlassButton
                   onClick={() => setShowApprovalModal(false)}
-                  variant="outline"
+                  variant="secondary"
                   className="flex-1"
                   disabled={processing}
                 >

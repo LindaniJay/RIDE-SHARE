@@ -107,7 +107,7 @@ export interface SocialMediaVerification {
 }
 
 class VerificationService {
-  private readonly API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:5001/api';
+  private readonly API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
   /**
    * Submit verification request
@@ -118,7 +118,7 @@ class VerificationService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: JSON.stringify(request)
       });
@@ -157,7 +157,7 @@ class VerificationService {
       const response = await fetch(`${this.API_BASE_URL}/verification/upload`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: formData
       });
@@ -177,7 +177,7 @@ class VerificationService {
     try {
       const response = await fetch(`${this.API_BASE_URL}/verification/status`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
 
@@ -206,7 +206,7 @@ class VerificationService {
       const response = await fetch(`${this.API_BASE_URL}/verification/video`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: formData
       });
@@ -226,7 +226,7 @@ class VerificationService {
     try {
       const response = await fetch(`${this.API_BASE_URL}/verification/videos`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
 
@@ -250,7 +250,7 @@ class VerificationService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: JSON.stringify({
           ...inspectionData
@@ -276,7 +276,7 @@ class VerificationService {
         
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
 
@@ -297,7 +297,7 @@ class VerificationService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: JSON.stringify(rating)
       });
@@ -326,7 +326,7 @@ class VerificationService {
     try {
       const response = await fetch(`${this.API_BASE_URL}/verification/ratings?targetId=${targetId}&targetType=${targetType}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
 
@@ -349,7 +349,7 @@ class VerificationService {
         
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
 
@@ -373,7 +373,7 @@ class VerificationService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: JSON.stringify({
           platform,
@@ -396,7 +396,7 @@ class VerificationService {
     try {
       const response = await fetch(`${this.API_BASE_URL}/verification/social`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
 
@@ -422,7 +422,7 @@ class VerificationService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         },
         body: JSON.stringify({
           targetId,
@@ -456,7 +456,7 @@ class VerificationService {
     try {
       const response = await fetch(`${this.API_BASE_URL}/verification/analytics`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(await import('../utils/firebaseAuth').then(module => module.getAuthHeaders()))
         }
       });
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { User } from '../models/User';
 import { Listing } from '../models/Listing';
 import { Booking } from '../models/Booking';
@@ -76,7 +76,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get detailed admin statistics (admin only)
-router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/admin', authenticateToken, async (req: AuthenticatedRequest, res) => {
   if (req.user!.role !== 'admin') {
     return res.status(403).json({ error: 'Only admins can access detailed statistics' });
   }
@@ -197,3 +197,5 @@ async function getBasicStats() {
 }
 
 export default router;
+
+

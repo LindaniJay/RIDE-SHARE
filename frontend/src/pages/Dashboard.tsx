@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import RealTimeAdminDashboard from './RealTimeAdminDashboard';
 import RenterDashboard from './RenterDashboard';
-import HostDashboard from './HostDashboard';
+import ModernHostDashboard from '../components/ModernHostDashboard';
 import AdminQuickActions from '../components/admin/AdminQuickActions';
 
 const Dashboard: React.FC = () => {
@@ -70,9 +70,9 @@ const Dashboard: React.FC = () => {
     setActiveRole(role);
     // Update URL to reflect the role switch
     if (role === 'admin') {
-      navigate('/admin-dashboard');
+      navigate('/admin-dashboard', { replace: true });
     } else {
-      navigate(`/dashboard/${role}`);
+      navigate(`/dashboard/${role}`, { replace: true });
     }
     // Reset transition state after a short delay
     setTimeout(() => setIsTransitioning(false), 300);
@@ -133,7 +133,7 @@ const Dashboard: React.FC = () => {
             // Admin users can switch between views
             <>
               {activeRole === 'renter' && <RenterDashboard />}
-              {activeRole === 'host' && <HostDashboard />}
+              {activeRole === 'host' && <ModernHostDashboard />}
               {activeRole === 'admin' && (
                 <div className="space-y-6">
                   <AdminQuickActions />
@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
             // Regular users see dashboard based on URL path or their role
             <>
               {dashboardType === 'renter' && <RenterDashboard />}
-              {dashboardType === 'host' && <HostDashboard />}
+              {dashboardType === 'host' && <ModernHostDashboard />}
             </>
           )}
         </div>

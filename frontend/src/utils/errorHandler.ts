@@ -63,7 +63,7 @@ export class ErrorHandler {
     this.errorLog.push(error);
     
     // In production, send to logging service
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       this.sendToLoggingService(error);
     } else {
       console.error('Error logged:', error);

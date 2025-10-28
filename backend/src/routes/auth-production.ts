@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { User } from '../models';
-import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -53,14 +53,16 @@ router.post('/register', async (req, res) => {
 
     // Create user with new schema
     const user = await User.create({
+      firebase_uid: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       email,
       password, // Virtual field - will be hashed by model hook
       first_name,
       last_name,
       phone_number,
-      role,
+      role: role.toLowerCase() as 'renter' | 'host' | 'admin',
+      isVerified: false,
       date_of_birth: date_of_birth ? new Date(date_of_birth) : undefined,
-      address,
+      address: typeof address === 'object' ? JSON.stringify(address) : address,
       is_email_verified: false,
       is_phone_verified: false,
       approval_status: 'pending',
@@ -90,7 +92,7 @@ router.post('/register', async (req, res) => {
       is_email_verified: user.is_email_verified,
       approval_status: user.approval_status,
       document_status: user.document_status,
-      created_at: user.createdAt
+      created_at: user.created_at
     };
 
     res.status(201).json({
@@ -179,7 +181,7 @@ router.post('/login', async (req, res) => {
       approval_status: user.approval_status,
       document_status: user.document_status,
       last_login_at: user.last_login_at,
-      created_at: user.createdAt
+      created_at: user.created_at
     };
 
     res.json({
@@ -205,7 +207,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Get current user profile
-router.get('/profile', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/profile', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const user = await User.findByPk(req.user?.id, {
       attributes: { exclude: ['password_hash'] }
@@ -237,8 +239,8 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res) => {
         preferences: user.preferences,
         last_login_at: user.last_login_at,
         is_active: user.is_active,
-        created_at: user.createdAt,
-        updated_at: user.updatedAt
+        created_at: user.created_at,
+        updated_at: user.updated_at
       }
     });
 
@@ -252,7 +254,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Update user profile
-router.put('/profile', authenticateToken, async (req: AuthRequest, res) => {
+router.put('/profile', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const updateSchema = z.object({
       first_name: z.string().min(1).max(100).optional(),
@@ -320,7 +322,7 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res) => {
         preferences: user.preferences,
         last_login_at: user.last_login_at,
         is_active: user.is_active,
-        updated_at: user.updatedAt
+        updated_at: user.updated_at
       }
     });
 
@@ -341,7 +343,7 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Change password
-router.put('/change-password', authenticateToken, async (req: AuthRequest, res) => {
+router.put('/change-password', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
 
@@ -393,14 +395,14 @@ router.put('/change-password', authenticateToken, async (req: AuthRequest, res) 
 });
 
 // Logout (client-side token removal)
-router.post('/logout', authenticateToken, (req: AuthRequest, res) => {
+router.post('/logout', authenticateToken, (req: AuthenticatedRequest, res) => {
   res.json({
     message: 'Logout successful'
   });
 });
 
 // Refresh token
-router.post('/refresh', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/refresh', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const user = await User.findByPk(req.user?.id);
     if (!user || !user.is_active) {
@@ -436,3 +438,4 @@ router.post('/refresh', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 export default router;
+

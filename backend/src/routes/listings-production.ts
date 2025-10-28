@@ -2,7 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import { Op } from 'sequelize';
 import { Listing, User, Booking, Review } from '../models';
-import { authenticateToken, AuthRequest, requireRole } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest, requireRole } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -13,11 +13,11 @@ const createListingSchema = z.object({
   make: z.string().min(1).max(100),
   model: z.string().min(1).max(100),
   year: z.number().int().min(1900).max(new Date().getFullYear() + 1),
-  vehicle_type: z.enum(['car', 'suv', 'bakkie', 'van', 'motorcycle', 'truck']),
+  vehicleType: z.enum(['car', 'suv', 'bakkie', 'van', 'motorcycle', 'truck']),
   category: z.enum(['economy', 'compact', 'mid_size', 'full_size', 'premium', 'luxury', 'sports']),
   price_per_day: z.number().min(0),
-  price_per_week: z.number().min(0).optional(),
-  price_per_month: z.number().min(0).optional(),
+  pricePerWeek: z.number().min(0).optional(),
+  pricePerMonth: z.number().min(0).optional(),
   location: z.object({
     address: z.string(),
     city: z.string(),
@@ -54,19 +54,19 @@ const updateListingSchema = createListingSchema.partial();
 
 const searchListingsSchema = z.object({
   location: z.string().optional(),
-  vehicle_type: z.enum(['car', 'suv', 'bakkie', 'van', 'motorcycle', 'truck']).optional(),
+  vehicleType: z.enum(['car', 'suv', 'bakkie', 'van', 'motorcycle', 'truck']).optional(),
   category: z.enum(['economy', 'compact', 'mid_size', 'full_size', 'premium', 'luxury', 'sports']).optional(),
   min_price: z.number().min(0).optional(),
   max_price: z.number().min(0).optional(),
-  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   features: z.array(z.string()).optional(),
   fuel_type: z.enum(['petrol', 'diesel', 'electric', 'hybrid']).optional(),
   transmission: z.enum(['manual', 'automatic', 'semi_automatic']).optional(),
   min_seats: z.number().int().min(1).optional(),
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(50).default(10),
-  sort_by: z.enum(['price', 'rating', 'distance', 'created_at']).default('created_at'),
+  sort_by: z.enum(['price', 'rating', 'distance', 'createdAt']).default('createdAt'),
   sort_order: z.enum(['asc', 'desc']).default('desc')
 });
 
@@ -76,12 +76,12 @@ router.get('/', async (req, res) => {
     const query = searchListingsSchema.parse(req.query);
     const { 
       location, 
-      vehicle_type, 
+      vehicleType, 
       category, 
       min_price, 
       max_price, 
-      start_date, 
-      end_date, 
+      startDate, 
+      endDate, 
       features, 
       fuel_type, 
       transmission, 
@@ -94,12 +94,12 @@ router.get('/', async (req, res) => {
 
     // Build where clause
     const whereClause: any = {
-      status: 'approved',
-      approval_status: 'approved'
+      approved: true,
+      is_available: true
     };
 
-    if (vehicle_type) {
-      whereClause.vehicle_type = vehicle_type;
+    if (vehicleType) {
+      whereClause.vehicleType = vehicleType;
     }
 
     if (category) {
@@ -133,37 +133,38 @@ router.get('/', async (req, res) => {
     }
 
     // Handle date availability
-    if (start_date && end_date) {
-      const startDate = new Date(start_date);
-      const endDate = new Date(end_date);
+    if (startDate && endDate) {
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
 
       // Find conflicting bookings
       const conflictingBookings = await Booking.findAll({
         where: {
           status: ['confirmed', 'approved', 'completed']
         },
-        attributes: ['listing_id']
+        attributes: ['listingId']
       });
 
       const conflictingListingIds = conflictingBookings
         .filter(booking => {
-          const bookingStart = new Date(booking.start_date);
-          const bookingEnd = new Date(booking.end_date);
-          return (startDate < bookingEnd && endDate > bookingStart);
+          if (!booking.startDate || !booking.endDate) return false;
+          const bookingStart = new Date(booking.startDate);
+          const bookingEnd = new Date(booking.endDate);
+          return (startDateObj < bookingEnd && endDateObj > bookingStart);
         })
-        .map(booking => booking.listing_id);
+        .map(booking => booking.listingId);
 
       if (conflictingListingIds.length > 0) {
         whereClause.id = { [Op.notIn]: conflictingListingIds };
       }
     }
 
-    // Handle location search
+    // Handle location search - using LIKE for SQLite compatibility
     if (location) {
       whereClause[Op.or] = [
-        { 'location.city': { [Op.iLike]: `%${location}%` } },
-        { 'location.province': { [Op.iLike]: `%${location}%` } },
-        { 'location.address': { [Op.iLike]: `%${location}%` } }
+        { 'location.city': { [Op.like]: `%${location}%` } },
+        { 'location.province': { [Op.like]: `%${location}%` } },
+        { 'location.address': { [Op.like]: `%${location}%` } }
       ];
     }
 
@@ -172,18 +173,19 @@ router.get('/', async (req, res) => {
     // Build order clause
     let orderClause: any = [];
     switch (sort_by) {
-      case 'price':
-        orderClause = [['price_per_day', sort_order]];
-        break;
-      case 'rating':
-        orderClause = [['rating', sort_order], ['total_bookings', 'desc']];
-        break;
-      case 'distance':
-        // For now, just sort by created_at since we don't have user location
-        orderClause = [['created_at', 'desc']];
-        break;
-      default:
-        orderClause = [['created_at', sort_order]];
+    case 'price':
+      orderClause = [['price_per_day', sort_order]];
+      break;
+    case 'rating':
+      // Sort by listing rating, fallback to total_bookings
+      orderClause = [['rating', sort_order], ['total_bookings', 'desc']];
+      break;
+    case 'distance':
+      // For now, just sort by createdAt since we don't have user location
+      orderClause = [['createdAt', 'desc']];
+      break;
+    default:
+      orderClause = [['createdAt', sort_order]];
     }
 
     const { count, rows: listings } = await Listing.findAndCountAll({
@@ -192,7 +194,7 @@ router.get('/', async (req, res) => {
         { 
           model: User, 
           as: 'host', 
-          attributes: ['id', 'first_name', 'last_name', 'rating'],
+          attributes: ['id', 'firstName', 'lastName'],
           where: { is_active: true }
         }
       ],
@@ -237,16 +239,16 @@ router.get('/:id', async (req, res) => {
         { 
           model: User, 
           as: 'host', 
-          attributes: ['id', 'first_name', 'last_name', 'email', 'phone_number', 'rating', 'created_at']
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phone_number', 'createdAt']
         },
         { 
           model: Review, 
           as: 'reviews',
           include: [
-            { model: User, as: 'reviewer', attributes: ['id', 'first_name', 'last_name'] }
+            { model: User, as: 'reviewer', attributes: ['id', 'firstName', 'lastName'] }
           ],
           where: { is_public: true },
-          order: [['created_at', 'desc']],
+          order: [['createdAt', 'desc']],
           limit: 10
         }
       ]
@@ -259,7 +261,7 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    if (listing.status !== 'approved' || listing.approval_status !== 'approved') {
+    if (!listing.approved) {
       return res.status(404).json({
         error: 'Listing not available',
         message: 'This listing is not currently available'
@@ -278,7 +280,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create listing (host only)
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     // Verify user is a host
     const user = await User.findByPk(req.user!.id);
@@ -298,20 +300,43 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 
     const listingData = createListingSchema.parse(req.body);
 
-    const listing = await Listing.create({
+    // Additional business logic validation
+    if (listingData.price_per_day < 50) {
+      return res.status(400).json({ 
+        error: 'Price too low', 
+        message: 'Minimum price per day is R50' 
+      });
+    }
+    
+    if (listingData.year < 2000) {
+      return res.status(400).json({ 
+        error: 'Vehicle too old', 
+        message: 'Vehicles must be from 2000 or newer' 
+      });
+    }
+
+    // Convert location object to string if needed
+    if (listingData.location && typeof listingData.location === 'object') {
+      (listingData as any).location = `${listingData.location.address}, ${listingData.location.city}, ${listingData.location.province}`;
+    }
+    
+    const listingDataForCreation = {
       ...listingData,
-      host_id: user.id,
+      hostId: user.id,
       status: 'pending',
       approval_status: 'pending',
       is_featured: false,
       total_bookings: 0,
-      total_earnings: 0
-    });
+      total_earnings: 0,
+      mileage: listingData.mileage || 0 // Add required mileage field
+    } as any;
+
+    const listing = await Listing.create(listingDataForCreation);
 
     // Fetch the created listing with relations
     const createdListing = await Listing.findByPk(listing.id, {
       include: [
-        { model: User, as: 'host', attributes: ['id', 'first_name', 'last_name', 'email'] }
+        { model: User, as: 'host', attributes: ['id', 'firstName', 'lastName', 'email'] }
       ]
     });
 
@@ -337,17 +362,17 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get host's listings
-router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/host', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { page = 1, limit = 20, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    const whereClause: any = { host_id: req.user!.id };
+    const whereClause: any = { hostId: req.user!.id };
     if (status) whereClause.status = status;
 
     const { count, rows: listings } = await Listing.findAndCountAll({
       where: whereClause,
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],
       limit: Number(limit),
       offset
     });
@@ -369,13 +394,13 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get host's listings by host ID (for admin access)
-router.get('/host/:hostId', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/host/:hostId', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { hostId } = req.params;
     const { page = 1, limit = 20, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    const whereClause: any = { host_id: hostId };
+    const whereClause: any = { hostId: hostId };
     if (status) whereClause.status = status;
 
     const { count, rows: listings } = await Listing.findAndCountAll({
@@ -384,10 +409,10 @@ router.get('/host/:hostId', authenticateToken, requireRole(['admin']), async (re
         { 
           model: User, 
           as: 'host', 
-          attributes: ['id', 'first_name', 'last_name', 'email'] 
+          attributes: ['id', 'firstName', 'lastName', 'email'] 
         }
       ],
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],
       limit: Number(limit),
       offset
     });
@@ -409,7 +434,7 @@ router.get('/host/:hostId', authenticateToken, requireRole(['admin']), async (re
 });
 
 // Legacy route for backward compatibility
-router.get('/host/my-listings', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/host/my-listings', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     // Verify user is a host
     const user = await User.findByPk(req.user!.id);
@@ -422,7 +447,7 @@ router.get('/host/my-listings', authenticateToken, async (req: AuthRequest, res)
 
     const { status, page = 1, limit = 10 } = req.query;
     
-    const whereClause: any = { host_id: user.id };
+    const whereClause: any = { hostId: user.id };
     if (status) {
       whereClause.status = status;
     }
@@ -432,9 +457,9 @@ router.get('/host/my-listings', authenticateToken, async (req: AuthRequest, res)
     const { count, rows: listings } = await Listing.findAndCountAll({
       where: whereClause,
       include: [
-        { model: User, as: 'host', attributes: ['id', 'first_name', 'last_name', 'email'] }
+        { model: User, as: 'host', attributes: ['id', 'firstName', 'lastName', 'email'] }
       ],
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],
       limit: Number(limit),
       offset
     });
@@ -459,7 +484,7 @@ router.get('/host/my-listings', authenticateToken, async (req: AuthRequest, res)
 });
 
 // Update listing
-router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
     const updateData = updateListingSchema.parse(req.body);
@@ -482,7 +507,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     const canUpdate = 
-      listing.host_id === user.id || 
+      listing.hostId === Number(user.id) || 
       user.role === 'admin';
 
     if (!canUpdate) {
@@ -493,12 +518,18 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Update listing
-    await listing.update(updateData);
+    // Convert location object to string if needed
+    if (updateData.location && typeof updateData.location === 'object') {
+      (updateData as any).location = `${updateData.location.address}, ${updateData.location.city}, ${updateData.location.province}`;
+    }
+    
+    const updateDataForModel = { ...updateData } as any;
+    await listing.update(updateDataForModel);
 
     // Fetch updated listing with relations
     const updatedListing = await Listing.findByPk(id, {
       include: [
-        { model: User, as: 'host', attributes: ['id', 'first_name', 'last_name', 'email'] }
+        { model: User, as: 'host', attributes: ['id', 'firstName', 'lastName', 'email'] }
       ]
     });
 
@@ -524,7 +555,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Delete listing
-router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
 
@@ -546,7 +577,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     const canDelete = 
-      listing.host_id === user.id || 
+      listing.hostId === Number(user.id) || 
       user.role === 'admin';
 
     if (!canDelete) {
@@ -559,7 +590,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
     // Check for active bookings
     const activeBookings = await Booking.count({
       where: {
-        listing_id: id,
+        listingId: id,
         status: ['confirmed', 'approved', 'completed']
       }
     });
@@ -572,7 +603,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // Soft delete by setting status to inactive
-    await listing.update({ status: 'inactive' });
+    await listing.update({ status: 'rejected' });
 
     res.json({
       message: 'Listing deleted successfully'
@@ -588,3 +619,5 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 export default router;
+
+

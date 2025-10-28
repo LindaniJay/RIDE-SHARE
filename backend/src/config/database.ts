@@ -1,12 +1,9 @@
 import { Sequelize } from 'sequelize';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { env } from './env';
 
 // Database configuration based on environment
-const isTest = process.env.NODE_ENV === 'test';
-const isProduction = process.env.NODE_ENV === 'production';
-const databaseUrl = process.env.DATABASE_URL;
+const isTest = env.NODE_ENV === 'test';
+const isProduction = env.NODE_ENV === 'production';
 
 let sequelize: Sequelize;
 
@@ -27,10 +24,10 @@ if (isTest) {
       idle: 10000
     }
   });
-} else if (databaseUrl) {
+} else if (env.DATABASE_URL && env.DATABASE_URL.startsWith('postgresql://')) {
   // Use PostgreSQL when DATABASE_URL is provided (production, staging, or local with PostgreSQL)
-  sequelize = new Sequelize(databaseUrl, {
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  sequelize = new Sequelize(env.DATABASE_URL, {
+    logging: env.NODE_ENV === 'development' ? console.log : false,
     define: {
       timestamps: true,
       underscored: true,
@@ -50,7 +47,7 @@ if (isTest) {
   sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: './database.sqlite',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    logging: env.NODE_ENV === 'development' ? console.log : false,
     define: {
       timestamps: true,
       underscored: true,

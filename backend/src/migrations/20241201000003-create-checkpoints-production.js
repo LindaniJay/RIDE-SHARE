@@ -207,65 +207,6 @@ module.exports = {
       }
     });
 
-    // Create payments table
-    await queryInterface.createTable('payments', {
-      id: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
-        primaryKey: true,
-        allowNull: false
-      },
-      booking_id: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: 'bookings',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-      },
-      amount_cents: {
-        type: Sequelize.INTEGER,
-        allowNull: false
-      },
-      currency: {
-        type: Sequelize.STRING(3),
-        allowNull: false,
-        defaultValue: 'ZAR'
-      },
-      payment_status: {
-        type: Sequelize.ENUM('pending', 'processing', 'succeeded', 'failed', 'cancelled', 'refunded'),
-        allowNull: false,
-        defaultValue: 'pending'
-      },
-      payment_method: {
-        type: Sequelize.STRING(50),
-        allowNull: true
-      },
-      transaction_id: {
-        type: Sequelize.STRING(255),
-        allowNull: true
-      },
-      gateway_response: {
-        type: Sequelize.JSONB,
-        allowNull: true
-      },
-      processed_at: {
-        type: Sequelize.DATE,
-        allowNull: true
-      },
-      created_at: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.NOW
-      },
-      updated_at: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.NOW
-      }
-    });
   },
 
   async down(queryInterface, Sequelize) {
@@ -273,6 +214,5 @@ module.exports = {
     await queryInterface.dropTable('checkpoint_items');
     await queryInterface.dropTable('checkpoints');
     await queryInterface.dropTable('admin_logs');
-    await queryInterface.dropTable('payments');
   }
 };

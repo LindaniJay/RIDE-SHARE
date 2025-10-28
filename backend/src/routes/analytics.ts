@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken, AuthRequest, requireRole } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest, requireRole } from '../middleware/auth';
 import { User } from '../models/User';
 import { Listing } from '../models/Listing';
 import { Booking } from '../models/Booking';
@@ -10,7 +10,7 @@ import { sequelize } from '../config/database';
 const router = express.Router();
 
 // Get platform analytics (admin)
-router.get('/platform', authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+router.get('/platform', authenticateToken, requireRole(['admin']), async (req: AuthenticatedRequest, res) => {
   try {
     const { period = 'month' } = req.query;
     
@@ -19,17 +19,17 @@ router.get('/platform', authenticateToken, requireRole(['admin']), async (req: A
     let startDate: Date;
     
     switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        break;
-      default:
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    case 'week':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case 'month':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case 'year':
+      startDate = new Date(now.getFullYear(), 0, 1);
+      break;
+    default:
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
 
     // Get comprehensive analytics
@@ -70,7 +70,7 @@ router.get('/platform', authenticateToken, requireRole(['admin']), async (req: A
       // Top performing vehicles
       Booking.findAll({
         attributes: [
-          'listing_id',
+          'listingId',
           [sequelize.fn('COUNT', sequelize.col('Booking.id')), 'bookingCount'],
           [sequelize.fn('SUM', sequelize.col('Booking.total_amount')), 'totalRevenue']
         ],
@@ -82,7 +82,7 @@ router.get('/platform', authenticateToken, requireRole(['admin']), async (req: A
           }
         ],
         where: { status: 'completed' },
-        group: ['listing_id', 'vehicle.id'],
+        group: ['listingId', 'vehicle.id'],
         order: [[sequelize.literal('bookingCount'), 'DESC']],
         limit: 10
       }),
@@ -182,13 +182,13 @@ router.get('/platform', authenticateToken, requireRole(['admin']), async (req: A
 });
 
 // Get host analytics
-router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/host', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     if (req.user!.role !== 'host' && req.user!.role !== 'admin') {
       return res.status(403).json({ error: 'Host access required' });
     }
 
-    const host_id = req.user!.role === 'admin' ? parseInt(req.query.host_id as string) : req.user!.id;
+    const hostId = req.user!.role === 'admin' ? parseInt(req.query.hostId as string) : req.user!.id;
     const { period = 'month' } = req.query;
     
     // Calculate date range
@@ -196,22 +196,22 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
     let startDate: Date;
     
     switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        break;
-      default:
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    case 'week':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case 'month':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case 'year':
+      startDate = new Date(now.getFullYear(), 0, 1);
+      break;
+    default:
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
 
     // Get host's vehicles
     const hostVehicles = await Listing.findAll({
-      where: { host_id },
+      where: { hostId },
       attributes: ['id']
     });
     const listing_ids = hostVehicles.map(v => v.id);
@@ -231,7 +231,7 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
       // Total earnings
       Booking.sum('total_amount', {
         where: {
-          listing_id: { [Op.in]: listing_ids },
+          listingId: { [Op.in]: listing_ids },
           status: 'completed'
         }
       }) || 0,
@@ -239,7 +239,7 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
       // Period earnings
       Booking.sum('total_amount', {
         where: {
-          listing_id: { [Op.in]: listing_ids },
+          listingId: { [Op.in]: listing_ids },
           status: 'completed',
           createdAt: { [Op.gte]: startDate }
         }
@@ -248,14 +248,14 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
       // Total bookings
       Booking.count({
         where: {
-          listing_id: { [Op.in]: listing_ids }
+          listingId: { [Op.in]: listing_ids }
         }
       }),
       
       // Period bookings
       Booking.count({
         where: {
-          listing_id: { [Op.in]: listing_ids },
+          listingId: { [Op.in]: listing_ids },
           createdAt: { [Op.gte]: startDate }
         }
       }),
@@ -269,7 +269,7 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
           {
             model: Listing,
             as: 'vehicle',
-            where: { host_id },
+            where: { hostId },
             attributes: []
           }
         ]
@@ -282,7 +282,7 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
           [sequelize.fn('SUM', sequelize.fn('DATEDIFF', sequelize.col('endDate'), sequelize.col('startDate'))), 'totalDays']
         ],
         where: {
-          listing_id: { [Op.in]: listing_ids },
+          listingId: { [Op.in]: listing_ids },
           status: 'completed',
           createdAt: { [Op.gte]: startDate }
         }
@@ -291,16 +291,16 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
       // Revenue by vehicle
       Booking.findAll({
         attributes: [
-          'listing_id',
+          'listingId',
           [sequelize.fn('SUM', sequelize.col('total_amount')), 'revenue'],
           [sequelize.fn('COUNT', sequelize.col('id')), 'bookingCount']
         ],
         where: {
-          listing_id: { [Op.in]: listing_ids },
+          listingId: { [Op.in]: listing_ids },
           status: 'completed',
           createdAt: { [Op.gte]: startDate }
         },
-        group: ['listing_id'],
+        group: ['listingId'],
         include: [
           {
             model: Listing,
@@ -317,7 +317,7 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
           [sequelize.fn('COUNT', sequelize.col('id')), 'count']
         ],
         where: {
-          listing_id: { [Op.in]: listing_ids },
+          listingId: { [Op.in]: listing_ids },
           createdAt: { [Op.gte]: startDate }
         },
         group: [sequelize.fn('DATE', sequelize.col('createdAt'))],
@@ -327,15 +327,15 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
       // Top performing vehicles
       Booking.findAll({
         attributes: [
-          'listing_id',
+          'listingId',
           [sequelize.fn('COUNT', sequelize.col('id')), 'bookingCount'],
           [sequelize.fn('SUM', sequelize.col('total_amount')), 'revenue']
         ],
         where: {
-          listing_id: { [Op.in]: listing_ids },
+          listingId: { [Op.in]: listing_ids },
           status: 'completed'
         },
-        group: ['listing_id'],
+        group: ['listingId'],
         order: [[sequelize.literal('bookingCount'), 'DESC']],
         limit: 5,
         include: [
@@ -380,13 +380,13 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get renter analytics
-router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/renter', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     if (req.user!.role !== 'renter' && req.user!.role !== 'admin') {
       return res.status(403).json({ error: 'Renter access required' });
     }
 
-    const renter_id = req.user!.role === 'admin' ? parseInt(req.query.renter_id as string) : req.user!.id;
+    const renterId = req.user!.role === 'admin' ? parseInt(req.query.renterId as string) : req.user!.id;
     const { period = 'month' } = req.query;
     
     // Calculate date range
@@ -394,17 +394,17 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
     let startDate: Date;
     
     switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        break;
-      default:
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    case 'week':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case 'month':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case 'year':
+      startDate = new Date(now.getFullYear(), 0, 1);
+      break;
+    default:
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
 
     // Get renter analytics
@@ -421,7 +421,7 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
       // Total spent
       Booking.sum('total_amount', {
         where: {
-          renter_id,
+          renterId,
           status: 'completed'
         }
       }) || 0,
@@ -429,7 +429,7 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
       // Period spent
       Booking.sum('total_amount', {
         where: {
-          renter_id,
+          renterId,
           status: 'completed',
           createdAt: { [Op.gte]: startDate }
         }
@@ -437,13 +437,13 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
       
       // Total bookings
       Booking.count({
-        where: { renter_id }
+        where: { renterId }
       }),
       
       // Period bookings
       Booking.count({
         where: {
-          renter_id,
+          renterId,
           createdAt: { [Op.gte]: startDate }
         }
       }),
@@ -454,7 +454,7 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
           [sequelize.fn('AVG', sequelize.col('total_amount')), 'averageValue']
         ],
         where: {
-          renter_id,
+          renterId,
           status: 'completed'
         }
       }),
@@ -465,7 +465,7 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
           [sequelize.fn('COUNT', sequelize.col('Booking.id')), 'count']
         ],
         where: {
-          renter_id,
+          renterId,
           status: 'completed'
         },
         include: [
@@ -482,7 +482,7 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
       // Booking history
       Booking.findAll({
         where: {
-          renter_id,
+          renterId,
           createdAt: { [Op.gte]: startDate }
         },
         include: [
@@ -499,7 +499,7 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
       // Calculate savings (simplified - compared to traditional rental)
       Booking.sum('total_amount', {
         where: {
-          renter_id,
+          renterId,
           status: 'completed',
           createdAt: { [Op.gte]: startDate }
         }
@@ -536,3 +536,5 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 export default router;
+
+

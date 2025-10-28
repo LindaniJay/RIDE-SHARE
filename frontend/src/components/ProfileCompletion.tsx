@@ -12,7 +12,7 @@ interface ProfileCompletionProps {
 export const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
   userRole,
   onProfileComplete,
-  className = ""
+  className = ''
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [profileData, setProfileData] = useState({

@@ -1,3 +1,5 @@
+import { auth } from '../config/firebase';
+
 export interface AdminStats {
   overview: {
     totalUsers: number;
@@ -49,10 +51,32 @@ export interface AdminVehicle {
 export class AdminService {
   private static baseUrl = '/api/admin';
 
+  private static async getAuthToken(): Promise<string> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+      
+      const token = await user.getIdToken();
+      return token;
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      throw new Error('Failed to get authentication token');
+    }
+  }
+
   static async getStats(): Promise<AdminStats> {
     try {
-      // For now, the backend uses mock authentication, so we don't need to send a token
-      const response = await fetch(`${this.baseUrl}/stats`);
+      const token = await this.getAuthToken();
+      
+      // Backend exposes GET /admin/dashboard-stats
+      const response = await fetch(`${this.baseUrl}/dashboard-stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch admin stats');
@@ -68,6 +92,8 @@ export class AdminService {
 
   static async getUsers(page = 1, limit = 10, status?: string, role?: string) {
     try {
+      const token = await this.getAuthToken();
+      
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -75,7 +101,12 @@ export class AdminService {
         ...(role && { role })
       });
 
-      const response = await fetch(`${this.baseUrl}/users?${params}`);
+      const response = await fetch(`${this.baseUrl}/users?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch users');
@@ -90,9 +121,11 @@ export class AdminService {
 
   static async approveUser(userId: number, status: 'approved' | 'rejected', reason?: string) {
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(`${this.baseUrl}/users/${userId}/approve`, {
         method: 'PATCH',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -114,6 +147,7 @@ export class AdminService {
 
   static async getVehicles(page = 1, limit = 10, status?: string) {
     try {
+      const token = await this.getAuthToken();
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -122,6 +156,8 @@ export class AdminService {
 
       const response = await fetch(`${this.baseUrl}/vehicles?${params}`, {
         headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -138,9 +174,11 @@ export class AdminService {
 
   static async approveVehicle(vehicleId: number, status: 'approved' | 'declined', reason?: string) {
     try {
+      const token = await this.getAuthToken();
       const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/approve`, {
         method: 'PATCH',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -162,6 +200,7 @@ export class AdminService {
 
   static async getBookings(page = 1, limit = 10, status?: string) {
     try {
+      const token = await this.getAuthToken();
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -170,6 +209,8 @@ export class AdminService {
 
       const response = await fetch(`${this.baseUrl}/bookings?${params}`, {
         headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -186,6 +227,7 @@ export class AdminService {
 
   static async getReviews(page = 1, limit = 10) {
     try {
+      const token = await this.getAuthToken();
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString()
@@ -193,6 +235,8 @@ export class AdminService {
 
       const response = await fetch(`${this.baseUrl}/reviews?${params}`, {
         headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -209,6 +253,7 @@ export class AdminService {
 
   static async getDocuments(page = 1, limit = 10, status?: string) {
     try {
+      const token = await this.getAuthToken();
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -217,6 +262,8 @@ export class AdminService {
 
       const response = await fetch(`${this.baseUrl}/documents?${params}`, {
         headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -233,6 +280,7 @@ export class AdminService {
 
   static async getDisputes(page = 1, limit = 10, status?: string) {
     try {
+      const token = await this.getAuthToken();
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -241,6 +289,8 @@ export class AdminService {
 
       const response = await fetch(`${this.baseUrl}/disputes?${params}`, {
         headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -251,6 +301,32 @@ export class AdminService {
       return await response.json();
     } catch (error) {
       console.error('Error fetching disputes:', error);
+      throw error;
+    }
+  }
+
+  static async approveBooking(bookingId: string, status: 'approved' | 'declined', reason?: string) {
+    try {
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/bookings/${bookingId}/approve`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status,
+          reason
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update booking status');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating booking:', error);
       throw error;
     }
   }

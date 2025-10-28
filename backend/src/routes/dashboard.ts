@@ -1,32 +1,32 @@
 import express from 'express';
-import { authenticateToken, AuthRequest } from '../middlewares/auth';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { Booking } from '../models/Booking';
-import { Vehicle } from '../models/Vehicle';
+import { Listing } from '../models/Listing';
 import { User } from '../models/User';
 import { Op } from 'sequelize';
 
 const router = express.Router();
 
 // Get renter dashboard stats
-router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/renter', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.id;
     
     // Get booking statistics
     const totalBookings = await Booking.count({
-      where: { renter_id: userId }
+      where: { renterId: userId }
     });
     
     const activeBookings = await Booking.count({
       where: { 
-        renter_id: userId,
+        renterId: userId,
         status: ['pending', 'confirmed']
       }
     });
     
     const completedBookings = await Booking.count({
       where: { 
-        renter_id: userId,
+        renterId: userId,
         status: 'completed'
       }
     });
@@ -34,18 +34,18 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
     // Get total spent
     const totalSpent = await Booking.sum('total_amount', {
       where: { 
-        renter_id: userId,
+        renterId: userId,
         status: 'completed'
       }
     }) || 0;
     
     // Get recent bookings
     const recentBookings = await Booking.findAll({
-      where: { renter_id: userId },
+      where: { renterId: userId },
       include: [
         {
-          model: Vehicle,
-          as: 'vehicle',
+          model: Listing,
+          as: 'listing',
         },
       ],
       order: [['createdAt', 'DESC']],
@@ -67,19 +67,19 @@ router.get('/renter', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get host dashboard stats
-router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/host', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.id;
     
     // Get vehicle statistics
-    const totalVehicles = await Vehicle.count({
+    const totalVehicles = await Listing.count({
       where: { hostId: userId }
     });
     
-    const availableVehicles = await Vehicle.count({
+    const availableVehicles = await Listing.count({
       where: { 
         hostId: userId,
-        isAvailable: true
+        status: 'approved'
       }
     });
     
@@ -87,8 +87,8 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
     const totalBookings = await Booking.count({
       include: [
         {
-          model: Vehicle,
-          as: 'vehicle',
+          model: Listing,
+          as: 'listing',
           where: { hostId: userId }
         }
       ]
@@ -97,19 +97,19 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
     const upcomingBookings = await Booking.count({
       where: {
         status: 'confirmed',
-        start_date: { [Op.gte]: new Date() }
+        startDate: { [Op.gte]: new Date() }
       },
       include: [
         {
-          model: Vehicle,
-          as: 'vehicle',
+          model: Listing,
+          as: 'listing',
           where: { hostId: userId }
         }
       ]
     });
     
     // Get total earnings
-    const hostVehicles = await Vehicle.findAll({
+    const hostVehicles = await Listing.findAll({
       where: { hostId: userId },
       attributes: ['id']
     });
@@ -118,7 +118,7 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
     const totalEarnings = await Booking.sum('total_amount', {
       where: {
         status: 'completed',
-        listing_id: { [Op.in]: listing_ids }
+        listingId: { [Op.in]: listing_ids }
       }
     }) || 0;
     
@@ -126,8 +126,8 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
     const recentBookings = await Booking.findAll({
       include: [
         {
-          model: Vehicle,
-          as: 'vehicle',
+          model: Listing,
+          as: 'listing',
           where: { hostId: userId }
         },
         {
@@ -155,7 +155,7 @@ router.get('/host', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Get admin dashboard stats
-router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/admin', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     // Check if user is admin
     if (req.user!.role !== 'admin') {
@@ -164,7 +164,7 @@ router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
     
     // Get platform statistics
     const totalUsers = await User.count();
-    const totalVehicles = await Vehicle.count();
+    const totalVehicles = await Listing.count();
     const totalBookings = await Booking.count();
     
     const activeUsers = await User.count({
@@ -185,8 +185,8 @@ router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
     const recentBookings = await Booking.findAll({
       include: [
         {
-          model: Vehicle,
-          as: 'vehicle',
+          model: Listing,
+          as: 'listing',
         },
         {
           model: User,
@@ -213,3 +213,5 @@ router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 export default router;
+
+

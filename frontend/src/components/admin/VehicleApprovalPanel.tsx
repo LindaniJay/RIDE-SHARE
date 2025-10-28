@@ -4,36 +4,36 @@ import Icon from '../Icon';
 import StatusBadge from '../StatusBadge';
 
 interface Vehicle {
-  id: number;
+  id: string;
   title: string;
   make: string;
   model: string;
   year: number;
-  type: string;
-  pricePerDay: number;
-  location: string;
-  status: 'pending' | 'approved' | 'declined';
-  declineReason?: string;
+  vehicle_type: string;
+  price_per_day: number;
+  location: any;
+  status: 'pending' | 'approved' | 'rejected';
+  rejection_reason?: string;
   images: string[];
   features: string[];
   host: {
-    id: number;
-    firstName: string;
-    lastName: string;
+    id: string;
+    first_name: string;
+    last_name: string;
     email: string;
   };
-  createdAt: string;
+  created_at: string;
 }
 
 const VehicleApprovalPanel: React.FC = () => {
-  const { } = useAuth();
+  const { user: _user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'declined'>('pending');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
-  const [approvalAction, setApprovalAction] = useState<'approve' | 'decline'>('approve');
-  const [declineReason, setDeclineReason] = useState('');
+  const [approvalAction, setApprovalAction] = useState<'approve' | 'reject'>('approve');
+  const [rejectionReason, setRejectionReason] = useState('');
 
   useEffect(() => {
     fetchVehicles();
@@ -58,7 +58,7 @@ const VehicleApprovalPanel: React.FC = () => {
     }
   };
 
-  const handleApproval = async (vehicleId: number, action: 'approve' | 'decline', reason?: string) => {
+  const handleApproval = async (vehicleId: string, action: 'approve' | 'reject', reason?: string) => {
     try {
       const response = await fetch(`/api/admin/vehicles/${vehicleId}/approve`, {
         method: 'PATCH',
@@ -76,15 +76,15 @@ const VehicleApprovalPanel: React.FC = () => {
         // Update local state
         setVehicles(prev => prev.map(v => 
           v.id === vehicleId 
-            ? { ...v, status: action === 'approve' ? 'approved' : 'declined', declineReason: reason }
+            ? { ...v, status: action === 'approve' ? 'approved' : 'rejected', rejection_reason: reason }
             : v
         ));
         
         setShowApprovalModal(false);
         setSelectedVehicle(null);
-        setDeclineReason('');
+        setRejectionReason('');
         
-        alert(`Vehicle ${action === 'approve' ? 'approved' : 'declined'} successfully`);
+        alert(`Vehicle ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
       } else {
         alert('Failed to update vehicle status');
       }
@@ -94,7 +94,7 @@ const VehicleApprovalPanel: React.FC = () => {
     }
   };
 
-  const openApprovalModal = (vehicle: Vehicle, action: 'approve' | 'decline') => {
+  const openApprovalModal = (vehicle: Vehicle, action: 'approve' | 'reject') => {
     setSelectedVehicle(vehicle);
     setApprovalAction(action);
     setShowApprovalModal(true);
@@ -114,7 +114,7 @@ const VehicleApprovalPanel: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white">Vehicle Approvals</h2>
         <div className="flex space-x-2">
-          {['all', 'pending', 'approved', 'declined'].map((filterType) => (
+          {['all', 'pending', 'approved', 'rejected'].map((filterType) => (
             <button
               key={filterType}
               onClick={() => setFilter(filterType as any)}
@@ -155,25 +155,25 @@ const VehicleApprovalPanel: React.FC = () => {
                       <div className="flex-1">
                         <h3 className="text-white font-semibold text-lg">{vehicle.title}</h3>
                         <p className="text-white/70 text-sm mb-2">
-                          {vehicle.make} {vehicle.model} ({vehicle.year}) • {vehicle.type}
+                          {vehicle.make} {vehicle.model} ({vehicle.year}) • {vehicle.vehicle_type}
                         </p>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-white/70">Price</p>
-                            <p className="text-white font-semibold">R{vehicle.pricePerDay}/day</p>
+                            <p className="text-white font-semibold">R{vehicle.price_per_day}/day</p>
                           </div>
                           <div>
                             <p className="text-white/70">Location</p>
-                            <p className="text-white">{vehicle.location}</p>
+                            <p className="text-white">{typeof vehicle.location === 'string' ? vehicle.location : vehicle.location?.address || 'N/A'}</p>
                           </div>
                           <div>
                             <p className="text-white/70">Host</p>
-                            <p className="text-white">{vehicle.host.firstName} {vehicle.host.lastName}</p>
+                            <p className="text-white">{vehicle.host.first_name} {vehicle.host.last_name}</p>
                           </div>
                           <div>
                             <p className="text-white/70">Listed</p>
-                            <p className="text-white">{new Date(vehicle.createdAt).toLocaleDateString()}</p>
+                            <p className="text-white">{new Date(vehicle.created_at).toLocaleDateString()}</p>
                           </div>
                         </div>
 
@@ -190,10 +190,10 @@ const VehicleApprovalPanel: React.FC = () => {
                           </div>
                         )}
 
-                        {vehicle.declineReason && (
+                        {vehicle.rejection_reason && (
                           <div className="mt-3 p-3 bg-red-500/10 border border-red-400/30 rounded-lg">
                             <p className="text-red-200 text-sm">
-                              <strong>Decline Reason:</strong> {vehicle.declineReason}
+                              <strong>Rejection Reason:</strong> {vehicle.rejection_reason}
                             </p>
                           </div>
                         )}
@@ -213,10 +213,10 @@ const VehicleApprovalPanel: React.FC = () => {
                           Approve
                         </button>
                         <button
-                          onClick={() => openApprovalModal(vehicle, 'decline')}
+                          onClick={() => openApprovalModal(vehicle, 'reject')}
                           className="px-3 py-1 bg-red-500/20 text-red-200 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
                         >
-                          Decline
+                          Reject
                         </button>
                       </div>
                     )}
@@ -240,26 +240,26 @@ const VehicleApprovalPanel: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-white mb-4">
-              {approvalAction === 'approve' ? 'Approve Vehicle' : 'Decline Vehicle'}
+              {approvalAction === 'approve' ? 'Approve Vehicle' : 'Reject Vehicle'}
             </h3>
             
             <div className="mb-4">
               <p className="text-white/70 mb-2">
                 {approvalAction === 'approve' 
                   ? `Are you sure you want to approve "${selectedVehicle.title}"?`
-                  : `Are you sure you want to decline "${selectedVehicle.title}"?`
+                  : `Are you sure you want to reject "${selectedVehicle.title}"?`
                 }
               </p>
               
-              {approvalAction === 'decline' && (
+              {approvalAction === 'reject' && (
                 <div>
                   <label className="block text-white/70 text-sm font-medium mb-2">
-                    Decline Reason (Optional)
+                    Rejection Reason (Optional)
                   </label>
                   <textarea
-                    value={declineReason}
-                    onChange={(e) => setDeclineReason(e.target.value)}
-                    placeholder="Enter reason for decline..."
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="Enter reason for rejection..."
                     className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={3}
                   />
@@ -272,21 +272,21 @@ const VehicleApprovalPanel: React.FC = () => {
                 onClick={() => {
                   setShowApprovalModal(false);
                   setSelectedVehicle(null);
-                  setDeclineReason('');
+                  setRejectionReason('');
                 }}
                 className="flex-1 px-4 py-2 bg-white/10 text-white/70 rounded-lg hover:bg-white/20 transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={() => handleApproval(selectedVehicle.id, approvalAction, declineReason)}
+                onClick={() => handleApproval(selectedVehicle.id, approvalAction, rejectionReason)}
                 className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
                   approvalAction === 'approve'
                     ? 'bg-green-500 text-white hover:bg-green-600'
                     : 'bg-red-500 text-white hover:bg-red-600'
                 }`}
               >
-                {approvalAction === 'approve' ? 'Approve' : 'Decline'}
+                {approvalAction === 'approve' ? 'Approve' : 'Reject'}
               </button>
             </div>
           </div>

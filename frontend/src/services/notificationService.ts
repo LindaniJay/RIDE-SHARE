@@ -233,10 +233,12 @@ class NotificationService {
   }
 
   subscribe(_callback: (notification: any) => void): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // Mock subscription
   }
 
   async markAsRead(_notificationId: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // Mock implementation
   }
 
@@ -245,6 +247,7 @@ class NotificationService {
   }
 
   async removeNotification(_notificationId: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // Mock implementation
   }
 }

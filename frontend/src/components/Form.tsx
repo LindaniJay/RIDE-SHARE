@@ -84,7 +84,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
         isSubmitting: false,
         isDirty: false,
       };
-    case 'SET_FORM_DATA':
+    case 'SET_FORM_DATA': {
       const fields: Record<string, FormField> = {};
       Object.entries(action.payload).forEach(([name, value]) => {
         fields[name] = {
@@ -98,6 +98,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
         fields,
         isDirty: false,
       };
+    }
     default:
       return state;
   }

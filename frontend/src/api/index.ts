@@ -12,7 +12,9 @@ import type {
   PaginatedResponse
 } from '../types/api';
 
-const API_BASE_URL = (import.meta as ImportMeta).env?.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = (import.meta as ImportMeta).env?.DEV
+  ? '/api'
+  : ((import.meta as ImportMeta).env?.VITE_API_URL || '/api');
 
 const api = axios.create({
   baseURL: API_BASE_URL,

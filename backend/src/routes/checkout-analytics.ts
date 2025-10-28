@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken } from '../middlewares/auth';
+import { authenticateToken } from '../middleware/auth';
 // import { any } from '../types/auth'; // File doesn't exist
 import { z } from 'zod';
 
@@ -267,3 +267,5 @@ router.get('/export', authenticateToken, async (req: any, res) => {
 });
 
 export default router;
+
+
