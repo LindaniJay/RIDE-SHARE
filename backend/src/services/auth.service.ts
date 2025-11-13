@@ -74,9 +74,35 @@ export class AuthService {
   // Login with Firebase token
   static async loginWithFirebase(firebaseToken: string): Promise<LoginResult | null> {
     try {
-      const user = await this.verifyFirebaseToken(firebaseToken);
+      const firebaseAuth = getFirebaseAuth();
+      if (!firebaseAuth) {
+        throw new Error('Firebase not configured');
+      }
+
+      const decodedToken = await firebaseAuth.verifyIdToken(firebaseToken);
+      let user = await User.findOne({ where: { firebase_uid: decodedToken.uid } });
+      
+      // If user doesn't exist, create them
       if (!user) {
-        return null;
+        const displayName = decodedToken.name || decodedToken.email?.split('@')[0] || 'User';
+        const nameParts = displayName.split(' ');
+        
+        user = await User.create({
+          firebase_uid: decodedToken.uid,
+          email: decodedToken.email || '',
+          display_name: displayName,
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          role: 'renter',
+          isVerified: decodedToken.email_verified || false,
+          profile_image_url: decodedToken.picture || undefined,
+          phone_number: decodedToken.phone_number || undefined
+        });
+      } else {
+        // Update login tracking
+        user.incrementLoginCount();
+        user.last_login_at = new Date();
+        await user.save();
       }
 
       const tokens = this.generateTokens(user.id.toString());

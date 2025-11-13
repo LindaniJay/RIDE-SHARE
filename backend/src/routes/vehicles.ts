@@ -38,12 +38,12 @@ router.post('/', verifyFirebaseToken, requireRole(['host', 'admin']), upload.arr
       description, 
       // required camelCase fields
       pricePerDay: Number(pricePerDay),
-      hostId: Number(req.user!.id) || 0,
+      hostId: req.user!.id,
       image: imageUrl,
       city,
       // keep snake_case fields for compatibility
       price_per_day: pricePerDay, 
-      host_id: Number(req.user!.id) || 0,
+      host_id: req.user!.id,
       make: 'Unknown',
       model: 'Unknown',
       year: new Date().getFullYear(),

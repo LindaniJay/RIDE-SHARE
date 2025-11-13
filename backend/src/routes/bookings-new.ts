@@ -35,9 +35,9 @@ router.post('/', auth, async (req, res, next) => {
       return res.status(409).json({ error: 'Vehicle already booked for those dates' }); 
     }
     const booking = await Booking.create({
-      booking_id: `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      bookingId: `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       vehicleId,
-      renterId: Number(req.user!.id) || 0,
+      renterId: req.user!.id, // UUID, not Number
       hostId: vehicle.hostId,
       startDate: start,
       endDate: end,

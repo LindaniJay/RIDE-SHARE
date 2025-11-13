@@ -6,7 +6,11 @@ class WebSocketService {
   private connecting = false;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_WS_URL || 'http://localhost:5001';
+    // Use centralized WebSocket URL helper
+    // In development, defaults to 'http://localhost:5001'
+    // In production, uses VITE_WS_URL if set
+    this.baseUrl = import.meta.env.VITE_WS_URL || 
+      (import.meta.env.DEV ? 'http://localhost:5001' : 'ws://localhost:5001');
     console.log('WebSocket service initialized with URL:', this.baseUrl);
   }
 

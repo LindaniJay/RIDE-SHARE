@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { 
@@ -20,33 +20,44 @@ import {
   Settings,
   List
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import GlassCard from './GlassCard';
 import GlassButton from './GlassButton';
 import GlassInput from './GlassInput';
 import Icon from './Icon';
 import ModernVehicleForm from './ModernVehicleForm';
+import { getApiBaseUrl } from '../utils/apiConfig';
 
 interface VehicleListing {
-  id: string;
+  id: number | string;
   make: string;
   model: string;
   year: number;
-  type: string;
-  color: string;
-  pricePerDay: number;
-  location: {
+  type?: string;
+  vehicle_type?: string;
+  color?: string;
+  pricePerDay?: number;
+  price_per_day?: number;
+  location?: {
     city: string;
     state: string;
   };
+  city?: string;
   status: 'draft' | 'pending' | 'approved' | 'rejected' | 'active' | 'inactive';
-  images: string[];
-  features: string[];
-  createdAt: string;
-  views: number;
-  bookings: number;
-  rating: number;
-  earnings: number;
-  lastUpdated: string;
+  images?: string[];
+  image?: string;
+  features?: string[] | any;
+  createdAt?: string;
+  created_at?: string;
+  views?: number;
+  bookings?: number;
+  total_bookings?: number;
+  rating?: number;
+  rating_average?: number;
+  earnings?: number;
+  total_earnings?: number;
+  lastUpdated?: string;
+  updated_at?: string;
 }
 
 interface ModernHostDashboardProps {
@@ -54,113 +65,129 @@ interface ModernHostDashboardProps {
 }
 
 const ModernHostDashboard: React.FC<ModernHostDashboardProps> = ({ className = '' }) => {
+  const { user } = useAuth();
   const [showVehicleForm, setShowVehicleForm] = useState(false);
-  const [listings, setListings] = useState<VehicleListing[]>([
-    // Mock data for demonstration
-    {
-      id: '1',
-      make: 'Toyota',
-      model: 'Corolla',
-      year: 2022,
-      type: 'car',
-      color: 'White',
-      pricePerDay: 250,
-      location: { city: 'Cape Town', state: 'Western Cape' },
-      status: 'approved',
-      images: ['/api/placeholder/300/200'],
-      features: ['Air Conditioning', 'Bluetooth', 'GPS'],
-      createdAt: '2024-01-15',
-      views: 156,
-      bookings: 12,
-      rating: 4.8,
-      earnings: 3600,
-      lastUpdated: '2024-01-20'
-    },
-    {
-      id: '2',
-      make: 'BMW',
-      model: 'X3',
-      year: 2021,
-      type: 'suv',
-      color: 'Black',
-      pricePerDay: 450,
-      location: { city: 'Johannesburg', state: 'Gauteng' },
-      status: 'pending',
-      images: ['/api/placeholder/300/200'],
-      features: ['Leather Seats', 'Sunroof', 'Premium Sound'],
-      createdAt: '2024-01-20',
-      views: 89,
-      bookings: 0,
-      rating: 0,
-      earnings: 0,
-      lastUpdated: '2024-01-20'
-    },
-    {
-      id: '3',
-      make: 'Mercedes',
-      model: 'C-Class',
-      year: 2023,
-      type: 'luxury',
-      color: 'Silver',
-      pricePerDay: 650,
-      location: { city: 'Durban', state: 'KwaZulu-Natal' },
-      status: 'approved',
-      images: ['/api/placeholder/300/200'],
-      features: ['Leather Seats', 'Premium Sound', 'Navigation'],
-      createdAt: '2024-01-10',
-      views: 234,
-      bookings: 18,
-      rating: 4.9,
-      earnings: 11700,
-      lastUpdated: '2024-01-22'
-    }
-  ]);
+  const [listings, setListings] = useState<VehicleListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalListings: 0,
+    activeListings: 0,
+    pendingListings: 0,
+    totalEarnings: 0,
+    totalViews: 0,
+    totalBookings: 0,
+    averageRating: 0,
+    monthlyEarnings: 0,
+    weeklyEarnings: 0
+  });
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  useEffect(() => {
+    if (user?.uid) {
+      fetchDashboardData();
+    }
+  }, [user?.uid]);
+
+  const fetchDashboardData = async () => {
+    try {
+      if (!user?.uid) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const token = await user.getIdToken();
+      const API_BASE_URL = getApiBaseUrl();
+
+      // Fetch host listings
+      const listingsResponse = await fetch(`${API_BASE_URL}/listings/host/${user.uid}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (listingsResponse.ok) {
+        const listingsData = await listingsResponse.json();
+        if (listingsData.success) {
+          const formattedListings = listingsData.data.map((listing: any) => ({
+            id: listing.id,
+            make: listing.make,
+            model: listing.model,
+            year: listing.year,
+            type: listing.vehicle_type || listing.type || 'car',
+            color: listing.color || 'Unknown',
+            pricePerDay: listing.price_per_day || listing.pricePerDay || 0,
+            city: listing.city || 'Unknown',
+            status: listing.status || 'pending',
+            image: listing.image || '',
+            images: listing.images ? (Array.isArray(listing.images) ? listing.images : [listing.images]) : (listing.image ? [listing.image] : []),
+            features: listing.features ? (Array.isArray(listing.features) ? listing.features : JSON.parse(listing.features || '[]')) : [],
+            createdAt: listing.created_at || listing.createdAt || new Date().toISOString(),
+            views: listing.view_count || 0,
+            bookings: listing.total_bookings || 0,
+            rating: listing.rating_average || listing.rating || 0,
+            earnings: listing.total_earnings || 0,
+            lastUpdated: listing.updated_at || listing.createdAt || new Date().toISOString()
+          }));
+          setListings(formattedListings);
+          
+          // Calculate stats from real data
+          const calculatedStats = {
+            totalListings: formattedListings.length,
+            activeListings: formattedListings.filter((l: VehicleListing) => l.status === 'approved').length,
+            pendingListings: formattedListings.filter((l: VehicleListing) => l.status === 'pending').length,
+            totalEarnings: formattedListings.reduce((sum: number, l: VehicleListing) => sum + (l.earnings || 0), 0),
+            totalViews: formattedListings.reduce((sum: number, l: VehicleListing) => sum + (l.views || 0), 0),
+            totalBookings: formattedListings.reduce((sum: number, l: VehicleListing) => sum + (l.bookings || 0), 0),
+            averageRating: formattedListings.length > 0 
+              ? formattedListings.reduce((sum: number, l: VehicleListing) => sum + (l.rating || 0), 0) / formattedListings.length 
+              : 0,
+            monthlyEarnings: formattedListings.reduce((sum: number, l: VehicleListing) => sum + (l.earnings || 0), 0) * 0.8,
+            weeklyEarnings: formattedListings.reduce((sum: number, l: VehicleListing) => sum + (l.earnings || 0), 0) * 0.2
+          };
+          setStats(calculatedStats);
+        }
+      }
+
+      // Fetch earnings data
+      const earningsResponse = await fetch(`${API_BASE_URL}/host/earnings`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (earningsResponse.ok) {
+        const earningsData = await earningsResponse.json();
+        if (earningsData.success && earningsData.data) {
+          setStats(prev => ({
+            ...prev,
+            totalEarnings: earningsData.data.totalEarnings || prev.totalEarnings
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredListings = listings.filter(listing => {
     const matchesStatus = filterStatus === 'all' || listing.status === filterStatus;
     const matchesSearch = searchTerm === '' || 
       `${listing.make} ${listing.model}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      listing.location.city.toLowerCase().includes(searchTerm.toLowerCase());
+      (listing.city || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
-  const stats = {
-    totalListings: listings.length,
-    activeListings: listings.filter(l => l.status === 'approved').length,
-    pendingListings: listings.filter(l => l.status === 'pending').length,
-    totalEarnings: listings.reduce((sum, l) => sum + l.earnings, 0),
-    totalViews: listings.reduce((sum, l) => sum + l.views, 0),
-    totalBookings: listings.reduce((sum, l) => sum + l.bookings, 0),
-    averageRating: listings.length > 0 ? listings.reduce((sum, l) => sum + l.rating, 0) / listings.length : 0,
-    monthlyEarnings: listings.reduce((sum, l) => sum + l.earnings, 0) * 0.8, // Simulate monthly
-    weeklyEarnings: listings.reduce((sum, l) => sum + l.earnings, 0) * 0.2 // Simulate weekly
-  };
-
   const handleVehicleSuccess = (newVehicle: any) => {
-    const listing: VehicleListing = {
-      id: Date.now().toString(),
-      make: newVehicle.make,
-      model: newVehicle.model,
-      year: newVehicle.year,
-      type: newVehicle.type,
-      color: newVehicle.color,
-      pricePerDay: newVehicle.pricePerDay,
-      location: newVehicle.location,
-      status: 'pending',
-      images: newVehicle.coverImage ? [URL.createObjectURL(newVehicle.coverImage)] : [],
-      features: newVehicle.features,
-      createdAt: new Date().toISOString().split('T')[0],
-      views: 0,
-      bookings: 0,
-      rating: 0,
-      earnings: 0,
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    
-    setListings(prev => [listing, ...prev]);
+    // Refresh listings from database after successful creation
+    fetchDashboardData();
     toast.success('Vehicle listing created successfully!');
   };
 
@@ -187,6 +214,16 @@ const ModernHostDashboard: React.FC<ModernHostDashboardProps> = ({ className = '
       default: return 'AlertCircle';
     }
   };
+
+  if (loading) {
+    return (
+      <div className={`space-y-8 ${className}`}>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-8 ${className}`}>
@@ -370,11 +407,15 @@ const ModernHostDashboard: React.FC<ModernHostDashboardProps> = ({ className = '
               <div className={`relative bg-gradient-to-br from-gray-600 to-gray-800 ${
                 viewMode === 'list' ? 'w-80 h-48' : 'h-48'
               }`}>
-                {listing.images.length > 0 ? (
+                {(listing.images && listing.images.length > 0) || listing.image ? (
                   <img
-                    src={listing.images[0]}
+                    src={listing.images && listing.images.length > 0 ? listing.images[0] : listing.image}
                     alt={`${listing.make} ${listing.model}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '';
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -402,7 +443,7 @@ const ModernHostDashboard: React.FC<ModernHostDashboardProps> = ({ className = '
 
                 {/* Price Badge */}
                 <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm rounded-xl px-3 py-2">
-                  <p className="text-white font-bold text-lg">R{listing.pricePerDay}</p>
+                  <p className="text-white font-bold text-lg">R{listing.pricePerDay || listing.price_per_day || 0}</p>
                   <p className="text-white/60 text-xs">per day</p>
                 </div>
               </div>
@@ -418,36 +459,36 @@ const ModernHostDashboard: React.FC<ModernHostDashboardProps> = ({ className = '
                   </div>
                   <div className="flex items-center space-x-1">
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="text-white font-medium">{listing.rating}</span>
-                    <span className="text-white/60 text-sm">({listing.bookings})</span>
+                    <span className="text-white font-medium">{(listing.rating || 0).toFixed(1)}</span>
+                    <span className="text-white/60 text-sm">({listing.bookings || 0})</span>
                   </div>
                 </div>
 
                 <div className="flex items-center text-white/60 text-sm mb-4">
                   <MapPin className="w-4 h-4 mr-2" />
-                  {listing.location.city}, {listing.location.state}
+                  {listing.city || 'Unknown Location'}
                 </div>
 
                 <div className="grid grid-cols-3 gap-4 text-sm mb-4">
                   <div className="text-center">
-                    <div className="text-white font-semibold">{listing.views}</div>
+                    <div className="text-white font-semibold">{listing.views || 0}</div>
                     <div className="text-white/60 text-xs">Views</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-white font-semibold">{listing.bookings}</div>
+                    <div className="text-white font-semibold">{listing.bookings || 0}</div>
                     <div className="text-white/60 text-xs">Bookings</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-green-400 font-semibold">R{listing.earnings.toLocaleString()}</div>
+                    <div className="text-green-400 font-semibold">R{(listing.earnings || 0).toLocaleString()}</div>
                     <div className="text-white/60 text-xs">Earnings</div>
                   </div>
                 </div>
 
                 {/* Features */}
-                {listing.features.length > 0 && (
+                {listing.features && Array.isArray(listing.features) && listing.features.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {listing.features.slice(0, 3).map((feature) => (
-                      <span key={feature} className="px-2 py-1 bg-white/10 text-white/80 rounded-lg text-xs">
+                    {listing.features.slice(0, 3).map((feature: string, idx: number) => (
+                      <span key={idx} className="px-2 py-1 bg-white/10 text-white/80 rounded-lg text-xs">
                         {feature}
                       </span>
                     ))}

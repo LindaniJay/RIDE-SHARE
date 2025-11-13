@@ -43,7 +43,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
     }
 
     // Verify user owns this booking
-    if (booking.renterId !== Number(req.user!.id)) {
+    if (booking.renterId !== req.user!.id) {
       return res.status(403).json({
         error: 'Access denied',
         message: 'You can only create payments for your own bookings'
@@ -61,7 +61,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
     // Check if payment already exists
     const existingPayment = await Payment.findOne({
       where: {
-        booking_id: parseInt(booking_id),
+        bookingId: parseInt(booking_id), // Use bookingId (camelCase) for Sequelize
         paymentStatus: ['pending', 'processing', 'completed']
       }
     });
@@ -76,7 +76,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
     // Create payment record
     const payment = await Payment.create({
       bookingId: parseInt(booking_id),
-      renter_id: Number(req.user!.id) || 0,
+      renter_id: req.user!.id,
       host_id: (booking as any).listing?.host_id || '',
       amount: booking.total_amount || 0,
       currency: 'ZAR',
@@ -146,7 +146,7 @@ router.post('/:id/process', authenticateToken, async (req: AuthenticatedRequest,
     }
 
     const canProcess = 
-      payment.renter_id === Number(user.id) || 
+      payment.renter_id === user.id || 
       user.role === 'admin';
 
     if (!canProcess) {
@@ -297,7 +297,7 @@ router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
     }
 
     const canView = 
-      payment.renter_id === Number(user.id) || 
+      payment.renter_id === user.id || 
       user.role === 'admin';
 
     if (!canView) {

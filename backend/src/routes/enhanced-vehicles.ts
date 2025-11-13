@@ -5,7 +5,7 @@ import fs from 'fs';
 import { Op } from 'sequelize';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { EnhancedVehicle } from '../models/EnhancedVehicle';
-import { User } from '../models';
+import { User, ApprovalRequest, Notification } from '../models';
 import { logger } from '../utils/logger';
 import aiImageVerification from '../services/aiImageVerification';
 import {
@@ -90,14 +90,15 @@ const videoUpload = multer({
   }
 });
 
-// POST /api/enhanced-vehicles - Create new vehicle listing
+// POST /api/enhanced-vehicles - Create new vehicle listing with images
 router.post('/', 
   authenticateToken,
   checkHostVerification,
   rateLimitListingCreation,
-  validateVehicleListing,
-  checkDuplicateVIN,
-  validateListingCompleteness,
+  imageUpload.fields([
+    { name: 'images', maxCount: 20 },
+    { name: 'coverImage', maxCount: 1 }
+  ]),
   async (req: AuthenticatedRequest, res: any) => {
     try {
       const userId = req.user?.id;
@@ -108,9 +109,48 @@ router.post('/',
         });
       }
 
+      // Process uploaded images
+      const uploadedImages: string[] = [];
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
+      if (files.images) {
+        for (const file of files.images) {
+          const imagePath = `/uploads/vehicles/${req.body.category || 'uncategorized'}/${file.filename}`;
+          uploadedImages.push(imagePath);
+        }
+      }
+      
+      // Handle cover image
+      let coverImage = '';
+      if (files.coverImage && files.coverImage[0]) {
+        coverImage = `/uploads/vehicles/${req.body.category || 'uncategorized'}/${files.coverImage[0].filename}`;
+      } else if (uploadedImages.length > 0) {
+        coverImage = uploadedImages[0]; // Use first image as cover
+      }
+
+      // Parse location if it's a string
+      let locationData = req.body.location;
+      if (typeof locationData === 'string') {
+        try {
+          locationData = JSON.parse(locationData);
+        } catch (e) {
+          locationData = { city: req.body.city || 'Unknown', address: '', state: '', country: 'South Africa' };
+        }
+      }
+
+      // Parse features if it's a string
+      let featuresData = req.body.features;
+      if (typeof featuresData === 'string') {
+        try {
+          featuresData = JSON.parse(featuresData);
+        } catch (e) {
+          featuresData = [];
+        }
+      }
+
       const vehicleData = {
         ...req.body,
-        hostId: userId,
+        hostId: userId, // UUID, not Number
         listingStatus: 'pending',
         verified: false,
         aiVerified: false,
@@ -122,13 +162,37 @@ router.post('/',
         inquiryCount: 0,
         bookingCount: 0,
         rating: 0,
-        ratingCount: 0
+        ratingCount: 0,
+        coverImage: coverImage,
+        images: uploadedImages,
+        location: locationData,
+        features: featuresData || []
       };
 
       // Calculate completeness score
       const vehicle = await EnhancedVehicle.create(vehicleData);
       vehicle.listingCompletenessScore = vehicle.calculateCompletenessScore();
       await vehicle.save();
+
+      // Create approval request for admin review
+      await ApprovalRequest.create({
+        requestType: 'VehicleApproval',
+        entityId: vehicle.id,
+        submittedBy: 'host',
+        submittedById: userId, // UUID, not Number
+        status: 'Pending'
+      });
+
+      // Create notification for admin
+      const adminUsers = await User.findAll({ where: { role: 'admin' } });
+      for (const admin of adminUsers) {
+        await Notification.create({
+          userId: admin.id,
+          message: `New vehicle listing pending approval: ${vehicle.make} ${vehicle.model}`,
+          type: 'vehicle_pending_approval',
+          isRead: false
+        });
+      }
 
       logger.info(`New vehicle listing created: ${vehicle.id}`, {
         hostId: userId,
@@ -179,7 +243,7 @@ router.post('/:id/images',
         });
       }
 
-      if (vehicle.hostId !== Number(userId)) {
+      if (String(vehicle.hostId) !== String(userId)) {
         return res.status(403).json({
           success: false,
           error: 'Unauthorized to modify this vehicle'
@@ -274,7 +338,7 @@ router.post('/:id/video',
         });
       }
 
-      if (vehicle.hostId !== Number(userId)) {
+      if (String(vehicle.hostId) !== String(userId)) {
         return res.status(403).json({
           success: false,
           error: 'Unauthorized to modify this vehicle'
@@ -412,7 +476,7 @@ router.get('/host/:hostId', authenticateToken, async (req: AuthenticatedRequest,
     const { hostId } = req.params;
     const userId = req.user?.id;
 
-    if (Number(userId) !== Number(hostId)) {
+    if (userId !== hostId) {
       return res.status(403).json({
         success: false,
         error: 'Unauthorized to view these vehicles'
@@ -420,7 +484,7 @@ router.get('/host/:hostId', authenticateToken, async (req: AuthenticatedRequest,
     }
 
     const vehicles = await EnhancedVehicle.findAll({
-      where: { hostId: Number(hostId) },
+      where: { hostId: hostId },
       order: [['createdAt', 'DESC']]
     });
 
@@ -462,7 +526,7 @@ router.put('/:id',
         });
       }
 
-      if (vehicle.hostId !== Number(userId)) {
+      if (String(vehicle.hostId) !== String(userId)) {
         return res.status(403).json({
           success: false,
           error: 'Unauthorized to modify this vehicle'
@@ -520,7 +584,7 @@ router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res) 
       });
     }
 
-    if (vehicle.hostId !== Number(userId)) {
+    if (String(vehicle.hostId) !== String(userId)) {
       return res.status(403).json({
         success: false,
         error: 'Unauthorized to delete this vehicle'

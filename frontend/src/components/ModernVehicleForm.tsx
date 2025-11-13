@@ -186,10 +186,48 @@ const ModernVehicleForm: React.FC<ModernVehicleFormProps> = ({
 
   const handleFileUpload = (files: FileList, category: keyof VehicleFormData) => {
     const fileArray = Array.from(files);
-    setFormData(prev => ({
-      ...prev,
-      [category]: fileArray
-    }));
+    
+    // Validate file types and sizes
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    const validFiles = fileArray.filter(file => {
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`${file.name} is not a valid image type. Please use JPEG, PNG, or WebP.`);
+        return false;
+      }
+      if (file.size > maxSize) {
+        toast.error(`${file.name} is too large. Maximum size is 10MB.`);
+        return false;
+      }
+      return true;
+    });
+    
+    if (category === 'images') {
+      // Limit to 10 additional images
+      const currentCount = formData.images.length;
+      const remainingSlots = 10 - currentCount;
+      const filesToAdd = validFiles.slice(0, remainingSlots);
+      
+      if (validFiles.length > remainingSlots) {
+        toast.error(`You can only upload ${remainingSlots} more image(s). Maximum 10 additional photos.`);
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [category]: [...prev.images, ...filesToAdd]
+      }));
+    } else if (category === 'coverImage') {
+      setFormData(prev => ({
+        ...prev,
+        [category]: validFiles.length > 0 ? validFiles[0] : null
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [category]: validFiles
+      }));
+    }
   };
 
   const handleDocumentUpload = (files: FileList, docType: keyof VehicleFormData['documents']) => {
@@ -274,20 +312,26 @@ const ModernVehicleForm: React.FC<ModernVehicleFormProps> = ({
         ...formData.entertainmentFeatures
       ]));
       
-      // Add images
+      // Add images - cover image first, then additional images
       if (formData.coverImage) {
-        submitData.append('images', formData.coverImage);
+        submitData.append('coverImage', formData.coverImage);
       }
-      formData.images.forEach(image => {
+      formData.images.forEach((image, index) => {
         submitData.append('images', image);
       });
       
+      // Add category for image storage
+      submitData.append('category', formData.type || 'uncategorized');
+      
       // Make API call to create vehicle listing
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch('/api/vehicles', {
+      const { getApiBaseUrl } = await import('../utils/apiConfig');
+      const API_BASE_URL = getApiBaseUrl();
+      const response = await fetch(`${API_BASE_URL}/enhanced-vehicles`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - browser will set it with boundary for FormData
         },
         body: submitData
       });

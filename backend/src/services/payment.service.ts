@@ -48,8 +48,8 @@ export class PaymentService {
       // Create payment record
       const payment = await Payment.create({
         bookingId: parseInt(data.bookingId),
-        renter_id: parseInt(data.renterId),
-        host_id: parseInt(data.hostId),
+        renter_id: String(data.renterId),
+        host_id: String(data.hostId),
         amount: data.amount,
         currency: data.currency,
         paymentMethod: 'stripe',
@@ -102,7 +102,7 @@ export class PaymentService {
           await payment.save();
 
           // Update booking status
-          const booking = await Booking.findByPk(payment.booking_id);
+          const booking = await Booking.findByPk(payment.bookingId);
           if (booking) {
             booking.approve();
             await booking.save();
@@ -137,8 +137,8 @@ export class PaymentService {
       // Create payment record
       const payment = await Payment.create({
         bookingId: parseInt(data.bookingId),
-        renter_id: parseInt(data.renterId),
-        host_id: parseInt(data.hostId),
+        renter_id: String(data.renterId),
+        host_id: String(data.hostId),
         amount: data.amount,
         currency: data.currency,
         paymentMethod: 'payfast',
@@ -233,7 +233,7 @@ export class PaymentService {
       await payment.save();
 
       // Update booking status
-      const booking = await Booking.findByPk(payment.booking_id);
+      const booking = await Booking.findByPk(payment.bookingId);
       if (booking) {
         booking.approve();
         await booking.save();

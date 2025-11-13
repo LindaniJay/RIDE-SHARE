@@ -5,7 +5,7 @@ async function notifyUser(userId: string, payload: any) {
   // store in DB (best-effort)
   try { 
     await Notification.create({ 
-      userId: parseInt(userId), 
+      userId: String(userId), 
       type: payload.type || 'system_announcement',
       title: payload.title || 'Notification',
       message: payload.message || JSON.stringify(payload),

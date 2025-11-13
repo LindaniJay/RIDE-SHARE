@@ -1,12 +1,49 @@
 import express from 'express';
 import { z } from 'zod';
 import { Op } from 'sequelize';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { Booking } from '../models/Booking';
 import { Listing } from '../models/Listing';
 import { User } from '../models/User';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
+
+// Configure multer for document uploads
+const documentStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(process.cwd(), 'uploads', 'bookings', 'documents');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+  }
+});
+
+const documentUpload = multer({
+  storage: documentStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB per file
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|webp|pdf/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype) || file.mimetype === 'application/pdf';
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files (JPEG, PNG, WebP) and PDF files are allowed'));
+    }
+  }
+});
 
 const router = express.Router();
 
@@ -89,8 +126,15 @@ router.get('/unified', authenticateToken, async (req: AuthenticatedRequest, res)
   }
 });
 
-// POST /api/bookings/unified - Create new booking
-router.post('/unified', authenticateToken, async (req: AuthenticatedRequest, res) => {
+// POST /api/bookings/unified - Create new booking (with optional document uploads)
+router.post('/unified', 
+  authenticateToken,
+  documentUpload.fields([
+    { name: 'driverLicense', maxCount: 1 },
+    { name: 'idDocument', maxCount: 1 },
+    { name: 'selfieVerification', maxCount: 1 }
+  ]),
+  async (req: AuthenticatedRequest, res) => {
   const transaction = await Booking.sequelize!.transaction();
   
   try {
@@ -186,9 +230,9 @@ router.post('/unified', authenticateToken, async (req: AuthenticatedRequest, res
 
     // Create booking
     const booking = await Booking.create({
-      booking_id: uuidv4(),
-      renterId: parseInt(userId),
-      hostId: parseInt(vehicle.hostId.toString()),
+      bookingId: uuidv4(),
+      renterId: userId, // UUID, not parseInt
+      hostId: vehicle.hostId, // UUID, not parseInt
       vehicleId: parseInt(validatedData.vehicleId),
       listingId: parseInt(validatedData.vehicleId),
       startDate: startDate,
@@ -232,7 +276,7 @@ router.post('/unified', authenticateToken, async (req: AuthenticatedRequest, res
     if (io && vehicle.hostId) {
       io.to(`user-${vehicle.hostId}`).emit('new-booking', {
         id: booking.id,
-        booking_id: booking.booking_id,
+        booking_id: booking.bookingId,
         renterName: `${req.user!.firstName || ''} ${req.user!.lastName || ''}`.trim() || 'User',
         vehicleTitle: `${vehicle.make} ${vehicle.model}`,
         startDate: startDate.toISOString(),
@@ -310,8 +354,8 @@ router.patch('/unified/:id', authenticateToken, async (req: AuthenticatedRequest
     }
 
     // Check permissions (renter, host, or admin)
-    const isRenter = booking.renterId === parseInt(userId);
-    const isHost = booking.hostId === parseInt(userId);
+    const isRenter = booking.renterId === userId; // UUID comparison
+    const isHost = booking.hostId === userId; // UUID comparison
     const isAdmin = req.user!.role === 'admin';
 
     if (!isRenter && !isHost && !isAdmin) {
@@ -401,8 +445,8 @@ router.get('/unified/:id', authenticateToken, async (req: AuthenticatedRequest, 
     }
 
     // Check permissions
-    const isRenter = booking.renterId === parseInt(userId);
-    const isHost = booking.hostId === parseInt(userId);
+    const isRenter = booking.renterId === userId; // UUID comparison
+    const isHost = booking.hostId === userId; // UUID comparison
     const isAdmin = req.user!.role === 'admin';
 
     if (!isRenter && !isHost && !isAdmin) {
@@ -442,7 +486,7 @@ router.delete('/unified/:id', authenticateToken, async (req: AuthenticatedReques
     }
 
     // Check permissions (renter or admin)
-    const isRenter = booking.renterId === parseInt(userId);
+    const isRenter = booking.renterId === userId; // UUID comparison
     const isAdmin = req.user!.role === 'admin';
 
     if (!isRenter && !isAdmin) {
@@ -494,6 +538,51 @@ router.delete('/unified/:id', authenticateToken, async (req: AuthenticatedReques
     res.status(500).json({
       success: false,
       error: 'Failed to cancel booking'
+    });
+  }
+});
+
+// GET /api/bookings/unavailable/:listingId - Get unavailable dates for a listing
+router.get('/unavailable/:listingId', async (req, res) => {
+  try {
+    const { listingId } = req.params;
+
+    // Find all bookings for this listing that are not cancelled
+    const bookings = await Booking.findAll({
+      where: {
+        listingId: parseInt(listingId),
+        status: { [Op.notIn]: ['cancelled', 'completed'] }
+      },
+      attributes: ['startDate', 'endDate']
+    });
+
+    // Generate list of unavailable dates
+    const unavailableDates: string[] = [];
+    bookings.forEach((booking: any) => {
+      const start = new Date(booking.startDate);
+      const end = new Date(booking.endDate);
+      const current = new Date(start);
+      
+      while (current <= end) {
+        unavailableDates.push(current.toISOString().split('T')[0]);
+        current.setDate(current.getDate() + 1);
+      }
+    });
+
+    // Remove duplicates and sort
+    const uniqueDates = [...new Set(unavailableDates)].sort();
+
+    res.json({
+      success: true,
+      dates: uniqueDates,
+      count: uniqueDates.length
+    });
+
+  } catch (error) {
+    logger.error('Error fetching unavailable dates:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch unavailable dates'
     });
   }
 });

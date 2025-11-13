@@ -5,7 +5,7 @@ interface AuditData {
   action: string;
   entityType: string;
   entityId: number;
-  userId: number;
+  userId: string; // UUID string
   userRole: string;
   oldValues?: any;
   newValues?: any;
@@ -19,7 +19,7 @@ class AuditService {
         action: data.action,
         entityType: data.entityType,
         entityId: data.entityId,
-        userId: data.userId,
+        userId: String(data.userId),
         userRole: data.userRole,
         oldValues: data.oldValues,
         newValues: data.newValues,

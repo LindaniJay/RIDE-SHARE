@@ -12,8 +12,8 @@ import { containerVariants, itemVariants, dashboardCardVariants } from '../utils
 import { toast } from 'react-hot-toast';
 // Icons are handled by the Icon component
 
-// API base URL
-const API_BASE_URL = 'http://localhost:5001/api';
+// Import API config helper
+import { getApiBaseUrl } from '../utils/apiConfig';
 
 // Import components directly to avoid dynamic import issues
 import DocumentUpload from '../components/DocumentUpload';
@@ -109,6 +109,7 @@ const RenterDashboard: React.FC = () => {
       
       // Get user's Firebase token
       const token = await user.getIdToken();
+      const API_BASE_URL = getApiBaseUrl();
       
       // Fetch bookings from API
       const response = await fetch(`${API_BASE_URL}/bookings/user/${user.uid}`, {

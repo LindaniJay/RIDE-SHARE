@@ -19,33 +19,80 @@ router.post('/login', asyncHandler(async (req: AuthenticatedRequest, res: Respon
 
   if (!firebaseToken) {
     return res.status(400).json({ 
+      success: false,
       message: 'Firebase token is required',
       error: 'Missing authentication token' 
     });
   }
 
   try {
-    const result = await AuthService.loginWithFirebase(firebaseToken);
-    
-    if (!result) {
-      return res.status(401).json({ 
-        message: 'Invalid Firebase token',
-        error: 'Authentication failed' 
+    const firebaseAuth = getFirebaseAuth();
+    if (!firebaseAuth) {
+      return res.status(500).json({ 
+        success: false,
+        message: 'Authentication service unavailable',
+        error: 'Firebase not configured' 
       });
     }
 
-    logger.info(`User ${result.user.id} logged in successfully with role: ${result.user.role}`);
+    // Verify Firebase token
+    const decodedToken = await firebaseAuth.verifyIdToken(firebaseToken);
+    
+    // Check if user exists in database
+    let user = await User.findOne({ where: { firebase_uid: decodedToken.uid } });
+    
+    // If user doesn't exist, create them (auto-register on first login)
+    if (!user) {
+      logger.info(`User ${decodedToken.uid} not found in database, creating new user`);
+      
+      const displayName = decodedToken.name || decodedToken.email?.split('@')[0] || 'User';
+      const nameParts = displayName.split(' ');
+      
+      user = await User.create({
+        firebase_uid: decodedToken.uid,
+        email: decodedToken.email || '',
+        display_name: displayName,
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        role: 'renter', // Default role
+        isVerified: decodedToken.email_verified || false,
+        profile_image_url: decodedToken.picture || undefined,
+        phone_number: decodedToken.phone_number || undefined
+      });
+      
+      logger.info(`Auto-registered user ${user.id} on first login`);
+    } else {
+      // Update last login and increment login count
+      user.incrementLoginCount();
+      user.last_login_at = new Date();
+      await user.save();
+    }
+
+    const tokens = AuthService.generateTokens(user.id.toString());
+
+    logger.info(`User ${user.id} logged in successfully with role: ${user.role}`);
     
     res.json({
       success: true,
       message: 'Login successful',
-      user: result.user.toJSON(),
-      tokens: result.tokens,
-      role: result.user.role
+      user: user.toJSON(),
+      tokens,
+      role: user.role
     });
   } catch (error) {
     logger.error('Login error:', error);
+    
+    // Check if it's a Firebase token error
+    if (error instanceof Error && error.message.includes('token')) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Invalid Firebase token',
+        error: 'Authentication failed' 
+      });
+    }
+    
     res.status(500).json({ 
+      success: false,
       message: 'Login failed',
       error: error instanceof Error ? error.message : 'Unknown error' 
     });
@@ -197,10 +244,11 @@ router.post('/logout', verifyFirebaseToken, requireAuth, asyncHandler(async (req
 
 // Register new user with Firebase token
 router.post('/register', asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { firebaseToken, role = 'renter' } = req.body;
+  const { firebaseToken, role = 'renter', firstName, lastName, phone } = req.body;
 
   if (!firebaseToken) {
     return res.status(400).json({ 
+      success: false,
       message: 'Firebase token is required',
       error: 'Missing authentication token' 
     });
@@ -210,6 +258,7 @@ router.post('/register', asyncHandler(async (req: AuthenticatedRequest, res: Res
     const firebaseAuth = getFirebaseAuth();
     if (!firebaseAuth) {
       return res.status(500).json({ 
+        success: false,
         message: 'Authentication service unavailable',
         error: 'Firebase not configured' 
       });
@@ -221,26 +270,48 @@ router.post('/register', asyncHandler(async (req: AuthenticatedRequest, res: Res
     let user = await User.findOne({ where: { firebase_uid: decodedToken.uid } });
     
     if (user) {
+      // User already exists - update if needed and return success
+      if (firstName || lastName || phone) {
+        if (firstName) user.firstName = firstName;
+        if (lastName) user.lastName = lastName;
+        if (phone) user.phone_number = phone;
+        await user.save();
+      }
+      
+      const tokens = AuthService.generateTokens(user.id.toString());
+      
+      logger.info(`User ${user.id} already registered, returning existing user`);
+      
       return res.status(200).json({ 
         success: true,
-        message: 'User already exists',
-        error: 'User is already registered',
+        message: 'User already registered',
         user: user.toJSON(),
-        tokens: AuthService.generateTokens(user.id.toString())
+        tokens,
+        role: user.role
       });
     }
 
     // Create new user
+    // Try to get name from token or use provided names
+    const displayName = decodedToken.name || 
+                       (firstName && lastName ? `${firstName} ${lastName}` : null) ||
+                       decodedToken.email?.split('@')[0] || 
+                       'User';
+    
+    const nameParts = displayName.split(' ');
+    const first = firstName || nameParts[0] || '';
+    const last = lastName || nameParts.slice(1).join(' ') || '';
+
     user = await User.create({
       firebase_uid: decodedToken.uid,
       email: decodedToken.email || '',
-      display_name: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
-      firstName: decodedToken.name?.split(' ')[0] || '',
-      lastName: decodedToken.name?.split(' ').slice(1).join(' ') || '',
+      display_name: displayName,
+      firstName: first,
+      lastName: last,
       role: role.toLowerCase() as 'renter' | 'host' | 'admin',
       isVerified: decodedToken.email_verified || false,
       profile_image_url: decodedToken.picture || undefined,
-      phone_number: decodedToken.phone_number || undefined
+      phone_number: phone || decodedToken.phone_number || undefined
     });
 
     const tokens = AuthService.generateTokens(user.id.toString());
@@ -257,6 +328,7 @@ router.post('/register', asyncHandler(async (req: AuthenticatedRequest, res: Res
   } catch (error) {
     logger.error('Registration error:', error);
     res.status(500).json({ 
+      success: false,
       message: 'Registration failed',
       error: error instanceof Error ? error.message : 'Unknown error' 
     });

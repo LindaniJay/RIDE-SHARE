@@ -6,36 +6,71 @@ import { logger } from '../utils/logger';
 const router = express.Router();
 
 // GET /api/notifications - Get current user's notifications
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req: any, res) => {
   try {
-    // Check if user is authenticated via token
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication token required'
+    const userId = req.user?.id;
+    if (!userId) {
+      logger.warn('Notifications request without authenticated user');
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          total: 0,
+          page: 1,
+          limit: 20,
+          pages: 0
+        }
       });
     }
 
-    const token = authHeader.substring(7);
-    
-    // For now, return empty notifications if no user is found
-    // This prevents the 404 error while maintaining the endpoint
+    logger.info(`Fetching notifications for user: ${userId}`);
+
+    // Find user by ID to get their notifications
+    const user = await User.findByPk(userId);
+    if (!user) {
+      logger.warn(`User not found for ID: ${userId}`);
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          total: 0,
+          page: 1,
+          limit: 20,
+          pages: 0
+        }
+      });
+    }
+
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    const notifications = await Notification.findAndCountAll({
+      where: { userId: userId },
+      order: [['createdAt', 'DESC']],
+      limit: Number(limit),
+      offset: offset
+    });
+
     res.json({
       success: true,
-      data: [],
+      data: notifications.rows,
       pagination: {
-        total: 0,
-        page: 1,
-        limit: 20,
-        pages: 0
+        total: notifications.count,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(notifications.count / Number(limit))
       }
     });
-  } catch (error) {
-    logger.error('Error fetching notifications:', error);
+  } catch (error: any) {
+    logger.error('Error fetching notifications:', {
+      error: error.message,
+      stack: error.stack,
+      userId: req.user?.id
+    });
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch notifications'
+      error: 'Failed to fetch notifications',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

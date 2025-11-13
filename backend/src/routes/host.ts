@@ -1,4 +1,5 @@
 import express from 'express';
+import { QueryTypes } from 'sequelize';
 import { authenticateToken, requireHost, AuthenticatedRequest } from '../middleware/auth';
 import { Listing, Booking, User } from '../models';
 import { logger } from '../utils/logger';
@@ -6,63 +7,76 @@ import { logger } from '../utils/logger';
 const router = express.Router();
 
 // GET /api/host/earnings - Get host earnings summary
-router.get('/earnings', authenticateToken, requireHost, async (req: AuthenticatedRequest, res) => {
+router.get('/earnings', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user?.id;
+    if (!userId) {
+      logger.warn('Earnings request without authenticated user');
+      return res.status(401).json({
+        success: false,
+        error: 'User not authenticated'
+      });
+    }
+    
+    logger.info(`Fetching earnings for host: ${userId}`);
+    
+    const sequelize = Booking.sequelize!;
+    if (!sequelize) {
+      throw new Error('Database connection not available');
+    }
     
     // Get total earnings from completed bookings
-    const earningsResult = await Booking.findOne({
-      where: { 
-        status: 'completed',
-        '$listing.hostId$': userId 
-      },
-      include: [{
-        model: Listing,
-        as: 'listing',
-        where: { hostId: userId }
-      }],
-      attributes: [
-        [require('sequelize').fn('SUM', require('sequelize').col('totalPrice')), 'totalEarnings']
-      ],
-      raw: true
-    });
+    const earningsResult = await sequelize.query(
+      `SELECT COALESCE(SUM(total_price), 0) as "totalEarnings" 
+       FROM bookings 
+       WHERE status = 'completed' AND host_id = :userId`,
+      {
+        replacements: { userId },
+        type: QueryTypes.SELECT
+      }
+    ) as any[];
     
-    const totalEarnings = (earningsResult as any)?.totalEarnings || 0;
+    const totalEarnings = parseFloat(earningsResult[0]?.totalEarnings || '0');
     
     // Get monthly earnings
-    const monthlyEarnings = await Booking.findAll({
-      where: { 
-        status: 'completed',
-        '$listing.hostId$': userId 
-      },
-      include: [{
-        model: Listing,
-        as: 'listing',
-        where: { hostId: userId }
-      }],
-      attributes: [
-        [require('sequelize').fn('DATE_TRUNC', 'month', require('sequelize').col('createdAt')), 'month'],
-        [require('sequelize').fn('SUM', require('sequelize').col('totalPrice')), 'earnings']
-      ],
-      group: [require('sequelize').fn('DATE_TRUNC', 'month', require('sequelize').col('createdAt'))],
-      order: [[require('sequelize').fn('DATE_TRUNC', 'month', require('sequelize').col('createdAt')), 'DESC']]
-    });
+    const monthlyEarningsResult = await sequelize.query(
+      `SELECT 
+        DATE_TRUNC('month', created_at) as month,
+        COALESCE(SUM(total_price), 0) as earnings
+       FROM bookings 
+       WHERE status = 'completed' AND host_id = :userId
+       GROUP BY DATE_TRUNC('month', created_at)
+       ORDER BY month DESC`,
+      {
+        replacements: { userId },
+        type: QueryTypes.SELECT
+      }
+    ) as any[];
+    
+    const monthlyEarnings = monthlyEarningsResult.map((item: any) => ({
+      month: item.month,
+      earnings: parseFloat(item.earnings || '0')
+    }));
+
+    logger.info(`Earnings fetched successfully for host ${userId}: total=${totalEarnings}`);
 
     res.json({
       success: true,
       data: {
-        totalEarnings: parseFloat(totalEarnings.toString()),
-        monthlyEarnings: monthlyEarnings.map((item: any) => ({
-          month: item.month,
-          earnings: parseFloat(item.earnings.toString())
-        }))
+        totalEarnings: totalEarnings,
+        monthlyEarnings: monthlyEarnings
       }
     });
-  } catch (error) {
-    logger.error('Error fetching host earnings:', error);
+  } catch (error: any) {
+    logger.error('Error fetching host earnings:', {
+      error: error.message,
+      stack: error.stack,
+      userId: req.user?.id
+    });
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch earnings'
+      error: 'Failed to fetch earnings',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

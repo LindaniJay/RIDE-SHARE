@@ -6,7 +6,12 @@ class ApiClient {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || '/api';
+    // Use centralized API URL helper to ensure proxy is used in development
+    // In development, this will use '/api' which goes through Vite proxy
+    // In production, this will use VITE_API_URL if set, otherwise '/api'
+    this.baseURL = import.meta.env.DEV 
+      ? '/api'
+      : (import.meta.env.VITE_API_URL || '/api');
     
     this.client = axios.create({
       baseURL: this.baseURL,
@@ -42,8 +47,18 @@ class ApiClient {
     // Add response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => response,
-      (error) => {
-        console.error('API Error:', error.response?.data || error.message);
+      async (error) => {
+        const { getApiErrorMessage, isConnectionRefusedError } = await import('../utils/apiConfig');
+        
+        if (isConnectionRefusedError(error)) {
+          console.error('❌ Backend server is not running. Please start the backend server on port 5001.');
+          console.error('   Run: cd backend && npm run dev');
+        } else {
+          console.error('API Error:', error.response?.data || error.message);
+        }
+        
+        // Enhance error with user-friendly message
+        error.userMessage = getApiErrorMessage(error);
         return Promise.reject(error);
       }
     );

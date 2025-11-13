@@ -507,7 +507,7 @@ router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
     }
 
     const canUpdate = 
-      listing.hostId === Number(user.id) || 
+      listing.hostId === user.id || 
       user.role === 'admin';
 
     if (!canUpdate) {
@@ -577,7 +577,7 @@ router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res) 
     }
 
     const canDelete = 
-      listing.hostId === Number(user.id) || 
+      listing.hostId === user.id || 
       user.role === 'admin';
 
     if (!canDelete) {

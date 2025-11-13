@@ -4,8 +4,8 @@ import { sequelize } from '../config/database';
 export interface ReviewAttributes {
   id: number;
   bookingId: number;
-  reviewerId: number;
-  revieweeId: number;
+  reviewerId: string; // UUID
+  revieweeId: string; // UUID
   rating: number;
   comment?: string;
   createdAt: Date;
@@ -13,8 +13,8 @@ export interface ReviewAttributes {
   
   // Additional fields for compatibility
   booking_id?: number;
-  reviewer_id?: number;
-  reviewee_id?: number;
+  reviewer_id?: string; // UUID
+  reviewee_id?: string; // UUID
   created_at?: Date;
   
   // Missing properties from errors
@@ -26,8 +26,8 @@ export interface ReviewCreationAttributes extends Omit<ReviewAttributes, 'id' | 
 export class Review extends Model<InferAttributes<Review>, InferCreationAttributes<Review>> {
   declare id: CreationOptional<number>;
   declare bookingId: number;
-  declare reviewerId: number;
-  declare revieweeId: number;
+  declare reviewerId: string; // UUID
+  declare revieweeId: string; // UUID
   declare rating: number;
   declare comment?: string;
   declare readonly createdAt: CreationOptional<Date>;
@@ -35,8 +35,8 @@ export class Review extends Model<InferAttributes<Review>, InferCreationAttribut
   
   // Additional fields for compatibility
   declare booking_id?: number;
-  declare reviewer_id?: number;
-  declare reviewee_id?: number;
+  declare reviewer_id?: string; // UUID
+  declare reviewee_id?: string; // UUID
   declare created_at?: Date;
   
   // Missing properties from errors
@@ -58,7 +58,7 @@ Review.init({
     },
   },
   reviewerId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
     references: {
       model: 'users',
@@ -66,7 +66,7 @@ Review.init({
     },
   },
   revieweeId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
     references: {
       model: 'users',
@@ -94,11 +94,11 @@ Review.init({
     allowNull: true,
   },
   reviewer_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: true,
   },
   reviewee_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: true,
   },
   created_at: {

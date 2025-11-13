@@ -20,14 +20,14 @@ router.get('/user/:uid', authenticateToken, async (req, res) => {
     }
 
     const bookings = await Booking.findAll({
-      where: { renter_id: user.id },
+      where: { renterId: user.id }, // Use renterId (UUID) instead of renter_id
       include: [{
         model: Listing,
         as: 'listing',
         include: [{
           model: User,
           as: 'host',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'phone']
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phone_number']
         }]
       }],
       order: [['createdAt', 'DESC']]
@@ -78,21 +78,24 @@ router.post('/create', authenticateToken, async (req, res) => {
     }
 
     // Check for date conflicts
+    const { Op } = require('sequelize');
+    const start = new Date(startDate);
+    const end = new Date(endDate);
     const existingBooking = await Booking.findOne({
       where: {
         listingId,
-        status: ['pending', 'confirmed'],
-        [require('sequelize').Op.or]: [
+        status: { [Op.in]: ['pending', 'confirmed', 'active'] },
+        [Op.or]: [
           {
-            startDate: { [require('sequelize').Op.between]: [startDate, endDate] }
+            startDate: { [Op.between]: [start, end] }
           },
           {
-            endDate: { [require('sequelize').Op.between]: [startDate, endDate] }
+            endDate: { [Op.between]: [start, end] }
           },
           {
-            [require('sequelize').Op.and]: [
-              { startDate: { [require('sequelize').Op.lte]: startDate } },
-              { endDate: { [require('sequelize').Op.gte]: endDate } }
+            [Op.and]: [
+              { startDate: { [Op.lte]: start } },
+              { endDate: { [Op.gte]: end } }
             ]
           }
         ]
@@ -108,9 +111,9 @@ router.post('/create', authenticateToken, async (req, res) => {
 
     // Create booking
     const booking = await Booking.create({
-      booking_id: `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      renterId: Number(user.id) || 0,
-      hostId: listing.hostId,
+      bookingId: `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      renterId: user.id, // UUID, not Number
+      hostId: listing.hostId, // UUID
       vehicleId: listing.id,
       listingId,
       startDate: new Date(startDate),
@@ -173,7 +176,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    if (booking.renterId !== Number(user.id)) {
+    if (booking.renterId !== user.id) { // UUID comparison, not Number
       return res.status(403).json({
         success: false,
         error: 'Unauthorized to cancel this booking'

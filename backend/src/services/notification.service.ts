@@ -16,7 +16,7 @@ export class NotificationService {
   static async createNotification(data: CreateNotificationData): Promise<Notification> {
     try {
       const notification = await Notification.create({
-        userId: parseInt(data.userId),
+        userId: String(data.userId),
         isRead: false,
         type: data.type,
         title: data.title,

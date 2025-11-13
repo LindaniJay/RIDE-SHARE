@@ -501,7 +501,7 @@ router.post('/notify', authenticateAdmin, auditAdminAction('SEND_NOTIFICATION'),
     const notifications = await Promise.all(
       targetUsers.map(user => 
         Notification.create({
-          userId: Number(user.id) || 0,
+          userId: user.id,
           message: `${title}: ${message}`,
           type: 'system_announcement', // Map admin notification types to system_announcement
           isRead: false

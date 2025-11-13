@@ -165,7 +165,7 @@ router.get('/:id', verifyFirebaseToken, requireAuth, asyncHandler(async (req: Au
     }
 
     // Check if user has access to this payment
-    const hasAccess = payment.renter_id === Number(req.user!.id) || payment.host_id === Number(req.user!.id);
+    const hasAccess = payment.renter_id === req.user!.id || payment.host_id === req.user!.id;
     
     if (!hasAccess) {
       return res.status(403).json({ error: 'Access denied' });
@@ -235,7 +235,7 @@ router.post('/:id/refund', verifyFirebaseToken, requireAuth, asyncHandler(async 
     }
 
     // Check if user has permission to refund
-    const canRefund = payment.renter_id === Number(req.user!.id) || payment.host_id === Number(req.user!.id);
+    const canRefund = payment.renter_id === req.user!.id || payment.host_id === req.user!.id;
     
     if (!canRefund) {
       return res.status(403).json({ error: 'Access denied' });
@@ -274,7 +274,7 @@ router.get('/:id/status', verifyFirebaseToken, requireAuth, asyncHandler(async (
     }
 
     // Check if user has access to this payment
-    const hasAccess = payment.renter_id === Number(req.user!.id) || payment.host_id === Number(req.user!.id);
+    const hasAccess = payment.renter_id === req.user!.id || payment.host_id === req.user!.id;
     
     if (!hasAccess) {
       return res.status(403).json({ error: 'Access denied' });

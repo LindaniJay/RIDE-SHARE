@@ -1,96 +1,66 @@
 import express from 'express';
 import { z } from 'zod';
-import { Booking, Listing, User, EnhancedVehicle } from '../models';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
+import { EnhancedVehicle, User, Booking, Notification } from '../models';
 import { logger } from '../utils/logger';
 import { Op } from 'sequelize';
-import { v4 as uuidv4 } from 'uuid';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = 'uploads/verification';
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ 
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
-});
-
 // Validation schemas
-const initiateBookingSchema = z.object({
+const createBookingSchema = z.object({
   vehicleId: z.number().int().positive(),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
-});
-
-const uploadVerificationSchema = z.object({
-  bookingId: z.number().int().positive(),
-  selfieFile: z.string().optional(),
-  idFile: z.string().optional(),
-  driverLicenseFile: z.string().optional(),
-});
-
-const confirmBookingSchema = z.object({
-  bookingId: z.number().int().positive(),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
   pickupLocation: z.string().min(1),
-  pickupTime: z.string().datetime().optional(),
   returnLocation: z.string().min(1),
-  returnTime: z.string().datetime().optional(),
-  renterPhone: z.string().min(10),
-  emergencyContactName: z.string().min(1),
-  emergencyContactPhone: z.string().min(10),
   specialRequests: z.string().optional(),
-  paymentMethod: z.enum(['stripe', 'payfast']),
+  emergencyContactName: z.string().min(1),
+  emergencyContactPhone: z.string().min(1)
 });
 
-const approveBookingSchema = z.object({
-  bookingId: z.number().int().positive(),
-  hostNotes: z.string().optional(),
+const updateBookingSchema = z.object({
+  status: z.enum(['confirmed', 'cancelled', 'completed']).optional(),
+  adminNotes: z.string().optional(),
+  cancellationReason: z.string().optional()
 });
 
-const checkinSchema = z.object({
-  bookingId: z.number().int().positive(),
-  preTripPhotos: z.array(z.string()).min(1),
-  contractSigned: z.boolean(),
-});
-
-const checkoutSchema = z.object({
-  bookingId: z.number().int().positive(),
-  postTripPhotos: z.array(z.string()).min(1),
-});
-
-// POST /api/bookings/initiate - Start booking process
-router.post('/initiate', authenticateToken, async (req: AuthenticatedRequest, res) => {
+// POST /api/enhanced-bookings - Create new booking
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const { vehicleId, startDate, endDate } = initiateBookingSchema.parse(req.body);
-    
-    // Find vehicle/listing
-    const vehicle = await Listing.findByPk(vehicleId, {
-      include: [{ model: User, as: 'host', attributes: ['id', 'firstName', 'lastName', 'email'] }]
+    const validation = createBookingSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid booking data',
+        details: validation.error.errors
+      });
+    }
+
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not authenticated'
+      });
+    }
+
+    const {
+      vehicleId,
+      startDate,
+      endDate,
+      pickupLocation,
+      returnLocation,
+      specialRequests,
+      emergencyContactName,
+      emergencyContactPhone
+    } = validation.data;
+
+    // Check if vehicle exists and is available
+    const vehicle = await EnhancedVehicle.findByPk(vehicleId, {
+      include: [{ model: User, as: 'host' }]
     });
-    
+
     if (!vehicle) {
       return res.status(404).json({
         success: false,
@@ -98,39 +68,60 @@ router.post('/initiate', authenticateToken, async (req: AuthenticatedRequest, re
       });
     }
 
-    if (vehicle.status !== 'approved') {
+    if (vehicle.listingStatus !== 'approved') {
       return res.status(400).json({
         success: false,
         error: 'Vehicle is not available for booking'
       });
     }
 
+    if (!vehicle.isAvailable) {
+      return res.status(400).json({
+        success: false,
+        error: 'Vehicle is currently not available'
+      });
+    }
+
     // Check for date conflicts
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    if (start >= end) {
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+
+    if (startDateObj >= endDateObj) {
       return res.status(400).json({
         success: false,
         error: 'End date must be after start date'
       });
     }
 
+    if (startDateObj < new Date()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Start date cannot be in the past'
+      });
+    }
+
+    // Check for existing bookings
     const existingBooking = await Booking.findOne({
       where: {
-        vehicleId,
-        status: { [Op.in]: ['pending', 'approved', 'active'] },
+        vehicleId: vehicleId,
+        status: {
+          [Op.in]: ['pending', 'confirmed', 'active']
+        },
         [Op.or]: [
           {
-            startDate: { [Op.between]: [start, end] }
+            startDate: {
+              [Op.between]: [startDateObj, endDateObj]
+            }
           },
           {
-            endDate: { [Op.between]: [start, end] }
+            endDate: {
+              [Op.between]: [startDateObj, endDateObj]
+            }
           },
           {
             [Op.and]: [
-              { startDate: { [Op.lte]: start } },
-              { endDate: { [Op.gte]: end } }
+              { startDate: { [Op.lte]: startDateObj } },
+              { endDate: { [Op.gte]: endDateObj } }
             ]
           }
         ]
@@ -138,513 +129,174 @@ router.post('/initiate', authenticateToken, async (req: AuthenticatedRequest, re
     });
 
     if (existingBooking) {
-      return res.status(409).json({
+      return res.status(400).json({
         success: false,
-        error: 'Vehicle is not available for the selected dates'
+        error: 'Vehicle is already booked for the selected dates'
       });
     }
 
-    // Calculate pricing
-    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const basePrice = vehicle.pricePerDay * days;
-    const insuranceFee = basePrice * 0.1; // 10% insurance
-    const serviceFee = basePrice * 0.05; // 5% service fee
-    const deposit = basePrice * 0.2; // 20% deposit
-    const totalPrice = basePrice + insuranceFee + serviceFee + deposit;
+    // Calculate total price
+    const daysDiff = Math.ceil((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24));
+    const totalPrice = daysDiff * Number(vehicle.pricePerDay);
 
     // Create booking
     const booking = await Booking.create({
-      booking_id: uuidv4(),
-      renterId: Number(req.user!.id) || 0,
-      hostId: vehicle.hostId,
-      vehicleId: vehicle.id,
-      listingId: vehicle.id,
-      startDate: start,
-      endDate: end,
-      totalPrice,
+      bookingId: `BK-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      renterId: userId,
+      hostId: String(vehicle.hostId), // UUID string
+      vehicleId: vehicleId,
+      listingId: vehicleId, // Using vehicleId as listingId for compatibility
+      startDate: startDateObj,
+      endDate: endDateObj,
+      totalPrice: totalPrice,
+      total_amount: totalPrice,
       status: 'pending',
       paymentStatus: 'pending',
-      selfie_verified: false,
-      id_verified: false,
-      pre_trip_completed: false,
-      post_trip_completed: false,
-      contract_signed: false,
+      pickup_location: pickupLocation,
+      return_location: returnLocation,
+      specialRequests: specialRequests,
+      emergency_contact_name: emergencyContactName,
+      emergency_contact_phone: emergencyContactPhone,
+      renter_phone: req.user?.phone_number || '',
+      display_name: `${req.user?.firstName || ''} ${req.user?.lastName || ''}`.trim()
     });
 
-    // Emit notification to host
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`user-${vehicle.hostId}`).emit('new-booking', {
-        id: booking.id,
-        booking_id: booking.booking_id,
-        renterName: req.user!.display_name || `${req.user!.first_name || ''} ${req.user!.last_name || ''}`.trim() || 'User',
-        vehicleTitle: `${vehicle.make} ${vehicle.model}`,
-        startDate,
-        endDate,
-        totalPrice,
-        createdAt: booking.createdAt
-      });
-    }
+    // Create notifications
+    await Notification.create({
+      userId: String(vehicle.hostId),
+      message: `New booking request for your ${vehicle.make} ${vehicle.model}`,
+      type: 'booking_request',
+      isRead: false
+    });
+
+    await Notification.create({
+      userId: userId,
+      message: `Booking request submitted for ${vehicle.make} ${vehicle.model}`,
+      type: 'booking_submitted',
+      isRead: false
+    });
+
+    logger.info(`New booking created: ${booking.id}`, {
+      renterId: userId,
+      hostId: vehicle.hostId, // UUID, not Number
+      vehicleId: vehicleId,
+      totalPrice: totalPrice
+    });
 
     res.status(201).json({
       success: true,
-      data: {
-        booking,
-        pricing: {
-          basePrice,
-          insuranceFee,
-          serviceFee,
-          deposit,
-          totalPrice,
-          days
-        },
-        vehicle: {
-          id: vehicle.id,
-          make: vehicle.make,
-          model: vehicle.model,
-          year: vehicle.year,
-          pricePerDay: vehicle.pricePerDay,
-          host: vehicle.hostId
-        }
-      },
-      message: 'Booking initiated successfully'
-    });
-
-  } catch (error) {
-    logger.error('Error initiating booking:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to initiate booking'
-    });
-  }
-});
-
-// POST /api/bookings/upload-verification - Upload selfie and ID verification
-router.post('/upload-verification', authenticateToken, upload.fields([
-  { name: 'selfie', maxCount: 1 },
-  { name: 'idDocument', maxCount: 1 },
-  { name: 'driverLicense', maxCount: 1 }
-]), async (req: AuthenticatedRequest, res) => {
-  try {
-    const { bookingId } = req.body;
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-
-    const booking = await Booking.findByPk(bookingId);
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        error: 'Booking not found'
-      });
-    }
-
-    if (booking.renterId !== Number(req.user!.id)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized to update this booking'
-      });
-    }
-
-    // Update verification URLs
-    const updates: any = {};
-    
-    if (files.selfie?.[0]) {
-      updates.selfie_verification_url = files.selfie[0].path;
-    }
-    
-    if (files.idDocument?.[0]) {
-      updates.id_verification_url = files.idDocument[0].path;
-    }
-    
-    if (files.driverLicense?.[0]) {
-      updates.driver_license_url = files.driverLicense[0].path;
-    }
-
-    await booking.update(updates);
-
-    // TODO: Implement face matching verification logic here
-    // For now, we'll simulate verification
-    const selfieVerified = files.selfie?.[0] ? true : false;
-    const idVerified = files.idDocument?.[0] ? true : false;
-
-    await booking.update({
-      selfie_verified: selfieVerified,
-      id_verified: idVerified
-    });
-
-    res.json({
-      success: true,
-      data: {
-        booking,
-        verification: {
-          selfie_verified: selfieVerified,
-          id_verified: idVerified,
-          selfie_url: files.selfie?.[0]?.path,
-          id_url: files.idDocument?.[0]?.path,
-          driver_license_url: files.driverLicense?.[0]?.path
-        }
-      },
-      message: 'Verification documents uploaded successfully'
-    });
-
-  } catch (error) {
-    logger.error('Error uploading verification:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to upload verification documents'
-    });
-  }
-});
-
-// POST /api/bookings/confirm - Confirm booking details and process payment
-router.post('/confirm', authenticateToken, async (req: AuthenticatedRequest, res) => {
-  try {
-    const {
-      bookingId,
-      pickupLocation,
-      pickupTime,
-      returnLocation,
-      returnTime,
-      renterPhone,
-      emergencyContactName,
-      emergencyContactPhone,
-      specialRequests,
-      paymentMethod
-    } = confirmBookingSchema.parse(req.body);
-
-    const booking = await Booking.findByPk(bookingId, {
-      include: [{ model: Listing, as: 'vehicle' }]
-    });
-
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        error: 'Booking not found'
-      });
-    }
-
-    if (booking.renterId !== Number(req.user!.id)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized to update this booking'
-      });
-    }
-
-    if (!booking.selfie_verified || !booking.id_verified) {
-      return res.status(400).json({
-        success: false,
-        error: 'Verification documents must be uploaded and verified before confirming booking'
-      });
-    }
-
-    // Update booking details
-    await booking.update({
-      pickup_location: pickupLocation,
-      pickup_time: pickupTime ? new Date(pickupTime) : undefined,
-      return_location: returnLocation,
-      return_time: returnTime ? new Date(returnTime) : undefined,
-      renter_phone: renterPhone,
-      emergency_contact_name: emergencyContactName,
-      emergency_contact_phone: emergencyContactPhone,
-      specialRequests,
-      paymentMethod
-    });
-
-    // TODO: Process payment with Stripe or PayFast
-    // For now, we'll simulate successful payment
-    await booking.update({
-      paymentStatus: 'paid',
-      status: 'pending' // Still pending host approval
-    });
-
-    // Emit notification to host
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`user-${booking.hostId}`).emit('booking-confirmed', {
-        id: booking.id,
-        booking_id: booking.booking_id,
-        renterName: req.user!.display_name || `${req.user!.first_name || ''} ${req.user!.last_name || ''}`.trim() || 'User',
-        vehicleTitle: `Vehicle ${booking.vehicleId}`,
-        startDate: booking.startDate,
-        endDate: booking.endDate,
-        totalPrice: booking.totalPrice,
-        pickupLocation,
-        returnLocation
-      });
-    }
-
-    res.json({
-      success: true,
       data: booking,
-      message: 'Booking confirmed and payment processed successfully'
+      message: 'Booking request submitted successfully'
     });
 
   } catch (error) {
-    logger.error('Error confirming booking:', error);
+    logger.error('Error creating booking:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to confirm booking'
+      error: 'Failed to create booking'
     });
   }
 });
 
-// POST /api/bookings/approve/:id - Host approval
-router.post('/approve/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
+// GET /api/enhanced-bookings - Get user's bookings
+router.get('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const { id } = req.params;
-    const { hostNotes } = approveBookingSchema.parse(req.body);
+    const userId = req.user?.id;
+    const { status, page = 1, limit = 10 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
 
-    const booking = await Booking.findByPk(id, {
-      include: [
-        { model: User, as: 'renter', attributes: ['id', 'firstName', 'lastName', 'email'] },
-        { model: Listing, as: 'vehicle' }
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not authenticated'
+      });
+    }
+
+    const whereClause: any = {
+      [Op.or]: [
+        { renterId: userId },
+        { hostId: userId }
       ]
+    };
+
+    if (status) {
+      whereClause.status = status;
+    }
+
+    const { count, rows: bookings } = await Booking.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: User,
+          as: 'renter',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phone_number']
+        },
+        {
+          model: User,
+          as: 'host',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phone_number']
+        },
+        {
+          model: EnhancedVehicle,
+          as: 'vehicle',
+          attributes: ['id', 'make', 'model', 'year', 'type', 'coverImage', 'pricePerDay']
+        }
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: Number(limit),
+      offset
     });
-
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        error: 'Booking not found'
-      });
-    }
-
-    if (booking.hostId !== Number(req.user!.id)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized to approve this booking'
-      });
-    }
-
-    if (booking.status !== 'pending') {
-      return res.status(400).json({
-        success: false,
-        error: 'Booking is not in pending status'
-      });
-    }
-
-    await booking.update({
-      status: 'approved',
-      host_notes: hostNotes
-    });
-
-    // Emit notification to renter
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`user-${booking.renterId}`).emit('booking-approved', {
-        id: booking.id,
-        booking_id: booking.booking_id,
-        vehicleTitle: `Vehicle ${booking.vehicleId}`,
-        startDate: booking.startDate,
-        endDate: booking.endDate,
-        hostNotes
-      });
-    }
 
     res.json({
       success: true,
-      data: booking,
-      message: 'Booking approved successfully'
+      data: bookings,
+      pagination: {
+        total: count,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(count / Number(limit))
+      }
     });
 
   } catch (error) {
-    logger.error('Error approving booking:', error);
+    logger.error('Error fetching bookings:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to approve booking'
+      error: 'Failed to fetch bookings'
     });
   }
 });
 
-// POST /api/bookings/reject/:id - Host rejection
-router.post('/reject/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
-  try {
-    const { id } = req.params;
-    const { reason } = req.body;
-
-    const booking = await Booking.findByPk(id);
-
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        error: 'Booking not found'
-      });
-    }
-
-    if (booking.hostId !== Number(req.user!.id)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized to reject this booking'
-      });
-    }
-
-    await booking.update({
-      status: 'cancelled',
-      cancellation_reason: reason,
-      paymentStatus: 'refunded'
-    });
-
-    // Emit notification to renter
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`user-${booking.renterId}`).emit('booking-rejected', {
-        id: booking.id,
-        booking_id: booking.booking_id,
-        reason
-      });
-    }
-
-    res.json({
-      success: true,
-      data: booking,
-      message: 'Booking rejected successfully'
-    });
-
-  } catch (error) {
-    logger.error('Error rejecting booking:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to reject booking'
-    });
-  }
-});
-
-// POST /api/bookings/checkin/:id - Pre-trip check-in
-router.post('/checkin/:id', authenticateToken, upload.array('photos', 10), async (req: AuthenticatedRequest, res) => {
-  try {
-    const { id } = req.params;
-    const { contractSigned } = req.body;
-    const files = req.files as Express.Multer.File[];
-
-    const booking = await Booking.findByPk(id);
-
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        error: 'Booking not found'
-      });
-    }
-
-    if (booking.renterId !== Number(req.user!.id) && booking.hostId !== Number(req.user!.id)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized to check in this booking'
-      });
-    }
-
-    if (booking.status !== 'approved') {
-      return res.status(400).json({
-        success: false,
-        error: 'Booking must be approved before check-in'
-      });
-    }
-
-    const photoUrls = files.map(file => file.path);
-
-    await booking.update({
-      pre_trip_photos: photoUrls,
-      contract_signed: contractSigned === 'true',
-      pre_trip_completed: true,
-      status: 'active'
-    });
-
-    // Emit notification
-    const io = req.app.get('io');
-    if (io) {
-      const targetUser = Number(req.user!.id) === booking.renterId ? booking.hostId : booking.renterId;
-      io.to(`user-${targetUser}`).emit('booking-checked-in', {
-        id: booking.id,
-        booking_id: booking.booking_id,
-        checkedInBy: req.user!.display_name || `${req.user!.first_name || ''} ${req.user!.last_name || ''}`.trim() || 'User'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: booking,
-      message: 'Check-in completed successfully'
-    });
-
-  } catch (error) {
-    logger.error('Error checking in booking:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to check in booking'
-    });
-  }
-});
-
-// POST /api/bookings/checkout/:id - Post-trip check-out
-router.post('/checkout/:id', authenticateToken, upload.array('photos', 10), async (req: AuthenticatedRequest, res) => {
-  try {
-    const { id } = req.params;
-    const files = req.files as Express.Multer.File[];
-
-    const booking = await Booking.findByPk(id);
-
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        error: 'Booking not found'
-      });
-    }
-
-    if (booking.renterId !== Number(req.user!.id) && booking.hostId !== Number(req.user!.id)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized to check out this booking'
-      });
-    }
-
-    if (booking.status !== 'active') {
-      return res.status(400).json({
-        success: false,
-        error: 'Booking must be active before check-out'
-      });
-    }
-
-    const photoUrls = files.map(file => file.path);
-
-    await booking.update({
-      post_trip_photos: photoUrls,
-      post_trip_completed: true,
-      status: 'completed'
-    });
-
-    // Emit notification
-    const io = req.app.get('io');
-    if (io) {
-      const targetUser = Number(req.user!.id) === booking.renterId ? booking.hostId : booking.renterId;
-      io.to(`user-${targetUser}`).emit('booking-checked-out', {
-        id: booking.id,
-        booking_id: booking.booking_id,
-        checkedOutBy: req.user!.display_name || `${req.user!.first_name || ''} ${req.user!.last_name || ''}`.trim() || 'User'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: booking,
-      message: 'Check-out completed successfully'
-    });
-
-  } catch (error) {
-    logger.error('Error checking out booking:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to check out booking'
-    });
-  }
-});
-
-// GET /api/bookings/:id - Get booking details
+// GET /api/enhanced-bookings/:id - Get single booking
 router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not authenticated'
+      });
+    }
 
     const booking = await Booking.findByPk(id, {
       include: [
-        { model: User, as: 'renter', attributes: ['id', 'firstName', 'lastName', 'email', 'phone'] },
-        { model: User, as: 'host', attributes: ['id', 'firstName', 'lastName', 'email', 'phone'] },
-        { model: Listing, as: 'vehicle' }
+        {
+          model: User,
+          as: 'renter',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phone_number']
+        },
+        {
+          model: User,
+          as: 'host',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phone_number']
+        },
+        {
+          model: EnhancedVehicle,
+          as: 'vehicle',
+          attributes: ['id', 'make', 'model', 'year', 'type', 'coverImage', 'pricePerDay', 'location']
+        }
       ]
     });
 
@@ -655,8 +307,8 @@ router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
       });
     }
 
-    // Check if user has access to this booking
-    if (booking.renterId !== Number(req.user!.id) && booking.hostId !== Number(req.user!.id) && req.user!.role !== 'admin') {
+    // Check if user can access this booking
+    if (booking.renterId !== userId && booking.hostId !== userId && req.user?.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'Unauthorized to view this booking'
@@ -677,106 +329,133 @@ router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
   }
 });
 
-// GET /api/bookings/user/:uid - Get user's bookings
-router.get('/user/:uid', authenticateToken, async (req: AuthenticatedRequest, res) => {
+// PATCH /api/enhanced-bookings/:id - Update booking (host/admin only)
+router.patch('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const { uid } = req.params;
-    const { status, page = 1, limit = 10 } = req.query;
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const validation = updateBookingSchema.safeParse(req.body);
 
-    const user = await User.findOne({ where: { firebase_uid: uid } });
-    if (!user) {
-      return res.status(404).json({
+    if (!validation.success) {
+      return res.status(400).json({
         success: false,
-        error: 'User not found'
+        error: 'Invalid update data',
+        details: validation.error.errors
       });
     }
 
-    const whereClause: any = { renter_id: user.id };
-    if (status) {
-      whereClause.status = status;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not authenticated'
+      });
     }
 
-    const offset = (Number(page) - 1) * Number(limit);
+    const booking = await Booking.findByPk(id);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found'
+      });
+    }
 
-    const { count, rows: bookings } = await Booking.findAndCountAll({
-      where: whereClause,
-      include: [
-        { model: User, as: 'host', attributes: ['id', 'firstName', 'lastName', 'email', 'phone'] },
-        { model: Listing, as: 'vehicle' }
-      ],
-      order: [['createdAt', 'DESC']],
-      limit: Number(limit),
-      offset
+    // Check if user can update this booking
+    if (booking.hostId !== userId && req.user?.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized to update this booking'
+      });
+    }
+
+    const { status, adminNotes, cancellationReason } = validation.data;
+
+    const updateData: any = {};
+    if (status) updateData.status = status;
+    if (adminNotes) updateData.adminNotes = adminNotes;
+    if (cancellationReason) updateData.cancellationReason = cancellationReason;
+
+    await booking.update(updateData);
+
+    // Create notification for renter
+    await Notification.create({
+      userId: booking.renterId,
+      message: `Your booking ${booking.bookingId} has been ${status}`,
+      type: 'booking_updated',
+      isRead: false
+    });
+
+    logger.info(`Booking updated: ${booking.id}`, {
+      updatedBy: userId,
+      status: status,
+      bookingId: booking.bookingId
     });
 
     res.json({
       success: true,
-      data: bookings,
-      pagination: {
-        total: count,
-        page: Number(page),
-        limit: Number(limit),
-        pages: Math.ceil(count / Number(limit))
-      }
+      data: booking,
+      message: 'Booking updated successfully'
     });
 
   } catch (error) {
-    logger.error('Error fetching user bookings:', error);
+    logger.error('Error updating booking:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch user bookings'
+      error: 'Failed to update booking'
     });
   }
 });
 
-// GET /api/bookings/host/:uid - Get host's bookings
-router.get('/host/:uid', authenticateToken, async (req: AuthenticatedRequest, res) => {
+// GET /api/enhanced-bookings/vehicle/:vehicleId - Get bookings for a specific vehicle
+router.get('/vehicle/:vehicleId', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const { uid } = req.params;
-    const { status, page = 1, limit = 10 } = req.query;
+    const { vehicleId } = req.params;
+    const userId = req.user?.id;
 
-    const user = await User.findOne({ where: { firebase_uid: uid } });
-    if (!user) {
-      return res.status(404).json({
+    if (!userId) {
+      return res.status(401).json({
         success: false,
-        error: 'User not found'
+        error: 'User not authenticated'
       });
     }
 
-    const whereClause: any = { hostId: user.id };
-    if (status) {
-      whereClause.status = status;
+    // Check if user owns the vehicle
+    const vehicle = await EnhancedVehicle.findByPk(vehicleId);
+    if (!vehicle) {
+      return res.status(404).json({
+        success: false,
+        error: 'Vehicle not found'
+      });
     }
 
-    const offset = (Number(page) - 1) * Number(limit);
+    if (String(vehicle.hostId) !== String(userId) && req.user?.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized to view bookings for this vehicle'
+      });
+    }
 
-    const { count, rows: bookings } = await Booking.findAndCountAll({
-      where: whereClause,
+    const bookings = await Booking.findAll({
+      where: { vehicleId: Number(vehicleId) },
       include: [
-        { model: User, as: 'renter', attributes: ['id', 'firstName', 'lastName', 'email', 'phone'] },
-        { model: Listing, as: 'vehicle' }
+        {
+          model: User,
+          as: 'renter',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phone_number']
+        }
       ],
-      order: [['createdAt', 'DESC']],
-      limit: Number(limit),
-      offset
+      order: [['createdAt', 'DESC']]
     });
 
     res.json({
       success: true,
-      data: bookings,
-      pagination: {
-        total: count,
-        page: Number(page),
-        limit: Number(limit),
-        pages: Math.ceil(count / Number(limit))
-      }
+      data: bookings
     });
 
   } catch (error) {
-    logger.error('Error fetching host bookings:', error);
+    logger.error('Error fetching vehicle bookings:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch host bookings'
+      error: 'Failed to fetch vehicle bookings'
     });
   }
 });

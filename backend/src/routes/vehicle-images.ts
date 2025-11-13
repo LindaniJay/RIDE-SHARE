@@ -81,7 +81,7 @@ router.post('/upload', authenticateToken, requireRole(['host', 'admin']), upload
           listingId: listingId ? parseInt(listingId) : null,
           url,
           category,
-          userId: Number(req.user!.id) || 0,
+          userId: req.user!.id,
           filename: path.basename(url),
           originalName: files.find(f => f.filename === path.basename(url))?.originalname || '',
           mimeType: files.find(f => f.filename === path.basename(url))?.mimetype || 'image/jpeg',
@@ -158,7 +158,7 @@ router.delete('/:imageId', authenticateToken, requireRole(['host', 'admin']), as
     }
 
     // Check if user owns the image or is admin
-    if (image.userId !== Number(req.user!.id) && req.user!.role !== 'admin') {
+    if (String(image.userId) !== req.user!.id && req.user!.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to delete this image'

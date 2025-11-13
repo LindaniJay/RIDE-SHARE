@@ -347,7 +347,7 @@ router.post('/', authenticateToken, upload.array('images', 5), async (req: Authe
     const imageUrls = uploadedFiles.map(file => `/uploads/vehicles/${file.filename}`);
 
     const vehicle = await Listing.create({
-      hostId: Number(user_id) || 0,
+      hostId: String(user_id),
       title: validatedData.title,
       description: validatedData.description,
       make: validatedData.make,
@@ -428,7 +428,7 @@ router.post('/:id/documents', authenticateToken, documentUpload.fields([
       return res.status(404).json({ error: 'Vehicle not found' });
     }
 
-    if (vehicle.host_id !== Number(user_id)) {
+    if (String(vehicle.host_id || vehicle.hostId) !== String(user_id)) {
       return res.status(403).json({ error: 'You can only upload documents for your own vehicles' });
     }
 
@@ -491,7 +491,7 @@ router.get('/:id/documents', authenticateToken, async (req: AuthenticatedRequest
     }
 
     // Check if user owns the vehicle or is admin
-    if (vehicle.host_id !== Number(user_id) && req.user?.role !== 'admin') {
+    if (String(vehicle.host_id || vehicle.hostId) !== String(user_id) && req.user?.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
     }
 

@@ -60,7 +60,7 @@ router.get('/my-reviews', authenticateToken, async (req: AuthenticatedRequest, r
     const offset = (Number(page) - 1) * Number(limit);
     
     const reviews = await Review.findAndCountAll({
-      where: { reviewer_id: Number(req.user!.id) },
+      where: { reviewer_id: req.user!.id },
       include: [
         {
           model: Listing,
@@ -131,7 +131,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
     const completedBooking = await Booking.findOne({
       where: {
         listing_id: reviewData.listing_id,
-        reviewer_id: Number(req.user!.id),
+        reviewer_id: req.user!.id,
         status: 'completed',
       },
     });
@@ -146,7 +146,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
     const existingReview = await Review.findOne({
       where: {
         listing_id: reviewData.listing_id,
-        reviewer_id: Number(req.user!.id),
+        reviewer_id: req.user!.id,
       },
     });
     
@@ -159,11 +159,11 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
       rating: reviewData.rating,
       comment: reviewData.comment,
       bookingId: completedBooking.id,
-      reviewerId: Number(req.user!.id),
-      revieweeId: listing.hostId,
+      reviewerId: req.user!.id, // UUID string
+      revieweeId: String(listing.hostId), // UUID string
       // compatibility fields
-      reviewer_id: Number(req.user!.id),
-      reviewee_id: listing.hostId,
+      reviewer_id: req.user!.id, // UUID string
+      reviewee_id: String(listing.hostId), // UUID string
       listing_id: reviewData.listing_id,
     });
     
@@ -185,7 +185,7 @@ router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
       return res.status(404).json({ error: 'Review not found' });
     }
     
-    if (review.reviewer_id !== Number(req.user!.id)) {
+    if (String(review.reviewer_id) !== req.user!.id) {
       return res.status(403).json({ error: 'You can only update your own reviews' });
     }
     
@@ -211,7 +211,7 @@ router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res) 
       return res.status(404).json({ error: 'Review not found' });
     }
     
-    if (review.reviewer_id !== Number(req.user!.id)) {
+    if (String(review.reviewer_id) !== req.user!.id) {
       return res.status(403).json({ error: 'You can only delete your own reviews' });
     }
     

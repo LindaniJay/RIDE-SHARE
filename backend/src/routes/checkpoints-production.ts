@@ -93,7 +93,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
     }
 
     // Check if user is either renter or host
-    const isRenter = booking.renterId === Number(user_id);
+    const isRenter = booking.renterId === String(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -144,7 +144,7 @@ router.get('/booking/:bookingId', authenticateToken, async (req: AuthenticatedRe
     }
 
     // Check if user is either renter or host
-    const isRenter = booking.renterId === Number(user_id);
+    const isRenter = booking.renterId === String(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -152,7 +152,7 @@ router.get('/booking/:bookingId', authenticateToken, async (req: AuthenticatedRe
     }
 
     const checkpoints = await Checkpoint.findAll({
-      where: { booking_id: bookingId },
+      where: { bookingId: bookingId }, // Use bookingId (camelCase) for Sequelize
       include: [
         { model: User, as: 'user', attributes: ['id', 'first_name', 'last_name'] },
         { model: CheckpointItem, as: 'items' },
@@ -193,7 +193,7 @@ router.put('/:checkpointId', authenticateToken, async (req: AuthenticatedRequest
     }
 
     // Verify user has access to this checkpoint
-    const booking = await Booking.findByPk(checkpoint.booking_id, {
+    const booking = await Booking.findByPk(checkpoint.bookingId, {
       include: [
         { model: User, as: 'renter' },
         { model: User, as: 'host', through: { attributes: [] } }
@@ -204,7 +204,7 @@ router.put('/:checkpointId', authenticateToken, async (req: AuthenticatedRequest
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    const isRenter = booking.renterId === Number(user_id);
+    const isRenter = booking.renterId === String(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -264,7 +264,7 @@ router.post('/:checkpointId/items', authenticateToken, async (req: Authenticated
     }
 
     // Verify user has access to this checkpoint
-    const booking = await Booking.findByPk(checkpoint.booking_id, {
+    const booking = await Booking.findByPk(checkpoint.bookingId, {
       include: [
         { model: User, as: 'renter' },
         { model: User, as: 'host', through: { attributes: [] } }
@@ -275,7 +275,7 @@ router.post('/:checkpointId/items', authenticateToken, async (req: Authenticated
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    const isRenter = booking.renterId === Number(user_id);
+    const isRenter = booking.renterId === String(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -328,7 +328,7 @@ router.post('/:checkpointId/images', authenticateToken, upload.single('image'), 
     }
 
     // Verify user has access to this checkpoint
-    const booking = await Booking.findByPk(checkpoint.booking_id, {
+    const booking = await Booking.findByPk(checkpoint.bookingId, {
       include: [
         { model: User, as: 'renter' },
         { model: User, as: 'host', through: { attributes: [] } }
@@ -339,7 +339,7 @@ router.post('/:checkpointId/images', authenticateToken, upload.single('image'), 
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    const isRenter = booking.renterId === Number(user_id);
+    const isRenter = booking.renterId === String(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {
@@ -383,7 +383,7 @@ router.get('/:checkpointId/images', authenticateToken, async (req: Authenticated
     }
 
     // Verify user has access to this checkpoint
-    const booking = await Booking.findByPk(checkpoint.booking_id, {
+    const booking = await Booking.findByPk(checkpoint.bookingId, {
       include: [
         { model: User, as: 'renter' },
         { model: User, as: 'host', through: { attributes: [] } }
@@ -394,7 +394,7 @@ router.get('/:checkpointId/images', authenticateToken, async (req: Authenticated
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    const isRenter = booking.renterId === Number(user_id);
+    const isRenter = booking.renterId === String(user_id);
     const isHost = (booking as any).listing?.host_id === user_id;
 
     if (!isRenter && !isHost) {

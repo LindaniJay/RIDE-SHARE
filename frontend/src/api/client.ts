@@ -42,6 +42,15 @@ const createApiClient = (): AxiosInstance => {
     async (error) => {
       const originalRequest = error.config;
 
+      // Check for connection refused errors
+      const { isConnectionRefusedError, getApiErrorMessage } = await import('../utils/apiConfig');
+      if (isConnectionRefusedError(error)) {
+        console.error('❌ Backend server is not running. Please start the backend server on port 5001.');
+        console.error('   Run: cd backend && npm run dev');
+        error.userMessage = getApiErrorMessage(error);
+        return Promise.reject(error);
+      }
+
       // Handle authentication errors
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
@@ -60,6 +69,11 @@ const createApiClient = (): AxiosInstance => {
           console.error('Token refresh failed:', refreshError);
           window.location.href = '/login';
         }
+      }
+
+      // Enhance error with user-friendly message
+      if (!error.userMessage) {
+        error.userMessage = getApiErrorMessage(error);
       }
 
       return Promise.reject(error);

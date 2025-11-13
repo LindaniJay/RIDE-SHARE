@@ -65,7 +65,7 @@ router.post('/', approvalRequestRateLimit, authenticateToken, async (req: Authen
       requestType,
       entityId,
       submittedBy,
-      submittedById: req.user!.id.toString(),
+      submittedById: req.user!.id,
       reviewNotes,
       status: 'Pending'
     });
@@ -100,7 +100,7 @@ router.post('/', approvalRequestRateLimit, authenticateToken, async (req: Authen
       action: wasAutoApproved ? 'AUTO_APPROVED' : 'CREATED',
       entityType: 'ApprovalRequest',
       entityId: approvalRequest.id,
-      userId: Number(req.user!.id) || 0,
+      userId: req.user!.id,
       userRole: req.user!.role,
       newValues: { requestType, entityId, submittedBy, status: wasAutoApproved ? 'Approved' : 'Pending' },
       req
@@ -272,7 +272,7 @@ router.patch('/:id', approvalUpdateRateLimit, authenticateToken, requireRole(['a
 
     await approvalRequest.update({
       status,
-      reviewedById: req.user!.id.toString(),
+      reviewedById: req.user!.id,
       reviewedAt: new Date(),
       reviewNotes
     });
@@ -306,7 +306,7 @@ router.patch('/:id', approvalUpdateRateLimit, authenticateToken, requireRole(['a
       action: `APPROVAL_${status.toUpperCase()}`,
       entityType: 'ApprovalRequest',
       entityId: parseInt(id),
-      userId: Number(req.user!.id) || 0,
+      userId: req.user!.id,
       userRole: req.user!.role,
       oldValues: { status: 'Pending' },
       newValues: { status, reviewNotes },
@@ -344,7 +344,7 @@ router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
     }
 
     // Check if user can access this request
-    if (req.user!.role !== 'admin' && approvalRequest.submittedById !== req.user!.id.toString()) {
+    if (req.user!.role !== 'admin' && approvalRequest.submittedById !== req.user!.id) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -374,7 +374,7 @@ router.patch('/bulk', bulkApprovalRateLimit, authenticateToken, requireRole(['ad
     const updatedRequests = await ApprovalRequest.update(
       {
         status,
-        reviewedById: req.user!.id.toString(),
+        reviewedById: req.user!.id,
         reviewedAt: new Date(),
         reviewNotes
       },

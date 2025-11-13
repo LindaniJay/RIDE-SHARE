@@ -287,7 +287,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
     
     const listing = await Listing.create({
       ...listingData,
-      hostId: Number(req.user!.id) || 0,
+      hostId: req.user!.id, // UUID string
       pricePerDay: listingData.price_per_day,
       image: listingData.images?.[0] || '/uploads/default-vehicle.jpg',
       city: listingData.location?.city || 'Unknown',
@@ -334,7 +334,7 @@ router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
     }
     
     // Check ownership
-    if (listing.host_id !== Number(req.user!.id) && req.user!.role !== 'admin') {
+    if (String(listing.host_id || listing.hostId) !== req.user!.id && req.user!.role !== 'admin') {
       return res.status(403).json({ error: 'Not authorized' });
     }
     

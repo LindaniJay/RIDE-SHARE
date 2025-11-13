@@ -39,7 +39,16 @@ export interface CreateBookingData {
 }
 
 class BookingService {
-  private readonly API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+  private getApiBaseUrl(): string {
+    // Use centralized API URL helper to ensure proxy is used in development
+    return import.meta.env.DEV 
+      ? '/api'
+      : (import.meta.env.VITE_API_URL || '/api');
+  }
+  
+  private get API_BASE_URL(): string {
+    return this.getApiBaseUrl();
+  }
   private storageKey = 'rideshare_bookings';
 
   private getStoredBookings(): Booking[] {

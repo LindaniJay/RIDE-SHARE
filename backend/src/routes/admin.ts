@@ -1,5 +1,7 @@
 import express from 'express';
+import { Op } from 'sequelize';
 import { authenticateAdmin } from '../middleware/adminAuth';
+// Op import for Sequelize operators
 import { Listing, Booking, User, Notification } from '../models';
 import { setAdminCustomClaims } from '../config/firebase';
 import { logger } from '../utils/logger';
@@ -14,13 +16,22 @@ router.get('/dashboard-stats', authenticateAdmin, async (req, res) => {
     const totalListings = await Listing.count();
     const totalBookings = await Booking.count();
     const pendingListings = await Listing.count({ where: { status: 'pending' } });
-    const activeBookings = await Booking.count({ where: { status: 'confirmed' } });
     
-    // Calculate total revenue
+    // Count active bookings using Sequelize Op operator
+    const activeBookings = await Booking.count({ 
+      where: { 
+        status: { [Op.in]: ['confirmed', 'active', 'pending'] }
+      } 
+    });
+    
+    // Calculate total revenue from completed bookings with paid status
     const revenueResult = await Booking.findOne({
-      where: { paymentStatus: 'paid' },
+      where: { 
+        paymentStatus: 'paid',
+        status: { [Op.in]: ['completed', 'confirmed'] }
+      },
       attributes: [
-        [require('sequelize').fn('SUM', require('sequelize').col('totalPrice')), 'totalRevenue']
+        [require('sequelize').fn('SUM', require('sequelize').col('total_price')), 'totalRevenue']
       ],
       raw: true
     });
@@ -55,7 +66,8 @@ router.get('/pending-listings', authenticateAdmin, async (req, res) => {
       include: [{
         model: User,
         as: 'host',
-        attributes: ['id', 'firstName', 'lastName', 'email', 'phone']
+        attributes: ['id', 'firstName', 'lastName', 'email', 'phone_number'],
+        required: false
       }],
       order: [['createdAt', 'ASC']]
     });
@@ -139,7 +151,11 @@ router.put('/listings/:id/approve', authenticateAdmin, async (req, res) => {
     }
 
     // Update listing status
-    await listing.update({ status: 'approved' });
+    await listing.update({ 
+      status: 'approved',
+      approved: true,
+      is_available: true
+    });
 
     // Create notification for host
     await Notification.create({

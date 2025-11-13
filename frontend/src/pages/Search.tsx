@@ -8,8 +8,8 @@ import OptimizedImage from '../components/OptimizedImage';
 import { containerVariants, itemVariants } from '../utils/motionVariants';
 import { toast } from 'react-hot-toast';
 
-// API base URL
-const API_BASE_URL = 'http://localhost:5001/api';
+// Import API config helper
+import { getApiBaseUrl } from '../utils/apiConfig';
 
 interface Listing {
   id: number;
@@ -72,6 +72,7 @@ const Search: React.FC = () => {
       if (params.transmission) queryParams.append('transmission', params.transmission);
       if (params.seats) queryParams.append('seats', params.seats);
       
+      const API_BASE_URL = getApiBaseUrl();
       const response = await fetch(`${API_BASE_URL}/search?${queryParams.toString()}`);
       
       if (!response.ok) {

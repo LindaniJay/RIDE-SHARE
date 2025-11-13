@@ -125,9 +125,9 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
 
     // Create booking
     const booking = await Booking.create({
-      booking_id: `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      renterId: Number(req.user!.id) || 0,
-      hostId: listing.host_id || 0,
+      bookingId: `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      renterId: req.user!.id, // UUID string
+      hostId: String(listing.hostId || listing.host_id || ''), // UUID string
       vehicleId: parseInt(listingId),
       listingId: parseInt(listingId),
       startDate: startDate,
@@ -315,8 +315,8 @@ router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
     }
 
     const hasAccess = 
-      booking.renterId === Number(user.id) || 
-      (user.role === 'host' && (booking as any).listing?.host_id === user.id) ||
+      booking.renterId === user.id || 
+      (user.role === 'host' && String((booking as any).listing?.host_id || (booking as any).listing?.hostId) === user.id) ||
       user.role === 'admin';
 
     if (!hasAccess) {
@@ -369,8 +369,8 @@ router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
     }
 
     const canUpdate = 
-      booking.renterId === Number(user.id) || 
-      (user.role === 'host' && listing.host_id === Number(user.id)) ||
+      booking.renterId === user.id || 
+      (user.role === 'host' && String(listing.host_id || listing.hostId) === user.id) ||
       user.role === 'admin';
 
     if (!canUpdate) {
@@ -456,7 +456,7 @@ router.post('/:id/cancel', authenticateToken, async (req: AuthenticatedRequest, 
     }
 
     const canCancel = 
-      booking.renterId === Number(user.id) || 
+      booking.renterId === user.id || 
       user.role === 'admin';
 
     if (!canCancel) {
