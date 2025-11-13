@@ -185,7 +185,7 @@ const ModernHostDashboard: React.FC<ModernHostDashboardProps> = ({ className = '
     return matchesStatus && matchesSearch;
   });
 
-  const handleVehicleSuccess = (newVehicle: any) => {
+  const handleVehicleSuccess = (_newVehicle: any) => {
     // Refresh listings from database after successful creation
     fetchDashboardData();
     toast.success('Vehicle listing created successfully!');

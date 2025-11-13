@@ -316,7 +316,7 @@ const ModernVehicleForm: React.FC<ModernVehicleFormProps> = ({
       if (formData.coverImage) {
         submitData.append('coverImage', formData.coverImage);
       }
-      formData.images.forEach((image, index) => {
+      formData.images.forEach((image) => {
         submitData.append('images', image);
       });
       

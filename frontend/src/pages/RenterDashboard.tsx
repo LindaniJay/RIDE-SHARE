@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { getApiBaseUrl } from '../utils/apiConfig';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
 import GlassCard from '../components/GlassCard';
@@ -11,9 +12,6 @@ import { DashboardSkeleton } from '../components/SkeletonLoader';
 import { containerVariants, itemVariants, dashboardCardVariants } from '../utils/motionVariants';
 import { toast } from 'react-hot-toast';
 // Icons are handled by the Icon component
-
-// Import API config helper
-import { getApiBaseUrl } from '../utils/apiConfig';
 
 // Import components directly to avoid dynamic import issues
 import DocumentUpload from '../components/DocumentUpload';
@@ -157,6 +155,7 @@ const RenterDashboard: React.FC = () => {
     
     try {
       const token = await user.getIdToken();
+      const API_BASE_URL = getApiBaseUrl();
       
       switch (tab) {
         case 'payments':
@@ -234,6 +233,7 @@ const RenterDashboard: React.FC = () => {
       if (!user?.uid) return;
       
       const token = await user.getIdToken();
+      const API_BASE_URL = getApiBaseUrl();
       
       const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}`, {
         method: 'DELETE',
