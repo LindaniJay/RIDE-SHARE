@@ -3,7 +3,7 @@ import { sequelize } from '../config/database';
 
 export interface EnhancedVehicleAttributes {
   id: number;
-  hostId: number;
+  hostId: string;
   
   // Basic Vehicle Information
   make: string;
@@ -112,7 +112,7 @@ export interface EnhancedVehicleCreationAttributes extends Omit<EnhancedVehicleA
 
 export class EnhancedVehicle extends Model<InferAttributes<EnhancedVehicle>, InferCreationAttributes<EnhancedVehicle>> {
   declare id: CreationOptional<number>;
-  declare hostId: number;
+  declare hostId: string;
   
   // Basic Vehicle Information
   declare make: string;
@@ -262,8 +262,9 @@ EnhancedVehicle.init({
     autoIncrement: true,
   },
   hostId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
+    field: 'host_id',
     references: {
       model: 'users',
       key: 'id',
@@ -619,9 +620,6 @@ EnhancedVehicle.init({
     },
     {
       fields: ['type'],
-    },
-    {
-      fields: ['location'],
     },
     {
       fields: ['price_per_day'],

@@ -238,7 +238,7 @@ const seedData = async () => {
       await Listing.create({
         ...listingData,
         host_id: undefined, // Remove conflicting field
-        hostId: Number(listingData.host_id!) || 0,
+        hostId: String(listingData.host_id || ''),
         pricePerDay: listingData.price_per_day || 100,
         image: '/uploads/default-vehicle.jpg',
         city: 'Cape Town',

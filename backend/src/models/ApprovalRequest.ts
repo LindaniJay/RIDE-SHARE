@@ -62,6 +62,7 @@ ApprovalRequest.init(
     submittedById: {
       type: DataTypes.UUID,
       allowNull: false,
+      field: 'submitted_by_id',
       references: {
         model: 'users',
         key: 'id'
@@ -70,6 +71,7 @@ ApprovalRequest.init(
     reviewedById: {
       type: DataTypes.UUID,
       allowNull: true,
+      field: 'reviewed_by_id',
       references: {
         model: 'users',
         key: 'id'

@@ -18,10 +18,12 @@ import { AuditLog } from './AuditLog';
 User.hasMany(Listing, { foreignKey: 'hostId', as: 'listings' });
 Listing.belongsTo(User, { foreignKey: 'hostId', as: 'host' });
 
-User.hasMany(Booking, { foreignKey: 'renterId', as: 'bookings' });
+User.hasMany(Booking, { foreignKey: 'renterId', as: 'renterBookings' });
+User.hasMany(Booking, { foreignKey: 'hostId', as: 'hostBookings' });
 Booking.belongsTo(User, { foreignKey: 'renterId', as: 'renter' });
+Booking.belongsTo(User, { foreignKey: 'hostId', as: 'host' });
 
-Listing.hasMany(Booking, { foreignKey: 'listingId', as: 'bookings' });
+Listing.hasMany(Booking, { foreignKey: 'listingId', as: 'listings' });
 Booking.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
 
 User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
@@ -54,6 +56,9 @@ CheckpointImage.belongsTo(Checkpoint, { foreignKey: 'checkpointId', as: 'checkpo
 // Enhanced Vehicle associations
 User.hasMany(EnhancedVehicle, { foreignKey: 'hostId', as: 'enhancedVehicles' });
 EnhancedVehicle.belongsTo(User, { foreignKey: 'hostId', as: 'host' });
+
+EnhancedVehicle.hasMany(Booking, { foreignKey: 'vehicleId', as: 'vehicleBookings' });
+Booking.belongsTo(EnhancedVehicle, { foreignKey: 'vehicleId', as: 'vehicle' });
 
 // Approval Request associations
 User.hasMany(ApprovalRequest, { foreignKey: 'submittedById', as: 'submittedRequests' });

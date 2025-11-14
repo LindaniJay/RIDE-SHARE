@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
 import SEO from '../components/SEO';
@@ -8,6 +9,7 @@ import { usePageTracking } from '../hooks/useAnalytics';
 import { heroVariants, containerVariants, itemVariants } from '../utils/motionVariants';
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
   // Track page views
   usePageTracking();
 
@@ -54,7 +56,7 @@ const Home: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.6 }}
           >
             <GlassButton
-              onClick={() => window.location.href = '/search'}
+              onClick={() => navigate('/search')}
               variant="primary"
               size="lg"
               icon={<Icon name="Search" size="md" />}
@@ -64,7 +66,7 @@ const Home: React.FC = () => {
               Browse Rentals
             </GlassButton>
             <GlassButton
-              onClick={() => window.location.href = '/pricing'}
+              onClick={() => navigate('/pricing')}
               variant="secondary"
               size="lg"
               icon={<Icon name="DollarSign" size="md" />}
@@ -73,7 +75,7 @@ const Home: React.FC = () => {
               View Pricing
             </GlassButton>
             <GlassButton
-              onClick={() => window.location.href = '/register'}
+              onClick={() => navigate('/register')}
               variant="accent"
               size="lg"
               icon={<Icon name="Plus" size="md" />}
@@ -182,9 +184,9 @@ const Home: React.FC = () => {
                   className="text-center p-6"
                   icon={<div className="text-4xl mb-4 font-bold text-white">C</div>}
                   title="Cars"
-                  subtitle="From R150/day"
+                  subtitle="Free"
                 >
-                  <p className="text-white font-semibold font-body">From R150/day</p>
+                  <p className="text-white font-semibold font-body">Free</p>
                 </GlassCard>
               </motion.div>
               <motion.div variants={itemVariants}>
@@ -195,9 +197,9 @@ const Home: React.FC = () => {
                   className="text-center p-6"
                   icon={<Icon name="Truck" size="lg" className="text-white/50 mx-auto mb-4" />}
                   title="Bakkies"
-                  subtitle="From R200/day"
+                  subtitle="Free"
                 >
-                  <p className="text-white font-semibold font-body">From R200/day</p>
+                  <p className="text-white font-semibold font-body">Free</p>
                 </GlassCard>
               </motion.div>
               <motion.div variants={itemVariants}>
@@ -208,9 +210,9 @@ const Home: React.FC = () => {
                   className="text-center p-6"
                   icon={<Icon name="Car" size="lg" className="text-white/50 mx-auto mb-4" />}
                   title="SUVs"
-                  subtitle="From R300/day"
+                  subtitle="Free"
                 >
-                  <p className="text-white font-semibold font-body">From R300/day</p>
+                  <p className="text-white font-semibold font-body">Free</p>
                 </GlassCard>
               </motion.div>
               <motion.div variants={itemVariants}>
@@ -221,9 +223,9 @@ const Home: React.FC = () => {
                   className="text-center p-6"
                   icon={<Icon name="Car" size="lg" className="text-white/50 mx-auto mb-4" />}
                   title="Luxury"
-                  subtitle="From R500/day"
+                  subtitle="Free"
                 >
-                  <p className="text-white font-semibold font-body">From R500/day</p>
+                  <p className="text-white font-semibold font-body">Free</p>
                 </GlassCard>
               </motion.div>
             </div>
@@ -255,7 +257,7 @@ const Home: React.FC = () => {
                   animated
                   className="p-6"
                   clickable
-                  onClick={() => window.location.href = '/search?type=bakkie'}
+                  onClick={() => navigate('/search?type=bakkie')}
                 >
                   <div className="aspect-w-16 aspect-h-9 mb-4">
                     <div className="w-full h-48 bg-gradient-to-br from-blue-600 to-purple-700 rounded-xl flex items-center justify-center relative overflow-hidden">
@@ -274,9 +276,9 @@ const Home: React.FC = () => {
                   <h3 className="text-xl font-bold text-white mb-2 font-heading">Toyota Hilux 4WD</h3>
                   <p className="text-white/80 mb-4 font-body">Legendary South African bakkie for farm work, construction, and outdoor adventures</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-white font-heading">R750/day</span>
+                    <span className="text-2xl font-bold text-white font-heading">Free</span>
                     <GlassButton
-                      onClick={() => window.location.href = '/search?type=bakkie'}
+                      onClick={() => navigate('/search?type=bakkie')}
                       variant="primary"
                       size="sm"
                       icon={<Icon name="Truck" size="sm" />}
@@ -295,7 +297,7 @@ const Home: React.FC = () => {
                   animated
                   className="p-6"
                   clickable
-                  onClick={() => window.location.href = '/search?type=truck'}
+                  onClick={() => navigate('/search?type=truck')}
                 >
                   <div className="aspect-w-16 aspect-h-9 mb-4">
                     <div className="w-full h-48 bg-gradient-to-br from-orange-600 to-red-700 rounded-xl flex items-center justify-center relative overflow-hidden">
@@ -314,9 +316,9 @@ const Home: React.FC = () => {
                   <h3 className="text-xl font-bold text-white mb-2 font-heading">Isuzu NPR 400 Truck</h3>
                   <p className="text-white/80 mb-4 font-body">Reliable medium-duty truck for construction and delivery services across SA</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-white font-heading">R1200/day</span>
+                    <span className="text-2xl font-bold text-white font-heading">Free</span>
                     <GlassButton
-                      onClick={() => window.location.href = '/search?type=truck'}
+                      onClick={() => navigate('/search?type=truck')}
                       variant="accent"
                       size="sm"
                       icon={<Icon name="Truck" size="sm" />}
@@ -335,7 +337,7 @@ const Home: React.FC = () => {
                   animated
                   className="p-6"
                   clickable
-                  onClick={() => window.location.href = '/search?type=minibus'}
+                  onClick={() => navigate('/search?type=minibus')}
                 >
                   <div className="aspect-w-16 aspect-h-9 mb-4">
                     <div className="w-full h-48 bg-gradient-to-br from-green-600 to-teal-700 rounded-xl flex items-center justify-center relative overflow-hidden">
@@ -354,9 +356,9 @@ const Home: React.FC = () => {
                   <h3 className="text-xl font-bold text-white mb-2 font-heading">Toyota Quantum Minibus</h3>
                   <p className="text-white/80 mb-4 font-body">Popular South African minibus for group transport and airport shuttles</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-white font-heading">R800/day</span>
+                    <span className="text-2xl font-bold text-white font-heading">Free</span>
                     <GlassButton
-                      onClick={() => window.location.href = '/search?type=minibus'}
+                      onClick={() => navigate('/search?type=minibus')}
                       variant="primary"
                       size="sm"
                       icon={<Icon name="Bus" size="sm" />}
@@ -408,7 +410,7 @@ const Home: React.FC = () => {
                       animated
                       className="p-4 text-center"
                       clickable
-                      onClick={() => window.location.href = `/search?type=${category.type}`}
+                      onClick={() => navigate(`/search?type=${category.type}`)}
                       icon={<Icon name={category.icon} size="lg" className="text-white/50 mx-auto mb-2" />}
                       title={category.label}
                     >
@@ -427,7 +429,7 @@ const Home: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <GlassButton
-                onClick={() => window.location.href = '/dashboard/host'}
+                onClick={() => navigate('/dashboard/host')}
                 variant="primary"
                 size="lg"
                 icon={<Icon name="Plus" size="md" />}
@@ -474,7 +476,7 @@ const Home: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.6 }}
             >
               <GlassButton
-                onClick={() => window.location.href = '/search'}
+                onClick={() => navigate('/search')}
                 variant="primary"
                 size="lg"
                 icon={<Icon name="Search" size="md" />}
@@ -484,7 +486,7 @@ const Home: React.FC = () => {
                 Start Your Journey
               </GlassButton>
               <GlassButton
-                onClick={() => window.location.href = '/register'}
+                onClick={() => navigate('/search')}
                 variant="accent"
                 size="lg"
                 icon={<Icon name="Car" size="md" />}

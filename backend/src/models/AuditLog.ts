@@ -6,7 +6,7 @@ export interface AuditLogAttributes {
   action: string;
   entityType: string;
   entityId: number;
-  userId: number;
+  userId: string;
   userRole: string;
   oldValues?: any;
   newValues?: any;
@@ -23,7 +23,7 @@ export class AuditLog extends Model<AuditLogAttributes, AuditLogCreationAttribut
   public action!: string;
   public entityType!: string;
   public entityId!: number;
-  public userId!: number;
+  public userId!: string;
   public userRole!: string;
   public oldValues?: any;
   public newValues?: any;
@@ -53,8 +53,13 @@ AuditLog.init(
       allowNull: false,
     },
     userId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
+      field: 'user_id',
+      references: {
+        model: 'users',
+        key: 'id',
+      },
     },
     userRole: {
       type: DataTypes.STRING,

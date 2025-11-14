@@ -1,13 +1,42 @@
+# RideShare.SA Frontend Dockerfile
+# Fresh build - 2025-10-28
+
 FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+# Install system dependencies
+RUN apk add --no-cache curl
 
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci && npm cache clean --force
+
+# Copy source code
 COPY . .
+
+# Build the application
 RUN npm run build
 
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Change ownership of the app directory
+RUN chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
 EXPOSE 3000
 
-CMD ["npm", "run", "preview"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000 || exit 1
+
+# Start the development server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

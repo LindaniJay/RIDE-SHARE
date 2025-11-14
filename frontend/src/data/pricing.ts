@@ -30,9 +30,9 @@ export const VEHICLE_CATEGORIES: VehicleCategory[] = [
     description: 'Perfect for city driving and daily commutes',
     icon: 'Car',
     pricing: {
-      daily: { min: 350, max: 650 },
-      weekly: { min: 1900, max: 3500 },
-      monthly: { min: 5000, max: 9000 }
+      daily: { min: 0, max: 0 },
+      weekly: { min: 0, max: 0 },
+      monthly: { min: 0, max: 0 }
     },
     features: ['Fuel efficient', 'Easy parking', 'City friendly', 'Budget friendly'],
     popular: true
@@ -43,9 +43,9 @@ export const VEHICLE_CATEGORIES: VehicleCategory[] = [
     description: 'Comfortable family vehicles for longer trips',
     icon: 'Car',
     pricing: {
-      daily: { min: 500, max: 900 },
-      weekly: { min: 3000, max: 4800 },
-      monthly: { min: 7000, max: 11000 }
+      daily: { min: 0, max: 0 },
+      weekly: { min: 0, max: 0 },
+      monthly: { min: 0, max: 0 }
     },
     features: ['Spacious interior', 'Comfortable seating', 'Family friendly', 'Reliable'],
     popular: true
@@ -56,9 +56,9 @@ export const VEHICLE_CATEGORIES: VehicleCategory[] = [
     description: 'Premium vehicles for business and luxury travel',
     icon: 'Car',
     pricing: {
-      daily: { min: 900, max: 1600 },
-      weekly: { min: 5200, max: 9500 },
-      monthly: { min: 12000, max: 15000 }
+      daily: { min: 0, max: 0 },
+      weekly: { min: 0, max: 0 },
+      monthly: { min: 0, max: 0 }
     },
     features: ['Premium comfort', 'Business class', 'Luxury features', 'Professional'],
     popular: false
@@ -69,9 +69,9 @@ export const VEHICLE_CATEGORIES: VehicleCategory[] = [
     description: 'Versatile vehicles for city and light off-road use',
     icon: 'Car',
     pricing: {
-      daily: { min: 700, max: 1400 },
-      weekly: { min: 4000, max: 8000 },
-      monthly: { min: 9000, max: 18000 }
+      daily: { min: 0, max: 0 },
+      weekly: { min: 0, max: 0 },
+      monthly: { min: 0, max: 0 }
     },
     features: ['Higher ground clearance', 'Versatile', 'Good visibility', 'All-weather'],
     popular: true
@@ -82,9 +82,9 @@ export const VEHICLE_CATEGORIES: VehicleCategory[] = [
     description: 'Powerful vehicles for off-road adventures and large families',
     icon: 'Car',
     pricing: {
-      daily: { min: 1200, max: 2800 },
-      weekly: { min: 7000, max: 16000 },
-      monthly: { min: 18000, max: 45000 }
+      daily: { min: 0, max: 0 },
+      weekly: { min: 0, max: 0 },
+      monthly: { min: 0, max: 0 }
     },
     features: ['4x4 capability', 'Off-road ready', 'Large capacity', 'Adventure ready'],
     popular: false
@@ -95,9 +95,9 @@ export const VEHICLE_CATEGORIES: VehicleCategory[] = [
     description: 'Work vehicles perfect for construction and outdoor activities',
     icon: 'Car',
     pricing: {
-      daily: { min: 490, max: 1000 },
-      weekly: { min: 3000, max: 6000 },
-      monthly: { min: 8000, max: 20000 }
+      daily: { min: 0, max: 0 },
+      weekly: { min: 0, max: 0 },
+      monthly: { min: 0, max: 0 }
     },
     features: ['Cargo capacity', 'Work ready', 'Durable', 'Versatile'],
     popular: true
@@ -108,9 +108,9 @@ export const VEHICLE_CATEGORIES: VehicleCategory[] = [
     description: 'Group transport for families and small teams',
     icon: 'Car',
     pricing: {
-      daily: { min: 1200, max: 2000 },
-      weekly: { min: 7000, max: 12000 },
-      monthly: { min: 18000, max: 40000 }
+      daily: { min: 0, max: 0 },
+      weekly: { min: 0, max: 0 },
+      monthly: { min: 0, max: 0 }
     },
     features: ['Group transport', 'Spacious', 'Family friendly', 'Team travel'],
     popular: false
@@ -121,9 +121,9 @@ export const VEHICLE_CATEGORIES: VehicleCategory[] = [
     description: 'Large group transport for events and tours',
     icon: 'Car',
     pricing: {
-      daily: { min: 1800, max: 3500 },
-      weekly: { min: 10000, max: 20000 },
-      monthly: { min: 25000, max: 50000 }
+      daily: { min: 0, max: 0 },
+      weekly: { min: 0, max: 0 },
+      monthly: { min: 0, max: 0 }
     },
     features: ['Large capacity', 'Event transport', 'Tour ready', 'Group friendly'],
     popular: false
@@ -134,9 +134,9 @@ export const VEHICLE_CATEGORIES: VehicleCategory[] = [
     description: 'Professional transport for large groups and events',
     icon: 'Car',
     pricing: {
-      daily: { min: 4500, max: 15000 },
-      weekly: { min: 25000, max: 80000 },
-      monthly: { min: 60000, max: 200000 }
+      daily: { min: 0, max: 0 },
+      weekly: { min: 0, max: 0 },
+      monthly: { min: 0, max: 0 }
     },
     features: ['Professional driver', 'Large capacity', 'Event ready', 'Luxury transport'],
     popular: false
@@ -161,7 +161,7 @@ export const CHARTER_OPTIONS: CharterOption[] = [
     name: '8-Seat Charter (4 hours)',
     seats: 8,
     duration: '4 hours',
-    pricing: { min: 2500, max: 3500 },
+    pricing: { min: 0, max: 0 },
     description: 'Perfect for small group tours and airport transfers'
   },
   {
@@ -169,7 +169,7 @@ export const CHARTER_OPTIONS: CharterOption[] = [
     name: '15-Seat Charter (4 hours)',
     seats: 15,
     duration: '4 hours',
-    pricing: { min: 4800, max: 6000 },
+    pricing: { min: 0, max: 0 },
     description: 'Ideal for medium group events and city tours'
   },
   {
@@ -177,7 +177,7 @@ export const CHARTER_OPTIONS: CharterOption[] = [
     name: '34-Seat Charter (4 hours)',
     seats: 34,
     duration: '4 hours',
-    pricing: { min: 7500, max: 9000 },
+    pricing: { min: 0, max: 0 },
     description: 'Great for large group tours and corporate events'
   },
   {
@@ -185,29 +185,29 @@ export const CHARTER_OPTIONS: CharterOption[] = [
     name: '60-Seat Charter (4 hours)',
     seats: 60,
     duration: '4 hours',
-    pricing: { min: 9800, max: 11500 },
+    pricing: { min: 0, max: 0 },
     description: 'Perfect for major events and large group transport'
   }
 ];
 
 export const PRICE_RANGES = {
   daily: [
-    { label: 'Under R500', min: 0, max: 500 },
-    { label: 'R500 - R1,000', min: 500, max: 1000 },
-    { label: 'R1,000 - R2,000', min: 1000, max: 2000 },
-    { label: 'R2,000+', min: 2000, max: Infinity }
+    { label: 'Free', min: 0, max: 0 },
+    { label: 'Free', min: 0, max: 0 },
+    { label: 'Free', min: 0, max: 0 },
+    { label: 'Free', min: 0, max: 0 }
   ],
   weekly: [
-    { label: 'Under R3,000', min: 0, max: 3000 },
-    { label: 'R3,000 - R7,000', min: 3000, max: 7000 },
-    { label: 'R7,000 - R15,000', min: 7000, max: 15000 },
-    { label: 'R15,000+', min: 15000, max: Infinity }
+    { label: 'Free', min: 0, max: 0 },
+    { label: 'Free', min: 0, max: 0 },
+    { label: 'Free', min: 0, max: 0 },
+    { label: 'Free', min: 0, max: 0 }
   ],
   monthly: [
-    { label: 'Under R8,000', min: 0, max: 8000 },
-    { label: 'R8,000 - R20,000', min: 8000, max: 20000 },
-    { label: 'R20,000 - R50,000', min: 20000, max: 50000 },
-    { label: 'R50,000+', min: 50000, max: Infinity }
+    { label: 'Free', min: 0, max: 0 },
+    { label: 'Free', min: 0, max: 0 },
+    { label: 'Free', min: 0, max: 0 },
+    { label: 'Free', min: 0, max: 0 }
   ]
 };
 

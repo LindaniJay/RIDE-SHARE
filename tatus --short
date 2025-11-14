@@ -1,0 +1,65 @@
+warning: in the working copy of 'backend/.env.backup', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/Dockerfile', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/config/database.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/config/env.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/config/firebase.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/ApprovalRequest.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/AuditLog.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/Booking.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/EnhancedVehicle.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/Image.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/Listing.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/Notification.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/Payment.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/routes/bookings-unified.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/scripts/seedData.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/server.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/Dockerfile', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/App.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/AuthModal.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/Chatbot.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/ModernHostDashboard.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/ModernVehicleForm.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/pages/Home.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/services/adminService.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/vercel.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'mobile-app/src/config/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'mobile-app/src/screens/main/HomeScreen.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'nginx.conf', LF will be replaced by CRLF the next time Git touches it
+ backend/.env.backup                        |   26 [32m+[m[31m-[m
+ backend/Dockerfile                         |   63 [32m+[m[31m-[m
+ backend/env.example                        |   15 [32m+[m
+ backend/package-lock.json                  |  116 [32m+++[m
+ backend/package.json                       |   11 [32m+[m
+ backend/src/config/database.ts             |  112 [32m++[m[31m-[m
+ backend/src/config/env.ts                  |   13 [32m+[m[31m-[m
+ backend/src/config/firebase.ts             |   67 [32m+[m[31m-[m
+ backend/src/models/ApprovalRequest.ts      |    2 [32m+[m
+ backend/src/models/AuditLog.ts             |   11 [32m+[m[31m-[m
+ backend/src/models/Booking.ts              |   29 [32m+[m[31m-[m
+ backend/src/models/EnhancedVehicle.ts      |   10 [32m+[m[31m-[m
+ backend/src/models/Image.ts                |    7 [32m+[m[31m-[m
+ backend/src/models/Listing.ts              |   10 [32m+[m[31m-[m
+ backend/src/models/Notification.ts         |   18 [32m+[m[31m-[m
+ backend/src/models/Payment.ts              |   12 [32m+[m[31m-[m
+ backend/src/models/index.ts                |    9 [32m+[m[31m-[m
+ backend/src/scripts/seedData.ts            |    2 [32m+[m[31m-[m
+ backend/src/server.ts                      |  112 [32m++[m[31m-[m
+ frontend/Dockerfile                        |   33 [32m+[m[31m-[m
+ frontend/src/App.tsx                       |   24 [32m+[m[31m-[m
+ frontend/src/components/AuthModal.tsx      | 1018 [32m+++++++++++[m[31m---------[m
+ frontend/src/components/Chatbot.tsx        | 1384 [32m+++++++++++++++++++++++++[m[31m---[m
+ frontend/src/data/mockVehicles.ts          |   60 [32m+[m[31m-[m
+ frontend/src/data/pricing.ts               |   86 [32m+[m[31m-[m
+ frontend/src/pages/Home.tsx                |   50 [32m+[m[31m-[m
+ frontend/src/pages/Pricing.tsx             |   14 [32m+[m[31m-[m
+ frontend/src/services/adminService.ts      |    5 [32m+[m[31m-[m
+ frontend/vercel.json                       |  124 [32m++[m[31m-[m
+ mobile-app/src/config/index.ts             |   14 [32m+[m[31m-[m
+ mobile-app/src/screens/main/HomeScreen.tsx |   79 [32m+[m[31m-[m
+ nginx.conf                                 |  172 [32m++[m[31m--[m
+ 32 files changed, 2755 insertions(+), 953 deletions(-)

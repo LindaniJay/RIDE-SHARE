@@ -49,7 +49,10 @@ export interface AdminVehicle {
 }
 
 export class AdminService {
-  private static baseUrl = '/api/admin';
+  // Use Vite proxy in dev, full URL in production
+  private static baseUrl = import.meta.env.DEV 
+    ? '/api/admin'  // Uses Vite proxy to http://localhost:5001/api/admin
+    : `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/admin`;
 
   private static async getAuthToken(): Promise<string> {
     try {

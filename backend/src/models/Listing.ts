@@ -3,7 +3,7 @@ import { sequelize } from '../config/database';
 
 export interface ListingAttributes {
   id: number;
-  hostId: number;
+  hostId: string;
   make: string;
   model: string;
   year: number;
@@ -57,7 +57,7 @@ export interface ListingCreationAttributes extends Omit<ListingAttributes, 'id' 
 
 export class Listing extends Model<InferAttributes<Listing>, InferCreationAttributes<Listing>> {
   declare id: CreationOptional<number>;
-  declare hostId: number;
+  declare hostId: string;
   declare make: string;
   declare model: string;
   declare year: number;
@@ -82,7 +82,7 @@ export class Listing extends Model<InferAttributes<Listing>, InferCreationAttrib
   declare approved?: boolean;
   declare is_available?: boolean;
   declare price_per_day?: number;
-  declare host_id?: number;
+  declare host_id?: string;
   declare created_at?: Date;
   declare is_featured?: boolean;
   declare total_bookings?: number;
@@ -120,7 +120,7 @@ Listing.init({
     autoIncrement: true,
   },
   hostId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
     field: 'host_id',
     references: {
@@ -217,7 +217,7 @@ Listing.init({
     allowNull: true,
   },
   host_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: true,
   },
   created_at: {

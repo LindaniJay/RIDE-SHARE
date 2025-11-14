@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Discover RideShare SA - South Africa's premier peer-to-peer vehicle rental platform. Connect with trusted hosts, rent vehicles, or earn income by listing your car.">
+    <meta name="keywords" content="RideShare SA, peer-to-peer car rental, vehicle sharing South Africa, car rental platform, bakkie rental, SUV rental">
+    <title>About RideShare SA - South Africa's Premier Vehicle Rental Platform</title>
+    <link rel="icon" type="image/png" href="./favicon-32x32.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #3b82f6;
+            --primary-purple: #8b5cf6;
+            --dark-bg: #0f172a;
+            --text-light: #e2e8f0;
+            --text-gray: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        html {
+            font-family: "Inter", system-ui, sans-serif;
+        }
+
+        body {
+            font-family: "Inter", system-ui, sans-serif;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.8) 100%),
+                        url('/background-rideshare.png'),
+                        url('./background-rideshare.png'),
+                        url('./frontend/background-rideshare.png');
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #D1D5DB;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: "Poppins", system-ui, sans-serif;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        p, span, div {
+            color: #D1D5DB;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-blue);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .hero h1 {
+            font-family: "Poppins", system-ui, sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.5);
+            line-height: 1.2;
+            color: #ffffff;
+        }
+
+        .hero p {
+            font-family: "Inter", system-ui, sans-serif;
+            font-size: clamp(1.1rem, 2vw, 1.5rem);
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #D1D5DB;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+
+        .btn-enter-platform {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+            font-size: 1.25rem;
+            font-weight: 700;
+            padding: 18px 48px;
+        }
+
+        .btn-enter-platform:hover {
+            background: linear-gradient(135deg, #1d4ed8, #6d28d9);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(59, 130, 246, 0.7);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Section */
+        section {
+            padding: 60px 20px;
+        }
+
+        .section-title {
+            font-family: "Poppins", system-ui, sans-serif;
+            text-align: center;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+        }
+
+        .section-divider {
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+            margin: 0 auto 3rem;
+            border-radius: 2px;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-family: "Poppins", system-ui, sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #ffffff;
+        }
+
+        .feature-card p {
+            font-family: "Inter", system-ui, sans-serif;
+            color: #D1D5DB;
+            line-height: 1.6;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .workflow-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .workflow-card h3 {
+            font-family: "Poppins", system-ui, sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #ffffff;
+        }
+
+        .workflow-card ol {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .workflow-card li {
+            counter-increment: step-counter;
+            display: flex;
+            align-items: start;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .workflow-card li::before {
+            content: counter(step-counter);
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .workflow-card strong {
+            font-family: "Poppins", system-ui, sans-serif;
+            font-weight: 600;
+            color: #ffffff;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .workflow-card span {
+            font-family: "Inter", system-ui, sans-serif;
+            color: #D1D5DB;
+        }
+
+        /* South African Context */
+        .sa-context {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            border-radius: 16px;
+            padding: 3rem;
+            margin-top: 3rem;
+        }
+
+        .sa-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .sa-item h3 {
+            font-family: "Poppins", system-ui, sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #ffffff;
+        }
+
+        .sa-item p {
+            font-family: "Inter", system-ui, sans-serif;
+            color: #D1D5DB;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(15, 23, 42, 0.9);
+            border-top: 1px solid var(--glass-border);
+            padding: 3rem 20px;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        footer p {
+            color: var(--text-gray);
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .hero {
+                padding: 40px 20px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            section {
+                padding: 40px 20px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="#" class="logo">🚗 RideShare SA</a>
+            <ul class="nav-links">
+                <li><a href="./index.html">Enter Platform</a></li>
+                <li><a href="./index.html" onclick="sessionStorage.setItem('redirect', '/search'); return true;">Search Vehicles</a></li>
+                <li><a href="./index.html" onclick="sessionStorage.setItem('redirect', '/signup'); return true;">Sign Up</a></li>
+                <li><a href="./index.html" onclick="sessionStorage.setItem('redirect', '/about'); return true;">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero fade-in">
+            <div class="container">
+                <h1>Welcome to RideShare SA 🇿🇦</h1>
+                <p>South Africa's Premier Peer-to-Peer Vehicle Rental Platform</p>
+                <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+                    Connecting vehicle owners with renters across all 9 provinces. 
+                    From Cape Town to Johannesburg, discover a smarter way to rent and share vehicles.
+                </p>
+                
+                <!-- Main Enter Platform Button -->
+                <div style="margin: 2rem 0;">
+                    <a href="./index.html" class="btn btn-enter-platform">
+                        🚗 Enter Platform →
+                    </a>
+                </div>
+                
+                <div class="cta-buttons">
+                    <a href="./index.html" onclick="sessionStorage.setItem('redirect', '/search'); return true;" class="btn btn-primary">🔍 Start Renting</a>
+                    <a href="./index.html" onclick="sessionStorage.setItem('redirect', '/signup'); return true;" class="btn btn-secondary">🚗 List Your Vehicle</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- What is RideShare SA -->
+        <section>
+            <div class="container">
+                <h2 class="section-title">What is RideShare SA?</h2>
+                <div class="section-divider"></div>
+                
+                <div class="glass-card">
+                    <p style="font-size: 1.2rem; margin-bottom: 1.5rem; line-height: 1.8;">
+                        <strong style="color: white; font-size: 1.3rem;">RideShare SA</strong> is an innovative peer-to-peer vehicle rental platform 
+                        designed specifically for the South African market. We connect vehicle owners (hosts) with people who need 
+                        to rent vehicles (renters), creating a trusted community marketplace for vehicle sharing.
+                    </p>
+                    
+                    <p style="font-size: 1.1rem; margin-bottom: 1.5rem; line-height: 1.8; color: var(--text-gray);">
+                        Whether you're a tourist exploring the Garden Route, a business professional needing a reliable vehicle, 
+                        or a local looking for a bakkie to move furniture, RideShare SA makes it easy to find and rent the perfect 
+                        vehicle from trusted hosts in your area.
+                    </p>
+
+                    <p style="font-size: 1.1rem; line-height: 1.8; color: var(--text-gray);">
+                        For vehicle owners, RideShare SA provides an opportunity to earn extra income by renting out your vehicle 
+                        when you're not using it. Our platform handles bookings, payments, and provides insurance coverage, making 
+                        it safe and easy to become a host.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Features -->
+        <section>
+            <div class="container">
+                <h2 class="section-title">Why Choose RideShare SA?</h2>
+                <div class="section-divider"></div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🛡️</div>
+                        <h3>Safe & Secure</h3>
+                        <p>All vehicles are verified, insured, and backed by our comprehensive safety system. Real-time tracking and emergency support available.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🗺️</div>
+                        <h3>Nationwide Coverage</h3>
+                        <p>Available across all 9 provinces of South Africa. From major cities to tourist destinations, find vehicles wherever you need them.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">💳</div>
+                        <h3>Local Payment Options</h3>
+                        <p>Pay with EFT, PayFast, SnapScan, Zapper, or credit cards. Transparent pricing with no hidden fees.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🚗</div>
+                        <h3>Wide Vehicle Selection</h3>
+                        <p>Choose from sedans, SUVs, bakkies, trucks, luxury vehicles, and more. Find the perfect vehicle for your needs.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">👥</div>
+                        <h3>Trusted Community</h3>
+                        <p>Verified hosts and renters with ratings and reviews. Build trust through our community-driven platform.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">⏰</div>
+                        <h3>Flexible Booking</h3>
+                        <p>Book instantly or request approval. Same-day bookings available. Modify or cancel with ease.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h3>Earn Extra Income</h3>
+                        <p>For hosts: Turn your idle vehicle into income. Set your own prices and availability. Track earnings in real-time.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>Mobile Optimized</h3>
+                        <p>Fully responsive design works perfectly on mobile, tablet, and desktop. PWA support for app-like experience.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>South African Context</h3>
+                        <p>Loadshedding awareness, local events integration, 11 official languages support, and cultural sensitivity built-in.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section>
+            <div class="container">
+                <h2 class="section-title">How It Works</h2>
+                <div class="section-divider"></div>
+
+                <div class="how-it-works">
+                    <div class="workflow-card">
+                        <h3>👤 For Renters</h3>
+                        <ol>
+                            <li>
+                                <div>
+                                    <strong>Sign Up</strong>
+                                    <span style="color: var(--text-gray);">Create your free account and verify your identity</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Search</strong>
+                                    <span style="color: var(--text-gray);">Find vehicles by location, type, price, and availability</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Book</strong>
+                                    <span style="color: var(--text-gray);">Reserve your vehicle and pay securely online</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Drive</strong>
+                                    <span style="color: var(--text-gray);">Pick up your vehicle and enjoy your journey</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Return & Review</strong>
+                                    <span style="color: var(--text-gray);">Return the vehicle and share your experience</span>
+                                </div>
+                            </li>
+                        </ol>
+                        <a href="./index.html" onclick="sessionStorage.setItem('redirect', '/signup'); return true;" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Get Started as Renter</a>
+                    </div>
+
+                    <div class="workflow-card">
+                        <h3>🚗 For Hosts</h3>
+                        <ol>
+                            <li>
+                                <div>
+                                    <strong>Register</strong>
+                                    <span style="color: var(--text-gray);">Create your host account and verify your vehicle</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>List</strong>
+                                    <span style="color: var(--text-gray);">Add your vehicle with photos, details, and pricing</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Get Approved</strong>
+                                    <span style="color: var(--text-gray);">Our team reviews and approves your listing</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Receive Bookings</strong>
+                                    <span style="color: var(--text-gray);">Renters find and book your vehicle</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Earn Money</strong>
+                                    <span style="color: var(--text-gray);">Get paid securely and track your earnings</span>
+                                </div>
+                            </li>
+                        </ol>
+                        <a href="./index.html" onclick="sessionStorage.setItem('redirect', '/signup'); return true;" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">Become a Host</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- South African Context -->
+        <section>
+            <div class="container">
+                <h2 class="section-title">Built for South Africa 🇿🇦</h2>
+                <div class="section-divider"></div>
+
+                <div class="glass-card sa-context">
+                    <div class="sa-grid">
+                        <div class="sa-item">
+                            <h3>📍 Nationwide Coverage</h3>
+                            <p style="color: var(--text-gray);">
+                                Available across all 9 provinces: Western Cape, Eastern Cape, KwaZulu-Natal, 
+                                Gauteng, Mpumalanga, Limpopo, North West, Free State, and Northern Cape.
+                                Major cities including Cape Town, Johannesburg, Durban, Pretoria, and Port Elizabeth.
+                            </p>
+                        </div>
+
+                        <div class="sa-item">
+                            <h3>🌍 Local Support</h3>
+                            <p style="color: var(--text-gray);">
+                                Support for all 11 official languages. Cultural sensitivity and local business 
+                                etiquette built into the platform. Loadshedding awareness, local events integration, 
+                                and South African regulations compliance.
+                            </p>
+                        </div>
+
+                        <div class="sa-item">
+                            <h3>💳 Local Payment Methods</h3>
+                            <p style="color: var(--text-gray);">
+                                EFT transfers, PayFast, SnapScan, Zapper, and international credit cards supported.
+                                Transparent pricing in ZAR with no hidden fees. Competitive rates for all vehicle types.
+                            </p>
+                        </div>
+
+                        <div class="sa-item">
+                            <h3>🚙 South African Vehicles</h3>
+                            <p style="color: var(--text-gray);">
+                                Popular vehicles including Toyota Hilux, Ford Ranger, Toyota Fortuner, and more.
+                                From economy cars to luxury vehicles, bakkies to SUVs - find what South Africans drive.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section>
+            <div class="container">
+                <div class="glass-card sa-context" style="text-align: center; padding: 3rem;">
+                    <h2 class="section-title" style="margin-bottom: 1.5rem;">Ready to Get Started?</h2>
+                    <p style="font-size: 1.2rem; margin-bottom: 2rem; color: var(--text-gray); max-width: 600px; margin-left: auto; margin-right: auto;">
+                        Join thousands of South Africans who are already using RideShare SA to rent and share vehicles. 
+                        Start your journey today!
+                    </p>
+                    <div class="cta-buttons">
+                        <a href="./index.html" class="btn btn-enter-platform" style="font-size: 1.1rem; padding: 16px 40px;">
+                            🚗 Enter Platform →
+                        </a>
+                        <a href="./index.html" onclick="sessionStorage.setItem('redirect', '/search'); return true;" class="btn btn-primary">🔍 Browse Vehicles</a>
+                        <a href="./index.html" onclick="sessionStorage.setItem('redirect', '/signup'); return true;" class="btn btn-secondary">👤 Create Account</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p><strong>RideShare SA</strong> - South Africa's Premier Peer-to-Peer Vehicle Rental Platform</p>
+            <p style="font-size: 0.9rem; margin-top: 1rem;">
+                &copy; 2024 RideShare SA. All rights reserved. | 
+                <a href="/contact" style="color: var(--primary-blue); text-decoration: none;">Contact Us</a> | 
+                <a href="/faq" style="color: var(--primary-blue); text-decoration: none;">FAQ</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Fade in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .workflow-card, .glass-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
+

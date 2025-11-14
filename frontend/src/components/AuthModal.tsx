@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import Icon from './Icon';
-import GlassCard from './GlassCard';
-import GlassButton from './GlassButton';
-import DocumentUpload from './DocumentUpload';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Mail, Lock, User, Phone, Eye, EyeOff, CheckCircle, AlertCircle, Car } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -11,20 +9,27 @@ interface AuthModalProps {
   initialMode?: 'login' | 'signup';
 }
 
+interface FormErrors {
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  general?: string;
+}
+
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login' }) => {
   const { login, signup, loading } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
-  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [successMessage, setSuccessMessage] = useState('');
 
-  // Login form data
-  const [loginData, setLoginData] = useState({
-    email: '',
-    password: ''
-  });
-
-  // Signup form data
-  const [signupData, setSignupData] = useState({
+  // Form data
+  const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
@@ -34,136 +39,25 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     role: 'Renter' as 'Renter' | 'Host'
   });
 
-  // Document upload state
-  const [documents, setDocuments] = useState({
-    idDocument: null as File | null,
-    driverLicense: null as File | null,
-    proofOfAddress: null as File | null
-  });
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  // Reset form data when modal opens/closes or mode changes
+  // Reset form when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode);
-      setError('');
-      setIsSubmitting(false);
+      setErrors({});
+      setSuccessMessage('');
+      setFormData({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        firstName: '',
+        lastName: '',
+        phone: '',
+        role: 'Renter'
+      });
     }
   }, [isOpen, initialMode]);
-
-  // Handle login form changes
-  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setLoginData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setError('');
-  };
-
-  // Handle signup form changes
-  const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setSignupData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setError('');
-  };
-
-  // Handle document upload
-  const handleDocumentUpload = (documentType: string, file: File | null) => {
-    setDocuments(prev => ({
-      ...prev,
-      [documentType]: file
-    }));
-  };
-
-  // Handle login submission
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
-
-    try {
-      await login(loginData.email, loginData.password);
-      onClose(); // Close modal on successful login
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Handle signup submission
-  const handleSignupSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
-
-    // Validation
-    if (signupData.password !== signupData.confirmPassword) {
-      setError('Passwords do not match');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (signupData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Check for required documents based on role
-    if (signupData.role === 'Host' && (!documents.idDocument || !documents.driverLicense)) {
-      setError('Please upload required documents to complete your registration');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (signupData.role === 'Renter' && !documents.driverLicense) {
-      setError('Please upload your driver\'s license to complete your registration');
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      await signup(
-        signupData.email,
-        signupData.password,
-        signupData.firstName,
-        signupData.lastName,
-        signupData.phone,
-        signupData.role
-      );
-      onClose(); // Close modal on successful signup
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Handle modal close
-  const handleClose = () => {
-    setError('');
-    setIsSubmitting(false);
-    setLoginData({ email: '', password: '' });
-    setSignupData({
-      email: '',
-      password: '',
-      confirmPassword: '',
-      firstName: '',
-      lastName: '',
-      phone: '',
-      role: 'Renter'
-    });
-    setDocuments({
-      idDocument: null,
-      driverLicense: null,
-      proofOfAddress: null
-    });
-    onClose();
-  };
 
   // Handle escape key
   useEffect(() => {
@@ -175,7 +69,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+      document.body.style.overflow = 'hidden';
     }
 
     return () => {
@@ -184,370 +78,600 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     };
   }, [isOpen]);
 
+  // Validate email
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Validate password strength
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    if (password.length > 128) {
+      return 'Password is too long';
+    }
+    return null;
+  };
+
+  // Handle input changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error for this field
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+    
+    // Clear general error
+    if (errors.general) {
+      setErrors(prev => ({ ...prev, general: undefined }));
+    }
+  };
+
+  // Validate form
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (mode === 'signup') {
+      if (!formData.firstName.trim()) {
+        newErrors.firstName = 'First name is required';
+      }
+      if (!formData.lastName.trim()) {
+        newErrors.lastName = 'Last name is required';
+      }
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else {
+      const passwordError = validatePassword(formData.password);
+      if (passwordError) {
+        newErrors.password = passwordError;
+      }
+    }
+
+    if (mode === 'signup') {
+      if (!formData.confirmPassword) {
+        newErrors.confirmPassword = 'Please confirm your password';
+      } else if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle login
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+    setSuccessMessage('');
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await login(formData.email, formData.password);
+      setSuccessMessage('Login successful! Redirecting...');
+      setTimeout(() => {
+        onClose();
+      }, 500);
+    } catch (error: any) {
+      setErrors({
+        general: error.message || 'Failed to sign in. Please check your credentials and try again.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle signup
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+    setSuccessMessage('');
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await signup(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName,
+        formData.phone,
+        formData.role
+      );
+      setSuccessMessage('Account created successfully! Redirecting...');
+      setTimeout(() => {
+        onClose();
+      }, 500);
+    } catch (error: any) {
+      setErrors({
+        general: error.message || 'Failed to create account. Please try again.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle close
+  const handleClose = () => {
+    if (isSubmitting) return;
+    setErrors({});
+    setSuccessMessage('');
+    setFormData({
+      email: '',
+      password: '',
+      confirmPassword: '',
+      firstName: '',
+      lastName: '',
+      phone: '',
+      role: 'Renter'
+    });
+    onClose();
+  };
+
+  // Click outside to close
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget && !isSubmitting) {
+      handleClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={handleClose}
-      />
-      
-      {/* Modal */}
-      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <GlassCard className="p-6">
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+        onClick={handleBackdropClick}
+      >
+        <motion.div
+          ref={modalRef}
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.3, type: 'spring', damping: 25 }}
+          className="relative w-full max-w-md bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Decorative gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10 pointer-events-none" />
+          
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                <Icon name="Car" size="sm" className="text-white" />
+          <div className="relative p-6 border-b border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
+                  <Car className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+                  </h2>
+                  <p className="text-sm text-white/60 mt-0.5">
+                    {mode === 'login' ? 'Sign in to continue' : 'Join RideShare SA today'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">
-                  {mode === 'login' ? 'Welcome back' : 'Join RideShare SA'}
-                </h2>
-                <p className="text-sm text-white/70">
-                  {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleClose}
-              className="glass-button p-2 text-white/70 hover:text-white transition-colors"
-            >
-              <Icon name="X" size="sm" />
-            </button>
-          </div>
-
-          {/* Mode Toggle */}
-          <div className="flex bg-white/10 rounded-lg p-1 mb-6">
-            <button
-              onClick={() => setMode('login')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                mode === 'login'
-                  ? 'bg-white/20 text-white shadow-sm'
-                  : 'text-white/70 hover:text-white'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => setMode('signup')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                mode === 'signup'
-                  ? 'bg-white/20 text-white shadow-sm'
-                  : 'text-white/70 hover:text-white'
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 text-red-200 text-sm mb-6">
-              {error}
-            </div>
-          )}
-
-          {/* Login Form */}
-          {mode === 'login' && (
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="login-email" className="block text-sm font-medium text-white/70 mb-2">
-                  Email address
-                </label>
-                <input
-                  id="login-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={loginData.email}
-                  onChange={handleLoginChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                  placeholder="Enter your email"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="login-password" className="block text-sm font-medium text-white/70 mb-2">
-                  Password
-                </label>
-                <input
-                  id="login-password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={loginData.password}
-                  onChange={handleLoginChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                  placeholder="Enter your password"
-                />
-              </div>
-
-              <GlassButton
-                type="submit"
-                disabled={isSubmitting || loading}
-                className="w-full flex justify-center items-center space-x-2"
+              <button
+                onClick={handleClose}
+                disabled={isSubmitting}
+                className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting || loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Signing in...</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="Login" size="sm" />
-                    <span>Sign in</span>
-                  </>
-                )}
-              </GlassButton>
-            </form>
-          )}
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-          {/* Signup Form */}
-          {mode === 'signup' && (
-            <form onSubmit={handleSignupSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            {/* Mode Toggle */}
+            <div className="mt-6 flex bg-white/5 rounded-xl p-1 border border-white/10">
+              <button
+                onClick={() => {
+                  setMode('login');
+                  setErrors({});
+                }}
+                disabled={isSubmitting}
+                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  mode === 'login'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                    : 'text-white/70 hover:text-white'
+                } disabled:opacity-50`}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => {
+                  setMode('signup');
+                  setErrors({});
+                }}
+                disabled={isSubmitting}
+                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  mode === 'signup'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                    : 'text-white/70 hover:text-white'
+                } disabled:opacity-50`}
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="relative p-6 max-h-[70vh] overflow-y-auto">
+            {/* Success Message */}
+            {successMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-4 bg-green-500/20 border border-green-500/30 rounded-xl flex items-center space-x-3"
+              >
+                <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
+                <p className="text-sm text-green-200">{successMessage}</p>
+              </motion.div>
+            )}
+
+            {/* Error Message */}
+            {errors.general && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-4 bg-red-500/20 border border-red-500/30 rounded-xl flex items-center space-x-3"
+              >
+                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
+                <p className="text-sm text-red-200">{errors.general}</p>
+              </motion.div>
+            )}
+
+            {/* Login Form */}
+            {mode === 'login' && (
+              <motion.form
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                onSubmit={handleLogin}
+                className="space-y-5"
+              >
+                {/* Email */}
                 <div>
-                  <label htmlFor="signup-firstName" className="block text-sm font-medium text-white/70 mb-2">
-                    First name
+                  <label htmlFor="login-email" className="block text-sm font-medium text-white/90 mb-2">
+                    Email Address
                   </label>
-                  <input
-                    id="signup-firstName"
-                    name="firstName"
-                    type="text"
-                    autoComplete="given-name"
-                    required
-                    value={signupData.firstName}
-                    onChange={handleSignupChange}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                    placeholder="First name"
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+                    <input
+                      id="login-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={`w-full pl-11 pr-4 py-3 bg-white/5 border ${
+                        errors.email ? 'border-red-500/50' : 'border-white/20'
+                      } rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all`}
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="mt-1.5 text-xs text-red-400 flex items-center space-x-1">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.email}</span>
+                    </p>
+                  )}
                 </div>
+
+                {/* Password */}
                 <div>
-                  <label htmlFor="signup-lastName" className="block text-sm font-medium text-white/70 mb-2">
-                    Last name
-                  </label>
-                  <input
-                    id="signup-lastName"
-                    name="lastName"
-                    type="text"
-                    autoComplete="family-name"
-                    required
-                    value={signupData.lastName}
-                    onChange={handleSignupChange}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                    placeholder="Last name"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="signup-email" className="block text-sm font-medium text-white/70 mb-2">
-                  Email address
-                </label>
-                <input
-                  id="signup-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={signupData.email}
-                  onChange={handleSignupChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                  placeholder="Enter your email"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="signup-phone" className="block text-sm font-medium text-white/70 mb-2">
-                  Phone number (optional)
-                </label>
-                <input
-                  id="signup-phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  value={signupData.phone}
-                  onChange={handleSignupChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                  placeholder="Enter your phone number"
-                />
-              </div>
-
-               <div>
-                 <label htmlFor="signup-role" className="block text-sm font-medium text-white/70 mb-2">
-                   I want to
-                 </label>
-                 <select
-                   id="signup-role"
-                   name="role"
-                   required
-                   value={signupData.role}
-                   onChange={handleSignupChange}
-                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                 >
-                   <option value="Renter" className="bg-gray-800 text-white">
-                     Rent vehicles from others
-                   </option>
-                   <option value="Host" className="bg-gray-800 text-white">
-                     Rent out my vehicles
-                   </option>
-                 </select>
-               </div>
-
-               {/* Document Upload Section for Host Role */}
-               {signupData.role === 'Host' && (
-                 <div className="mt-6 p-6 bg-white/5 rounded-xl border border-white/10">
-                   <div className="flex items-center space-x-3 mb-4">
-                     <Icon name="FileText" size="md" className="text-blue-400" />
-                     <h3 className="text-lg font-semibold text-white">Required Documents</h3>
-                   </div>
-                   <p className="text-white/70 text-sm mb-6">
-                     Please upload the required documents to complete your registration. These documents help us verify your identity and ensure platform safety.
-                   </p>
-                   
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div>
-                       <label className="block text-sm font-medium text-white/80 mb-2">
-                         ID Document *
-                       </label>
-                       <p className="text-white/60 text-xs mb-3">
-                         South African ID, passport, or driver's license
-                       </p>
-                       <DocumentUpload
-                         label=""
-                         name="idDocument"
-                         onChange={(file) => handleDocumentUpload('idDocument', file)}
-                         acceptedTypes={['image/*', 'application/pdf']}
-                         maxSize={5}
-                       />
-                     </div>
-                     
-                     <div>
-                       <label className="block text-sm font-medium text-white/80 mb-2">
-                         Driver's License *
-                       </label>
-                       <p className="text-white/60 text-xs mb-3">
-                         Valid South African driver's license
-                       </p>
-                       <DocumentUpload
-                         label=""
-                         name="driverLicense"
-                         onChange={(file) => handleDocumentUpload('driverLicense', file)}
-                         acceptedTypes={['image/*', 'application/pdf']}
-                         maxSize={5}
-                       />
-                     </div>
-                   </div>
-                 </div>
-               )}
-
-               {/* Document Upload Section for Renter Role */}
-               {signupData.role === 'Renter' && (
-                 <div className="mt-6 p-6 bg-white/5 rounded-xl border border-white/10">
-                   <div className="flex items-center space-x-3 mb-4">
-                     <Icon name="FileText" size="md" className="text-green-400" />
-                     <h3 className="text-lg font-semibold text-white">Driver Verification</h3>
-                   </div>
-                   <p className="text-white/70 text-sm mb-6">
-                     Please upload your driver's license to verify your driving eligibility. This helps ensure a safe and secure rental experience.
-                   </p>
-                   
-                   <div className="grid grid-cols-1 gap-6">
-                     <div>
-                       <label className="block text-sm font-medium text-white/80 mb-2">
-                         Driver's License *
-                       </label>
-                       <p className="text-white/60 text-xs mb-3">
-                         Valid South African driver's license (front and back)
-                       </p>
-                       <DocumentUpload
-                         label=""
-                         name="driverLicense"
-                         onChange={(file) => handleDocumentUpload('driverLicense', file)}
-                         acceptedTypes={['image/*', 'application/pdf']}
-                         maxSize={5}
-                       />
-                     </div>
-                   </div>
-                 </div>
-               )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="signup-password" className="block text-sm font-medium text-white/70 mb-2">
+                  <label htmlFor="login-password" className="block text-sm font-medium text-white/90 mb-2">
                     Password
                   </label>
-                  <input
-                    id="signup-password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    value={signupData.password}
-                    onChange={handleSignupChange}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                    placeholder="Create password"
-                  />
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+                    <input
+                      id="login-password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      required
+                      value={formData.password}
+                      onChange={handleChange}
+                      className={`w-full pl-11 pr-11 py-3 bg-white/5 border ${
+                        errors.password ? 'border-red-500/50' : 'border-white/20'
+                      } rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all`}
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="mt-1.5 text-xs text-red-400 flex items-center space-x-1">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.password}</span>
+                    </p>
+                  )}
                 </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting || loading}
+                  className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {isSubmitting || loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                      <span>Signing in...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-5 w-5" />
+                      <span>Sign In</span>
+                    </>
+                  )}
+                </button>
+              </motion.form>
+            )}
+
+            {/* Signup Form */}
+            {mode === 'signup' && (
+              <motion.form
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                onSubmit={handleSignup}
+                className="space-y-5"
+              >
+                {/* Name Fields */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="signup-firstName" className="block text-sm font-medium text-white/90 mb-2">
+                      First Name
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+                      <input
+                        id="signup-firstName"
+                        name="firstName"
+                        type="text"
+                        autoComplete="given-name"
+                        required
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        className={`w-full pl-11 pr-4 py-3 bg-white/5 border ${
+                          errors.firstName ? 'border-red-500/50' : 'border-white/20'
+                        } rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all`}
+                        placeholder="John"
+                      />
+                    </div>
+                    {errors.firstName && (
+                      <p className="mt-1.5 text-xs text-red-400 flex items-center space-x-1">
+                        <AlertCircle className="h-3 w-3" />
+                        <span>{errors.firstName}</span>
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="signup-lastName" className="block text-sm font-medium text-white/90 mb-2">
+                      Last Name
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+                      <input
+                        id="signup-lastName"
+                        name="lastName"
+                        type="text"
+                        autoComplete="family-name"
+                        required
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        className={`w-full pl-11 pr-4 py-3 bg-white/5 border ${
+                          errors.lastName ? 'border-red-500/50' : 'border-white/20'
+                        } rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all`}
+                        placeholder="Doe"
+                      />
+                    </div>
+                    {errors.lastName && (
+                      <p className="mt-1.5 text-xs text-red-400 flex items-center space-x-1">
+                        <AlertCircle className="h-3 w-3" />
+                        <span>{errors.lastName}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email */}
                 <div>
-                  <label htmlFor="signup-confirmPassword" className="block text-sm font-medium text-white/70 mb-2">
-                    Confirm password
+                  <label htmlFor="signup-email" className="block text-sm font-medium text-white/90 mb-2">
+                    Email Address
                   </label>
-                  <input
-                    id="signup-confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    value={signupData.confirmPassword}
-                    onChange={handleSignupChange}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                    placeholder="Confirm password"
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+                    <input
+                      id="signup-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={`w-full pl-11 pr-4 py-3 bg-white/5 border ${
+                        errors.email ? 'border-red-500/50' : 'border-white/20'
+                      } rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all`}
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="mt-1.5 text-xs text-red-400 flex items-center space-x-1">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.email}</span>
+                    </p>
+                  )}
                 </div>
-              </div>
 
-              <GlassButton
-                type="submit"
-                disabled={isSubmitting || loading}
-                className="w-full flex justify-center items-center space-x-2"
-              >
-                {isSubmitting || loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Creating account...</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="Plus" size="sm" />
-                    <span>Create account</span>
-                  </>
-                )}
-              </GlassButton>
-            </form>
-          )}
+                {/* Phone (Optional) */}
+                <div>
+                  <label htmlFor="signup-phone" className="block text-sm font-medium text-white/90 mb-2">
+                    Phone Number <span className="text-white/50 text-xs">(Optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+                    <input
+                      id="signup-phone"
+                      name="phone"
+                      type="tel"
+                      autoComplete="tel"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                      placeholder="+27 12 345 6789"
+                    />
+                  </div>
+                </div>
 
-          {/* Footer */}
-          <div className="mt-6 text-center">
-            <p className="text-white/60 text-sm">
-              {mode === 'login' ? 'Don\'t have an account? ' : 'Already have an account? '}
-              <button
-                onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-                className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
-              >
-                {mode === 'login' ? 'Sign up here' : 'Sign in here'}
-              </button>
-            </p>
+                {/* Role Selection */}
+                <div>
+                  <label htmlFor="signup-role" className="block text-sm font-medium text-white/90 mb-2">
+                    I want to
+                  </label>
+                  <select
+                    id="signup-role"
+                    name="role"
+                    required
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="Renter" className="bg-slate-800">Rent vehicles from others</option>
+                    <option value="Host" className="bg-slate-800">Rent out my vehicles</option>
+                  </select>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label htmlFor="signup-password" className="block text-sm font-medium text-white/90 mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+                    <input
+                      id="signup-password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      required
+                      value={formData.password}
+                      onChange={handleChange}
+                      className={`w-full pl-11 pr-11 py-3 bg-white/5 border ${
+                        errors.password ? 'border-red-500/50' : 'border-white/20'
+                      } rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all`}
+                      placeholder="Minimum 6 characters"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="mt-1.5 text-xs text-red-400 flex items-center space-x-1">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.password}</span>
+                    </p>
+                  )}
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label htmlFor="signup-confirmPassword" className="block text-sm font-medium text-white/90 mb-2">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+                    <input
+                      id="signup-confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      required
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className={`w-full pl-11 pr-11 py-3 bg-white/5 border ${
+                        errors.confirmPassword ? 'border-red-500/50' : 'border-white/20'
+                      } rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all`}
+                      placeholder="Re-enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="mt-1.5 text-xs text-red-400 flex items-center space-x-1">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.confirmPassword}</span>
+                    </p>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting || loading}
+                  className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {isSubmitting || loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                      <span>Creating account...</span>
+                    </>
+                  ) : (
+                    <>
+                      <User className="h-5 w-5" />
+                      <span>Create Account</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Terms */}
+                <p className="text-xs text-white/50 text-center">
+                  By creating an account, you agree to our Terms of Service and Privacy Policy
+                </p>
+              </motion.form>
+            )}
           </div>
-        </GlassCard>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

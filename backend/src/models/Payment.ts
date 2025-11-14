@@ -20,8 +20,8 @@ export interface PaymentAttributes {
   created_at?: Date;
   
   // Missing properties from errors
-  renter_id?: number;
-  host_id?: number;
+  renter_id?: string;
+  host_id?: string;
   payment_method?: string;
   paymentStatus?: string;
   payment_metadata?: any;
@@ -52,8 +52,8 @@ export class Payment extends Model<InferAttributes<Payment>, InferCreationAttrib
   declare created_at?: Date;
   
   // Missing properties from errors
-  declare renter_id?: number;
-  declare host_id?: number;
+  declare renter_id?: string;
+  declare host_id?: string;
   declare payment_method?: string;
   declare paymentStatus?: string;
   declare payment_metadata?: any;
@@ -155,11 +155,11 @@ Payment.init({
   
   // Missing properties from errors
   renter_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: true,
   },
   host_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: true,
   },
   payment_method: {

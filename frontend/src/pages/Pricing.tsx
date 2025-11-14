@@ -27,9 +27,9 @@ const Pricing: React.FC = () => {
   return (
     <div className="page-background">
       <SEO 
-        title="Vehicle Rental Pricing - RideShare SA"
-        description="Transparent pricing for all vehicle types in South Africa. From economy cars to luxury coaches, find the perfect vehicle for your budget."
-        keywords="vehicle rental pricing South Africa, car rental rates Cape Town, bakkie rental Johannesburg, SUV rental Durban, transparent pricing"
+        title="Free Vehicle Rental - RideShare SA"
+        description="Completely free vehicle rentals in South Africa. From economy cars to luxury coaches, all vehicles available at zero cost."
+        keywords="free vehicle rental South Africa, free car rental Cape Town, free bakkie rental Johannesburg, free SUV rental Durban, zero cost rental"
         url="https://rideshare-sa.co.za/pricing"
       />
       
@@ -38,10 +38,10 @@ const Pricing: React.FC = () => {
           {/* Header */}
           <div className="text-center mb-16">
             <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-6">
-              Transparent Pricing
+              Free Vehicle Rental
             </h1>
             <p className="text-xl text-white/80 max-w-3xl mx-auto">
-              No hidden fees, no surprises. Our competitive rates are designed for the South African market with flexible options for every budget.
+              All vehicle rentals are completely free! No hidden fees, no surprises. Experience our full range of vehicles at zero cost.
             </p>
           </div>
 
@@ -216,10 +216,10 @@ const Pricing: React.FC = () => {
           {/* CTA Section */}
           <div className="text-center">
             <h2 className="text-3xl font-bold text-white mb-6">
-              Ready to Find Your Perfect Vehicle?
+              Ready to Get Your Free Vehicle?
             </h2>
             <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-              Browse our extensive selection of vehicles and find the perfect match for your needs and budget.
+              Browse our extensive selection of vehicles and get your perfect match completely free of charge.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link

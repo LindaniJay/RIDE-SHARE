@@ -1,51 +1,50 @@
-# Multi-stage build for production
-FROM node:18-alpine AS base
+# RideShare.SA Backend Dockerfile
+# Fresh build - 2025-10-28
 
-# Install dependencies only when needed
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:18-alpine
+
+# Set working directory
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+# Install system dependencies
+RUN apk add --no-cache \
+    curl \
+    postgresql-client \
+    python3 \
+    make \
+    g++
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy source code
 COPY . .
 
-# Build the application
+# Create necessary directories
+RUN mkdir -p uploads logs
+
+# Build TypeScript
 RUN npm run build
 
-# Production image, copy all the files and run the app
-FROM base AS runner
-WORKDIR /app
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
-# Create a non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nodejs
-
-# Copy the built application
-COPY --from=builder /app/dist ./dist
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-
-# Create uploads directory
-RUN mkdir -p uploads logs
-RUN chown -R nodejs:nodejs uploads logs
+# Change ownership of the app directory
+RUN chown -R nodejs:nodejs /app
 
 # Switch to non-root user
 USER nodejs
 
 # Expose port
-EXPOSE 5000
+EXPOSE 5001
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5001/api/health || exit 1
 
 # Start the application
 CMD ["npm", "start"]

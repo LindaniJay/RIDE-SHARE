@@ -3,7 +3,7 @@
 // import { listingService } from './services/productionListingService';
 // import { apiClient } from './services/productionApiClient';
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense, lazy, useEffect } from 'react';
@@ -20,6 +20,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 const Home = lazy(() => import('./pages/Home'));
 const Search = lazy(() => import('./pages/Search'));
 const VehicleDetail = lazy(() => import('./pages/VehicleDetail'));
+const UnifiedCheckout = lazy(() => import('./pages/UnifiedCheckout'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 // Import Dashboard directly to avoid dynamic import issues
@@ -51,6 +52,21 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Component to handle redirects from landing page
+function RedirectHandler() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const redirectPath = sessionStorage.getItem('redirect');
+    if (redirectPath) {
+      sessionStorage.removeItem('redirect');
+      navigate(redirectPath, { replace: true });
+    }
+  }, [navigate]);
+  
+  return null;
+}
 
 function App() {
   // Global error handler for message channel errors
@@ -96,6 +112,7 @@ function App() {
         <ToastProvider>
             <ErrorBoundary>
               <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <RedirectHandler />
                 <AuthProvider>
                   <ThemeProvider>
               <div className="App">
@@ -104,6 +121,11 @@ function App() {
                         <Route path="/" element={<Layout><Home /></Layout>} />
                         <Route path="/search" element={<Layout><Search /></Layout>} />
                         <Route path="/vehicle/:id" element={<Layout><VehicleDetail /></Layout>} />
+                        <Route path="/checkout/:listingId" element={
+                          <ProtectedRoute>
+                            <Layout><UnifiedCheckout /></Layout>
+                          </ProtectedRoute>
+                        } />
                         <Route path="/about" element={<Layout><About /></Layout>} />
                         <Route path="/contact" element={<Layout><Contact /></Layout>} />
                         <Route path="/faq" element={<Layout><FAQ /></Layout>} />

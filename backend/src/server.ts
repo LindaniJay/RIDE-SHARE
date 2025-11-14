@@ -9,37 +9,36 @@ import { env } from './config/env';
 import { logger } from './utils/logger';
 import { sequelize } from './config/database';
 import { initializeFirebase } from './config/firebase';
+import { getSupabaseClient, getSupabaseAdminClient, testSupabaseConnection, isSupabaseConfigured } from './config/supabase';
 
 // Import routes
-import authRoutes from './routes/auth';
-import authRoutesNew from './routes/auth.routes';
+import authRoutes from './routes/auth.routes';
 import listingsRoutes from './routes/listings';
 import bookingsRoutes from './routes/bookings';
 import bookingsUnifiedRoutes from './routes/bookings-unified';
 import adminRoutes from './routes/admin';
-import enhancedAdminRoutes from './routes/enhancedAdmin';
 import notificationsRoutes from './routes/notifications';
 import hostRoutes from './routes/host';
 import paymentsRoutes from './routes/payments';
 import searchRoutes from './routes/search';
-import supportRoutes from './routes/support';
-import vehiclesRoutes from './routes/vehicles';
-import messagesRoutes from './routes/messages';
-import selfieVerificationRoutes from './routes/selfieVerification';
+import vehiclesRoutes from './routes/enhanced-vehicles';
+import enhancedAdminRoutes from './routes/enhanced-admin';
+import enhancedBookingsRoutes from './routes/enhanced-bookings';
+import approvalRequestsRoutes from './routes/approval-requests';
 import documentsRoutes from './routes/documents';
 import reviewsRoutes from './routes/reviews';
 import analyticsRoutes from './routes/analytics';
-import earningsRoutes from './routes/earnings';
 import dashboardRoutes from './routes/dashboard';
 import usersRoutes from './routes/users';
-import vehicleImagesRoutes from './routes/vehicle-images';
-import enhancedVehiclesRoutes from './routes/enhanced-vehicles';
 
 // Import models to ensure they're registered
 import './models/User';
 import './models/Listing';
 import './models/Booking';
 import './models/Notification';
+import './models/EnhancedVehicle';
+import './models/ApprovalRequest';
+import './models/AuditLog';
 
 const app = express();
 const server = createServer(app);
@@ -54,21 +53,37 @@ const io = new SocketIOServer(server, {
   path: env.SOCKET_IO_PATH
 });
 
-// Middleware
+// Security middleware
 app.use(helmet({
-  contentSecurityPolicy: false, // Disable CSP for development
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "ws:", "wss:"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
   crossOriginEmbedderPolicy: false
 }));
 
+// CORS configuration
 app.use(cors({
   origin: env.FRONTEND_URLS.split(','),
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Firebase-Token']
 }));
 
+// Compression and logging
 app.use(compression());
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
+
+// Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -78,34 +93,35 @@ app.get('/api/health', (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     environment: env.NODE_ENV,
-    version: '1.0.0'
+    version: '2.0.0',
+    database: 'connected',
+    services: {
+      firebase: 'connected',
+      socketio: 'active',
+      redis: 'connected'
+    }
   });
 });
 
 // API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/auth', authRoutesNew);
 app.use('/api/listings', listingsRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/bookings', bookingsUnifiedRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/admin', enhancedAdminRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/host', hostRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/search', searchRoutes);
-app.use('/api/support', supportRoutes);
 app.use('/api/vehicles', vehiclesRoutes);
-app.use('/api/messages', messagesRoutes);
-app.use('/api/selfie-verification', selfieVerificationRoutes);
+app.use('/api/admin/enhanced-vehicles', enhancedAdminRoutes);
+app.use('/api/enhanced-bookings', enhancedBookingsRoutes);
+app.use('/api/approval-requests', approvalRequestsRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/earnings', earningsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', usersRoutes);
-app.use('/api/vehicle-images', vehicleImagesRoutes);
-app.use('/api/enhanced-vehicles', enhancedVehiclesRoutes);
 
 // Placeholder image endpoint
 app.get('/api/placeholder/:width/:height', (req, res) => {
@@ -113,7 +129,6 @@ app.get('/api/placeholder/:width/:height', (req, res) => {
   const w = parseInt(width) || 300;
   const h = parseInt(height) || 200;
   
-  // Create a simple SVG placeholder
   const svg = `
     <svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
       <rect width="100%" height="100%" fill="#f3f4f6"/>
@@ -144,6 +159,12 @@ io.on('connection', (socket) => {
     logger.info(`Admin joined admin room`);
   });
   
+  // Handle booking notifications
+  socket.on('booking-update', (data) => {
+    io.to(`user-${data.hostId}`).emit('booking-notification', data);
+    io.to(`user-${data.renterId}`).emit('booking-notification', data);
+  });
+  
   socket.on('disconnect', () => {
     logger.info(`Client disconnected: ${socket.id}`);
   });
@@ -157,13 +178,18 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   logger.error('Unhandled error:', err);
   res.status(500).json({ 
     error: 'Internal server error',
-    message: env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    message: env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+    timestamp: new Date().toISOString()
   });
 });
 
 // 404 handler
 app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ 
+    error: 'Route not found',
+    path: req.originalUrl,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Database and server initialization
@@ -173,11 +199,38 @@ const initializeServer = async () => {
     await initializeFirebase();
     logger.info('Firebase Admin initialized');
 
+    // Initialize Supabase if configured
+    if (isSupabaseConfigured()) {
+      try {
+        // Initialize Supabase clients
+        const supabaseClient = getSupabaseClient();
+        const supabaseAdminClient = getSupabaseAdminClient();
+        
+        if (supabaseClient && supabaseAdminClient) {
+          // Test Supabase connection
+          const connectionTest = await testSupabaseConnection();
+          if (connectionTest) {
+            logger.info('Supabase client initialized and connection verified');
+          } else {
+            logger.warn('Supabase client initialized but connection test failed');
+          }
+        } else {
+          logger.warn('Supabase configuration incomplete - some clients could not be initialized');
+        }
+      } catch (error: any) {
+        logger.error('Failed to initialize Supabase:', error.message);
+        // Don't fail server startup if Supabase fails - it's optional
+        logger.warn('Continuing server startup without Supabase...');
+      }
+    } else {
+      logger.info('Supabase not configured - skipping initialization');
+    }
+
     // Test database connection
     await sequelize.authenticate();
     logger.info('Database connection established');
 
-    // Sync database models - force recreate in development
+    // Sync database models
     if (env.NODE_ENV === 'development') {
       await sequelize.sync({ force: true });
       logger.info('Database models recreated (development mode)');
@@ -189,12 +242,13 @@ const initializeServer = async () => {
     // Start server
     const port = env.PORT;
     server.listen(port, '0.0.0.0', () => {
-      logger.info(`🚀 Server running on http://localhost:${port}`);
+      logger.info(`🚀 RideShare.SA Server running on http://localhost:${port}`);
       logger.info(`📱 Environment: ${env.NODE_ENV}`);
       logger.info(`🔗 Frontend URLs: ${env.FRONTEND_URLS}`);
       logger.info(`📊 Socket.io path: ${env.SOCKET_IO_PATH}`);
       logger.info(`🔗 Health check: http://localhost:${port}/api/health`);
       logger.info(`🔌 WebSocket test: http://localhost:${port}/socket.io/`);
+      logger.info(`📊 Database: ${env.DATABASE_URL?.split('@')[1] || 'local'}`);
     });
 
     // Graceful shutdown

@@ -9,6 +9,7 @@ export const env = {
   
   // Firebase Admin SDK
   FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || 'ride-share-56610',
+  FIREBASE_SERVICE_ACCOUNT_PATH: process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
   FIREBASE_PRIVATE_KEY_ID: process.env.FIREBASE_PRIVATE_KEY_ID,
   FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
   FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
@@ -21,9 +22,11 @@ export const env = {
   SOCKET_IO_PATH: process.env.SOCKET_IO_PATH || '/socket.io/',
   
   // JWT
-  JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key',
+  // Note: JWT_SECRET and JWT_REFRESH_SECRET should be set in .env file
+  // Using strong defaults for development only - MUST be changed in production
+  JWT_SECRET: process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'dev-secret-key-change-in-production'),
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '24h',
-  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret',
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'dev-refresh-secret-change-in-production'),
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   
   // Rate limiting
@@ -49,4 +52,10 @@ export const env = {
   
   // Redis
   REDIS_URL: process.env.REDIS_URL,
+  
+  // Supabase
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  SUPABASE_DB_PASSWORD: process.env.SUPABASE_DB_PASSWORD,
 };

@@ -6,7 +6,7 @@ export interface ImageAttributes {
   listingId: number | null;
   url: string;
   category?: string;
-  userId?: number;
+  userId?: string;
   filename?: string;
   originalName?: string;
   mimeType?: string;
@@ -22,7 +22,7 @@ export class Image extends Model<InferAttributes<Image>, InferCreationAttributes
   declare listingId: number | null;
   declare url: string;
   declare category?: string;
-  declare userId?: number;
+  declare userId?: string;
   declare filename?: string;
   declare originalName?: string;
   declare mimeType?: string;
@@ -54,12 +54,13 @@ Image.init({
     allowNull: true,
   },
   userId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: true,
     references: {
       model: 'users',
       key: 'id',
     },
+    field: 'user_id',
   },
   filename: {
     type: DataTypes.STRING,

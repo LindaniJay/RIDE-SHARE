@@ -110,6 +110,33 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('VehicleDetail', { vehicleId });
   };
 
+  const handleNotificationPress = () => {
+    // Navigate to notifications - check if it exists in navigation stack
+    // For now, navigate to MainTabs and then to Messages/Notifications
+    navigation.navigate('MainTabs' as any);
+  };
+
+  const handleCategoryPress = (category: string) => {
+    // Navigate to search with category filter
+    navigation.navigate('Search' as any, { category });
+  };
+
+  const handleMyBookingsPress = () => {
+    // Navigate to bookings tab
+    navigation.navigate('MainTabs' as any, { screen: 'Bookings' });
+  };
+
+  const handleSavedVehiclesPress = () => {
+    // Navigate to search with saved filter or profile
+    navigation.navigate('MainTabs' as any, { screen: 'Profile' });
+  };
+
+  const handleSupportPress = () => {
+    // Navigate to support/contact screen
+    // For now, navigate to profile where support might be
+    navigation.navigate('MainTabs' as any, { screen: 'Profile' });
+  };
+
   const renderVehicleCard = ({ item }: { item: Vehicle }) => (
     <TouchableOpacity
       style={[styles.vehicleCard, { backgroundColor: theme.colors.surface }]}
@@ -138,17 +165,29 @@ const HomeScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
-  const renderCategoryCard = (category: string, icon: string, color: string) => (
-    <TouchableOpacity style={styles.categoryCard}>
-      <LinearGradient
-        colors={[color, `${color}80`]}
-        style={styles.categoryGradient}
+  const renderCategoryCard = (category: string, icon: string, color: string) => {
+    const categoryMap: { [key: string]: string } = {
+      'Sedan': 'sedan',
+      'SUV': 'suv',
+      'Bakkie': 'bakkie',
+      'Luxury': 'luxury',
+    };
+    
+    return (
+      <TouchableOpacity 
+        style={styles.categoryCard}
+        onPress={() => handleCategoryPress(categoryMap[category] || category.toLowerCase())}
       >
-        <Icon name={icon} size={32} color="white" />
-        <Text style={styles.categoryText}>{category}</Text>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
+        <LinearGradient
+          colors={[color, `${color}80`]}
+          style={styles.categoryGradient}
+        >
+          <Icon name={icon} size={32} color="white" />
+          <Text style={styles.categoryText}>{category}</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -163,7 +202,10 @@ const HomeScreen: React.FC = () => {
               {user?.firstName || 'Guest'}
             </Text>
           </View>
-          <TouchableOpacity style={[styles.notificationButton, { backgroundColor: theme.colors.surface }]}>
+          <TouchableOpacity 
+            style={[styles.notificationButton, { backgroundColor: theme.colors.surface }]}
+            onPress={handleNotificationPress}
+          >
             <Icon name="notifications" size={24} color={theme.colors.text} />
           </TouchableOpacity>
         </View>
@@ -242,21 +284,30 @@ const HomeScreen: React.FC = () => {
             Quick Actions
           </Text>
           <View style={styles.quickActionsContainer}>
-            <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: theme.colors.surface }]}>
+            <TouchableOpacity 
+              style={[styles.quickActionCard, { backgroundColor: theme.colors.surface }]}
+              onPress={handleMyBookingsPress}
+            >
               <Icon name="book-online" size={32} color={theme.colors.primary} />
               <Text style={[styles.quickActionText, { color: theme.colors.text }]}>
                 My Bookings
               </Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: theme.colors.surface }]}>
+            <TouchableOpacity 
+              style={[styles.quickActionCard, { backgroundColor: theme.colors.surface }]}
+              onPress={handleSavedVehiclesPress}
+            >
               <Icon name="favorite" size={32} color={theme.colors.error} />
               <Text style={[styles.quickActionText, { color: theme.colors.text }]}>
                 Saved Vehicles
               </Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: theme.colors.surface }]}>
+            <TouchableOpacity 
+              style={[styles.quickActionCard, { backgroundColor: theme.colors.surface }]}
+              onPress={handleSupportPress}
+            >
               <Icon name="support-agent" size={32} color={theme.colors.secondary} />
               <Text style={[styles.quickActionText, { color: theme.colors.text }]}>
                 Support

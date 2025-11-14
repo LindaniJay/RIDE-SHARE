@@ -143,6 +143,9 @@ backend/dist/
 backend/database.sqlite
 backend/logs/
 backend/uploads/
+backend/firebase-service-account.json
+**/firebase-service-account.json
+backup/
 
 # Frontend specific
 frontend/dist/

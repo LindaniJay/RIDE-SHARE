@@ -5,14 +5,14 @@ import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import messaging from '@react-native-firebase/messaging';
 
-// Initialize Firebase (replace with your actual config)
+// Initialize Firebase with actual project credentials
 const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "your-app-id"
+  apiKey: "AIzaSyCUn6sq5qode0tO73tfDgXneg03_CobxjI",
+  authDomain: "ride-share-56610.firebaseapp.com",
+  projectId: "ride-share-56610",
+  storageBucket: "ride-share-56610.firebasestorage.app",
+  messagingSenderId: "1074725088115",
+  appId: "1:1074725088115:web:9d53e6c7b24a497cf3b306"
 };
 
 // Initialize Firebase App

@@ -3,15 +3,15 @@ import { sequelize } from '../config/database';
 
 export interface BookingAttributes {
   id: number;
-  booking_id: string; // Unique booking identifier
-  renterId: number;
-  hostId: number;
+  bookingId: string; // Unique booking identifier
+  renterId: string;
+  hostId: string;
   vehicleId: number;
   listingId: number;
   startDate: Date;
   endDate: Date;
   totalPrice: number;
-  status: 'pending' | 'approved' | 'active' | 'completed' | 'cancelled';
+  status: 'pending' | 'approved' | 'active' | 'completed' | 'cancelled' | 'confirmed';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentMethod?: string;
   specialRequests?: string;
@@ -64,15 +64,15 @@ export interface BookingCreationAttributes extends Omit<BookingAttributes, 'id' 
 
 export class Booking extends Model<InferAttributes<Booking>, InferCreationAttributes<Booking>> {
   declare id: CreationOptional<number>;
-  declare booking_id: string;
-  declare renterId: number;
-  declare hostId: number;
+  declare bookingId: string;
+  declare renterId: string;
+  declare hostId: string;
   declare vehicleId: number;
   declare listingId: number;
   declare startDate: Date;
   declare endDate: Date;
   declare totalPrice: number;
-  declare status: 'pending' | 'approved' | 'active' | 'completed' | 'cancelled';
+  declare status: 'pending' | 'approved' | 'active' | 'completed' | 'cancelled' | 'confirmed';
   declare paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   declare paymentMethod?: string;
   declare specialRequests?: string;
@@ -151,22 +151,25 @@ Booking.init({
     primaryKey: true,
     autoIncrement: true,
   },
-  booking_id: {
+  bookingId: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
+    field: 'booking_id',
   },
   renterId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
+    field: 'renter_id',
     references: {
       model: 'users',
       key: 'id',
     },
   },
   hostId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
+    field: 'host_id',
     references: {
       model: 'users',
       key: 'id',
@@ -327,7 +330,7 @@ Booking.init({
     allowNull: true,
   },
   renter_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: true,
   },
   listing_id: {
@@ -339,7 +342,7 @@ Booking.init({
     allowNull: true,
   },
   host_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: true,
   },
   display_name: {
